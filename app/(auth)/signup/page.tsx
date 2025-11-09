@@ -3,11 +3,14 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
+  const router = useRouter();
+  
   const handleGoogleLogin = () => {
-    // Handle Google login logic here
-    console.log("Google login clicked");
+    console.log("Google login");
+    router.replace("/home");
   };
 
   return (

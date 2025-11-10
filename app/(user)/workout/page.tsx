@@ -2,10 +2,16 @@
 
 import { RotateCw, Plus, Notebook, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function WorkoutPage() {
+  const router = useRouter();
   const handleRefresh = () => {
     window.location.reload();
+  };
+
+  const handleStartEmptyWorkout = () => {
+    router.push("/workout/quick-start");
   };
 
   return (
@@ -44,6 +50,9 @@ export default function WorkoutPage() {
         <section>
           <h2 className="text-lg font-semibold mb-5">Quick Start</h2>
           <Button
+            onClick={() => {
+              handleStartEmptyWorkout();
+            }}
             variant="outline"
             className="w-full justify-start text-lg bg-gray-100 rounded-[10px] p-8"
             size="lg"

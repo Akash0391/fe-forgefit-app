@@ -28,6 +28,21 @@ export default function QuickStartPage() {
     router.back();
   };
 
+  const handleDurationClick = () => {
+    console.log("Duration clicked");
+    // Add duration logic here
+  };
+
+  const handleVolumeClick = () => {
+    console.log("Volume clicked");
+    // Add volume logic here
+  };
+
+  const handleSetsClick = () => {
+    console.log("Sets clicked");
+    // Add sets logic here
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -64,19 +79,28 @@ export default function QuickStartPage() {
       </header>
 
       {/* Workout Summary Metrics */}
-      <div className="grid grid-cols-3 gap-4 px-4 py-6">
-        <div>
+      <div className="grid grid-cols-3 gap-4 px-4 py-6 ">
+        <button
+          onClick={handleDurationClick}
+          className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+        >
           <p className="text-sm text-muted-foreground mb-1">Duration</p>
           <p className="text-xl font-bold text-blue-500">11s</p>
-        </div>
-        <div>
+        </button>
+        <button
+          onClick={handleVolumeClick}
+          className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+        >
           <p className="text-sm text-muted-foreground mb-1">Volume</p>
           <p className="text-xl font-regular">0 kg</p>
-        </div>
-        <div>
+        </button>
+        <button
+          onClick={handleSetsClick}
+          className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+        >
           <p className="text-sm text-muted-foreground mb-1">Sets</p>
           <p className="text-xl font-regular">0</p>
-        </div>
+        </button>
       </div>
 
       {/* Main Content Area - Get Started */}

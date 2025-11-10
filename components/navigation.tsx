@@ -25,7 +25,7 @@ const navigationItems = [
 
 export function Navigation() {
   const pathname = usePathname();
-  const hideBottomNav = pathname?.includes("/workout/quick-start");
+  const hideBottomNav = pathname?.includes("/workout/quick-start") || pathname?.includes("/workout/new-routine");
 
   return (
     <>

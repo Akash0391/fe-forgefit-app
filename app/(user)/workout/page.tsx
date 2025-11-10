@@ -105,7 +105,7 @@ export default function WorkoutPage() {
             <button
               onClick={() => {
                 // Handle New Routines click
-                console.log("New Routines clicked");
+                router.push("/workout/new-routine");
               }}
               className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-8 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >
@@ -115,7 +115,7 @@ export default function WorkoutPage() {
             <button
               onClick={() => {
                 // Handle Explore routines click
-                console.log("Explore routines clicked");
+                router.push("/workout/explore-routines");
               }}
               className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-8 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >

@@ -2,13 +2,33 @@
 
 import { AlarmClock, ChevronDown, Dumbbell, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function QuickStartPage() {
   const router = useRouter();
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  // Set workout in progress when component mounts
+  useEffect(() => {
+    localStorage.setItem("workoutInProgress", "true");
+    return () => {
+      // Don't clear on unmount, only when explicitly discarded
+    };
+  }, []);
 
   const handleFinish = () => {
     console.log("Finish workout");
+    // Clear workout in progress flag when finished
+    localStorage.removeItem("workoutInProgress");
     // Add finish workout logic here
   };
 
@@ -22,10 +42,20 @@ export default function QuickStartPage() {
     // Add settings logic here
   };
 
-  const handleDiscardWorkout = () => {
+  const handleDiscardClick = () => {
+    setShowDiscardDialog(true);
+  };
+
+  const handleConfirmDiscard = () => {
     console.log("Discard Workout clicked");
-    // Add discard confirmation logic here
+    // Clear workout in progress flag
+    localStorage.removeItem("workoutInProgress");
+    setShowDiscardDialog(false);
     router.back();
+  };
+
+  const handleCancelDiscard = () => {
+    setShowDiscardDialog(false);
   };
 
   const handleDurationClick = () => {
@@ -135,13 +165,40 @@ export default function QuickStartPage() {
           </Button>
           <Button
             variant="default"
-            onClick={handleDiscardWorkout}
+            onClick={handleDiscardClick}
             className="flex-1 text-lg py-6 bg-gray-100 text-red-500 rounded-[10px] "
           >
             Discard Workout
           </Button>
         </div>
       </div>
+
+      {/* Discard Confirmation Dialog */}
+      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription className="text-center text-lg font-regular">
+              Are you sure you want to discard this workout?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-5">
+            <Button
+              variant="default"
+              onClick={handleConfirmDiscard}
+              className="w-full sm:w-auto bg-gray-100 text-red-500 p-6 text-lg rounded-[10px]"
+            >
+              Discard Workout
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleCancelDiscard}
+              className="w-full sm:w-auto bg-gray-100 text-black p-6 text-lg rounded-[10px]"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

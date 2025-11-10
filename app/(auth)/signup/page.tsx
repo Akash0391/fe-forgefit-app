@@ -10,7 +10,7 @@ const SignupPage = () => {
   
   const handleGoogleLogin = () => {
     console.log("Google login");
-    router.replace("/home");
+    router.replace("/workout");
   };
 
   return (

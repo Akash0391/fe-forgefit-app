@@ -1,17 +1,53 @@
 "use client";
 
-import { RotateCw, Plus, Notebook, Search, ArrowRight } from "lucide-react";
+import { RotateCw, Plus, Notebook, Search, ArrowRight, Play, Trash, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function WorkoutPage() {
   const router = useRouter();
+  const [workoutInProgress, setWorkoutInProgress] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  useEffect(() => {
+    // Check if workout is in progress
+    const inProgress = localStorage.getItem("workoutInProgress") === "true";
+    setWorkoutInProgress(inProgress);
+  }, []);
+
   const handleRefresh = () => {
     window.location.reload();
   };
 
   const handleStartEmptyWorkout = () => {
     router.push("/workout/quick-start");
+  };
+
+  const handleResumeWorkout = () => {
+    router.push("/workout/quick-start");
+  };
+
+  const handleDiscardClick = () => {
+    setShowDiscardDialog(true);
+  };
+
+  const handleConfirmDiscard = () => {
+    localStorage.removeItem("workoutInProgress");
+    setWorkoutInProgress(false);
+    setShowDiscardDialog(false);
+  };
+
+  const handleCancelDiscard = () => {
+    setShowDiscardDialog(false);
   };
 
   return (
@@ -45,7 +81,7 @@ export default function WorkoutPage() {
       </header>
 
       {/* Content */}
-      <div className="p-4 space-y-6 pb-20 mt-0">
+      <div className="p-4 space-y-6 pb-20 mt-8">
         {/* Quick Start Section */}
         <section>
           <h2 className="text-lg font-semibold mb-5">Quick Start</h2>
@@ -89,21 +125,72 @@ export default function WorkoutPage() {
           </div>
         </section>
 
-        {/* How to get Started Button */}
-        <div className="fixed bottom-20 left-0 right-0 px-4 pb-1 md:hidden">
-          <Button
-            variant="default"
-            className="w-full justify-between text-lg bg-blue-100 text-black rounded-[10px] p-9"
-            onClick={() => {
-              // Handle How to get Started click
-              console.log("How to get started clicked");
-            }}
-          >
-            <span className="pl-2 font-regular">How to get started</span>
-            <ArrowRight className="size-[20px] mr-2" />
-          </Button>
+        {/* Workout on Progress or How to get Started Button */}
+        <div className={`fixed bottom-20 left-0 right-0 px-4 md:hidden ${workoutInProgress ? 'border-t border-gray-200 pt-3' : ''}`}>
+          {workoutInProgress ? (
+            <div className="w-full bg-white rounded-[10px] px-4">
+              <p className="text-lg font-regular text-muted-foreground text-center">Workout in Progress</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="default"
+                  className="flex-1 text-lg bg-white hover:bg-blue-600 text-blue-500 rounded-[10px]"
+                  onClick={handleResumeWorkout}
+                >
+                  <Play className="size-[16px] mr-2" />
+                  Resume
+                </Button>
+                <Button
+                  variant="default"
+                  className="flex-1 text-lg bg-white text-red-500 hover:bg-gray-200 rounded-[10px]"
+                  onClick={handleDiscardClick}
+                >
+                  <X className="size-[16px] mr-2" />
+                  Discard
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="default"
+              className="w-full justify-between text-lg bg-blue-100 text-black rounded-[10px] p-9"
+              onClick={() => {
+                // Handle How to get Started click
+                console.log("How to get started clicked");
+              }}
+            >
+              <span className="pl-2 font-regular">How to get started</span>
+              <ArrowRight className="size-[20px] mr-2" />
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Discard Confirmation Dialog */}
+      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogDescription className="text-center text-lg font-regular">
+              Are you sure you want to discard this workout in progress?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-5">
+            <Button
+              variant="default"
+              onClick={handleConfirmDiscard}
+              className="w-full sm:w-auto bg-gray-100 text-red-500 p-6 text-lg rounded-[10px]"
+            >
+              Discard Workout
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleCancelDiscard}
+              className="w-full sm:w-auto bg-gray-100 text-black p-6 text-lg rounded-[10px]"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

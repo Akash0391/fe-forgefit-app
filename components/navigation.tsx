@@ -25,12 +25,14 @@ const navigationItems = [
 
 export function Navigation() {
   const pathname = usePathname();
+  const hideBottomNav = pathname?.includes("/workout/quick-start");
 
   return (
     <>
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border md:hidden">
-        <div className="flex items-center justify-around h-16 px-2">
+      {!hideBottomNav && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border md:hidden">
+        <div className="flex items-center justify-around h-16">
           {navigationItems.map((item) => {
             const Icon = item.Icon;
             const isActive = pathname === item.href;
@@ -45,13 +47,14 @@ export function Navigation() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="size-[24px]" />
                 <span className="text-xs font-medium">{item.name}</span>
               </Link>
             );
           })}
         </div>
       </nav>
+      )}
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:left-0 md:bg-background md:border-r md:border-border">
@@ -74,7 +77,7 @@ export function Navigation() {
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="size-[20px]" />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );

@@ -18,8 +18,9 @@ const SignupPage = () => {
     }
   }, [isAuthenticated, loading, router]);
   
-  const handleGoogleLogin = () => {
-    login();
+  const handleGoogleSignup = () => {
+    // Redirect to workout page after signup, and force account selection screen
+    login("/workout", true);
   };
 
   if (loading || isAuthenticated) {
@@ -49,7 +50,7 @@ const SignupPage = () => {
       <div className="pb-8 space-y-4">
         <div className="w-full max-w-md mx-auto">
           <Button
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleSignup}
             className="w-full text-lg rounded-[12px] p-6 justify-start"
             size="lg"
             variant="outline"

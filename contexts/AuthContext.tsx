@@ -17,7 +17,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: () => void;
+  login: (redirectTo?: string, isSignup?: boolean) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -76,17 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loading, router]);
 
-  const login = () => {
-    // Save redirect parameter if present in URL
+  const login = (redirectTo?: string, isSignup: boolean = false) => {
+    // Use provided redirect or check URL parameter, default to /workout for login
     const urlParams = new URLSearchParams(window.location.search);
-    const redirect = urlParams.get("redirect");
-    if (redirect) {
-      sessionStorage.setItem("authRedirect", redirect);
-    }
+    const redirect = redirectTo || urlParams.get("redirect") || "/workout";
     
-    // Redirect to backend Google OAuth endpoint
+    // Save redirect destination for after OAuth completes
+    sessionStorage.setItem("authRedirect", redirect);
+    
+    // Redirect to backend Google OAuth endpoint with redirect parameter
+    // Add signup parameter to force account selection screen
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    window.location.href = `${apiUrl}/api/auth/google`;
+    const signupParam = isSignup ? "&signup=true" : "";
+    window.location.href = `${apiUrl}/api/auth/google?redirect=${encodeURIComponent(redirect)}${signupParam}`;
   };
 
   const logout = useCallback(async () => {

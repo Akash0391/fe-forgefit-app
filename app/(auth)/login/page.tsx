@@ -20,7 +20,8 @@ const LoginPage = () => {
   }, [isAuthenticated, loading, router, searchParams]);
 
   const handleGoogleLogin = () => {
-    login();
+    // Redirect to workout page after login
+    login("/workout");
   };
 
   if (loading || isAuthenticated) {

@@ -6,10 +6,12 @@ import { useState } from "react";
 
 interface ExerciseCardProps {
   exercise: Exercise;
+  isSelected?: boolean;
   onClick?: () => void;
+  onVideoClick?: (e: React.MouseEvent) => void;
 }
 
-export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
+export function ExerciseCard({ exercise, isSelected = false, onClick, onVideoClick }: ExerciseCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const mediaUrl =
@@ -39,9 +41,23 @@ export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
       : "";
 
   return (
-    <div className="bg-white border-b border-gray-200 p-3 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] flex items-center gap-3">
-      {/* Circular Image/GIF on Left */}
-      <div className="relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden bg-gray-100">
+    <div 
+      className="bg-white border-b border-gray-200 py-3 pr-3 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] flex items-center gap-3 relative"
+      onClick={onClick}
+    >
+      {/* Blue vertical line indicator when selected */}
+      <div 
+        className={`absolute left-0 top-0 bottom-0 bg-blue-600 transition-all duration-300 ease-in-out ${
+          isSelected ? 'opacity-100 w-1.5' : 'opacity-0 w-0'
+        }`}
+      />
+      
+      {/* Content wrapper that shifts when selected */}
+      <div className={`flex items-center gap-3 flex-1 transition-all duration-300 ease-in-out ${
+        isSelected ? 'pl-4' : 'pl-0'
+      }`}>
+        {/* Circular Image/GIF on Left */}
+        <div className="relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden bg-gray-100">
         {mediaUrl && !imageError ? (
           <>
             {imageLoading && (
@@ -69,24 +85,25 @@ export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
             <Dumbbell className="size-6 text-gray-400" />
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Exercise Name and Muscle Group in Middle */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-lg font-regular text-black truncate">
-          {formatExerciseName()}
-        </h3>
-        {primaryMuscleGroup && (
-          <p className="text-base font-regular text-gray-500 mt-0.5">
-            {primaryMuscleGroup}
-          </p>
-        )}
-      </div>
+        {/* Exercise Name and Muscle Group in Middle */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-regular text-black truncate">
+            {formatExerciseName()}
+          </h3>
+          {primaryMuscleGroup && (
+            <p className="text-base font-regular text-gray-500 mt-0.5">
+              {primaryMuscleGroup}
+            </p>
+          )}
+        </div>
 
-      {/* Icon Button on Right */}
-      <div className="flex-shrink-0" onClick={onClick}>
-        <div className="w-8 h-8 border border-black rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-          <TrendingUp className="size-7 text-gray-600" />
+        {/* Icon Button on Right */}
+        <div className="flex-shrink-0" onClick={onVideoClick}>
+          <div className="w-8 h-8 border border-black rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+            <TrendingUp className="size-7 text-gray-600" />
+          </div>
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ export default function AddExercisePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -90,6 +91,19 @@ export default function AddExercisePage() {
   };
 
   const handleExerciseClick = (exercise: Exercise) => {
+    setSelectedExerciseIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(exercise._id)) {
+        newSet.delete(exercise._id);
+      } else {
+        newSet.add(exercise._id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleVideoIconClick = (exercise: Exercise, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (exercise.gifUrl || exercise.videoUrl) {
       setSelectedExercise(exercise);
       setShowVideoModal(true);
@@ -99,6 +113,13 @@ export default function AddExercisePage() {
   const handleCreate = () => {
     // Add logic to add selected exercise to workout
     window.location.reload();
+  };
+
+  const handleAddExercises = () => {
+    // Add logic to add selected exercises to workout
+    console.log("Adding exercises:", Array.from(selectedExerciseIds));
+    // TODO: Implement actual add to workout logic
+    router.back();
   };
 
   const filteredExercises = exercises.filter(exercise =>
@@ -194,7 +215,9 @@ export default function AddExercisePage() {
                 <ExerciseCard
                   key={exercise._id}
                   exercise={exercise}
+                  isSelected={selectedExerciseIds.has(exercise._id)}
                   onClick={() => handleExerciseClick(exercise)}
+                  onVideoClick={(e) => handleVideoIconClick(exercise, e)}
                 />
               ))}
               {loadingMore && (
@@ -209,6 +232,18 @@ export default function AddExercisePage() {
           )}
         </div>
       </div>
+
+      {/* Bottom Button - Appears when exercises are selected */}
+      {selectedExerciseIds.size > 0 && (
+        <div className="flex-shrink-0 p-4 bg-background">
+          <Button
+            onClick={handleAddExercises}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-[8px] font-regular text-lg"
+          >
+            Add {selectedExerciseIds.size} {selectedExerciseIds.size === 1 ? 'exercise' : 'exercises'}
+          </Button>
+        </div>
+      )}
 
       <ExerciseVideoModal
         exercise={selectedExercise}

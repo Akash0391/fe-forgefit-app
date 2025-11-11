@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api";
 
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       // Allow 401 errors (not logged in) - this is expected behavior
       const response = await apiClient.get<{ success: boolean; user: User }>("/api/auth/me", true);
@@ -50,27 +50,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshUser();
   }, []);
 
+  // Handle redirect after successful OAuth login
+  useEffect(() => {
+    if (user && !loading) {
+      // Check for saved redirect from sessionStorage (set before OAuth)
+      const savedRedirect = sessionStorage.getItem("authRedirect");
+      if (savedRedirect) {
+        sessionStorage.removeItem("authRedirect");
+        router.push(savedRedirect);
+        return;
+      }
+      
+      // Also check URL parameter as fallback
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get("redirect");
+      if (redirect) {
+        router.push(redirect);
+      }
+    }
+  }, [user, loading, router]);
+
   const login = () => {
+    // Save redirect parameter if present in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get("redirect");
+    if (redirect) {
+      sessionStorage.setItem("authRedirect", redirect);
+    }
+    
     // Redirect to backend Google OAuth endpoint
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
+      console.log("Attempting logout...");
       await apiClient.post("/api/auth/logout");
+      console.log("Logout API call successful");
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with logout even if API call fails
+    } finally {
+      // Always clear user state and redirect, even if API call failed
+      console.log("Clearing user state and redirecting to login");
       setUser(null);
       router.push("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
     }
-  };
+  }, [router]);
 
   const value: AuthContextType = {
     user,

@@ -10,25 +10,28 @@ import {
   ChartNoAxesColumnIncreasing,
   PersonStanding,
   CalendarDays,
+  LogOut,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-  const { user, loading, isAuthenticated, refreshUser } = useAuth();
+  const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [selectedMetric, setSelectedMetric] = useState<
     "Duration" | "Volume" | "Reps"
   >("Duration");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutCountdown, setLogoutCountdown] = useState<number | null>(null);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const logoutExecutedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push("/login");
-    } else if (!loading && isAuthenticated) {
-      refreshUser();
     }
-  }, [loading, isAuthenticated, router, refreshUser]);
+  }, [loading, isAuthenticated, router]);
 
   // Generate initials from name
   const getInitials = (name: string) => {
@@ -50,6 +53,68 @@ export default function ProfilePage() {
     }
     return "user";
   };
+
+  const handleLogout = () => {
+    if (logoutCountdown === null && !isLoggingOut) {
+      // Start countdown
+      logoutExecutedRef.current = false;
+      setIsLoggingOut(true);
+      setLogoutCountdown(5);
+    }
+  };
+
+  // Handle countdown timer
+  useEffect(() => {
+    // Clear any existing timer
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+
+    if (logoutCountdown !== null && logoutCountdown > 0) {
+      // Start countdown interval
+      countdownTimerRef.current = setInterval(() => {
+        setLogoutCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            // Clear interval when countdown reaches 0
+            if (countdownTimerRef.current) {
+              clearInterval(countdownTimerRef.current);
+              countdownTimerRef.current = null;
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (logoutCountdown === 0 && isLoggingOut && !logoutExecutedRef.current) {
+      // Execute logout after countdown reaches 0 (only once)
+      logoutExecutedRef.current = true;
+      const executeLogout = async () => {
+        try {
+          console.log("Executing logout from profile page");
+          await logout();
+          console.log("Logout completed successfully");
+          // Reset state after successful logout
+          setIsLoggingOut(false);
+          setLogoutCountdown(null);
+        } catch (error) {
+          console.error("Logout error in profile page:", error);
+          // Reset state even on error (logout function handles redirect)
+          setIsLoggingOut(false);
+          setLogoutCountdown(null);
+        }
+      };
+      executeLogout();
+    }
+
+    // Cleanup function
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+    };
+  }, [logoutCountdown, isLoggingOut, logout]);
 
   if (loading) {
     return (
@@ -213,6 +278,25 @@ export default function ProfilePage() {
             <ChevronDown className="size-4" />
           </button>
         </div>
+      </div>
+
+      {/* Logout Section */}
+      <div className="px-4 mb-6">
+        {isLoggingOut && logoutCountdown !== null ? (
+          <div className="bg-red-50 border border-red-200 rounded-[10px] p-4">
+            <p className="text-red-700 text-center text-lg font-regular">
+              Logging out in {logoutCountdown} second{logoutCountdown !== 1 ? "s" : ""}...
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-500 hover:bg-red-600 text-white rounded-[10px] p-4 flex items-center justify-center gap-3 transition-colors"
+          >
+            <LogOut className="size-5" />
+            <span className="text-lg font-regular">Logout</span>
+          </button>
+        )}
       </div>
     </div>
   );

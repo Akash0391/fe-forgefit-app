@@ -4,13 +4,32 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // If already authenticated, redirect to workout or intended destination
+    if (!loading && isAuthenticated) {
+      router.push("/workout");
+    }
+  }, [isAuthenticated, loading, router, searchParams]);
 
   const handleGoogleLogin = () => {
     login();
   };
+
+  if (loading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col p-4 relative">

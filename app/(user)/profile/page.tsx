@@ -11,12 +11,57 @@ import {
   PersonStanding,
   CalendarDays,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const { user, loading, isAuthenticated, refreshUser } = useAuth();
+  const router = useRouter();
   const [selectedMetric, setSelectedMetric] = useState<
     "Duration" | "Volume" | "Reps"
   >("Duration");
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
+    } else if (!loading && isAuthenticated) {
+      refreshUser();
+    }
+  }, [loading, isAuthenticated, router, refreshUser]);
+
+  // Generate initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Generate username from email or name
+  const getUsername = () => {
+    if (user?.email) {
+      return user.email.split("@")[0];
+    }
+    if (user?.name) {
+      return user.name.toLowerCase().replace(/\s+/g, "");
+    }
+    return "user";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -29,7 +74,7 @@ export default function ProfilePage() {
           </button>
 
           {/* Center: Username */}
-          <h1 className="text-lg font-regular">akash0391</h1>
+          <h1 className="text-lg font-regular">{getUsername()}</h1>
 
           {/* Right: Share and Settings */}
           <div className="flex items-center gap-4">
@@ -48,13 +93,15 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4">
           {/* Profile Picture */}
           <Avatar className="size-28">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>AY</AvatarFallback>
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback>
+              {user.name ? getInitials(user.name) : "U"}
+            </AvatarFallback>
           </Avatar>
 
           {/* Name and Stats */}
           <div className="flex-1 pt-2">
-            <h2 className="text-2xl font-semibold mb-4">Akash Yadav</h2>
+            <h2 className="text-2xl font-semibold mb-4">{user.name || "User"}</h2>
             <div className="flex justify-between gap-6">
               <div>
                 <p className="text-sm text-gray-500">Workouts</p>

@@ -9,7 +9,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    allow401: boolean = false
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
@@ -18,6 +19,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         ...options.headers,
       },
+      credentials: 'include', // Include cookies for session-based auth
       ...options,
     };
 
@@ -25,6 +27,15 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        // Handle 401 (Unauthorized) gracefully if allowed
+        if (response.status === 401 && allow401) {
+          const errorData = await response.json().catch(() => ({ 
+            success: false,
+            message: 'Not authenticated' 
+          }));
+          throw { status: 401, data: errorData };
+        }
+        
         const error = await response.json().catch(() => ({ 
           error: 'An error occurred' 
         }));
@@ -36,12 +47,16 @@ class ApiClient {
       if (error instanceof Error) {
         throw error;
       }
+      // Re-throw 401 errors if allow401 is true
+      if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
+        throw error;
+      }
       throw new Error('Network error occurred');
     }
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  async get<T>(endpoint: string, allow401: boolean = false): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' }, allow401);
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {

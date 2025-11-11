@@ -116,9 +116,38 @@ export default function AddExercisePage() {
   };
 
   const handleAddExercises = () => {
-    // Add logic to add selected exercises to workout
-    console.log("Adding exercises:", Array.from(selectedExerciseIds));
-    // TODO: Implement actual add to workout logic
+    // Get selected exercises from the exercises list
+    const selectedExercises = exercises.filter(exercise => 
+      selectedExerciseIds.has(exercise._id)
+    );
+    
+    // Get existing workout exercises from localStorage
+    const existingExercisesJson = localStorage.getItem("workoutExercises");
+    const existingExercises = existingExercisesJson 
+      ? JSON.parse(existingExercisesJson) 
+      : [];
+    
+    // Combine existing exercises with new ones (avoid duplicates)
+    const exerciseMap = new Map();
+    
+    // Add existing exercises
+    existingExercises.forEach((ex: Exercise) => {
+      exerciseMap.set(ex._id, ex);
+    });
+    
+    // Add new exercises (will overwrite if duplicate, but that's fine)
+    selectedExercises.forEach((ex: Exercise) => {
+      exerciseMap.set(ex._id, ex);
+    });
+    
+    // Save back to localStorage
+    const allExercises = Array.from(exerciseMap.values());
+    localStorage.setItem("workoutExercises", JSON.stringify(allExercises));
+    
+    // Dispatch a custom event to notify other components
+    window.dispatchEvent(new Event("workoutExercisesUpdated"));
+    
+    console.log("Added exercises to workout:", selectedExercises);
     router.back();
   };
 

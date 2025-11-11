@@ -145,7 +145,7 @@ export default function AddExercisePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="w-full h-12 pl-12 pr-4 text-base rounded-[8px] bg-gray-100 border-none outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-colors"
+            className="w-full h-12 pl-12 pr-4 text-base rounded-[8px] bg-gray-100 border-none outline-none placeholder:text-gray-400 transition-colors"
           />
         </div>
 

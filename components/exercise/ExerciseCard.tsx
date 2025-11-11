@@ -13,7 +13,7 @@ export function ExerciseCard({ exercise, onClick }: ExerciseCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const mediaUrl =
-    exercise.gifUrl || exercise.videoUrl || exercise.thumbnailUrl;
+    exercise.thumbnailUrl;
 
   // Format exercise name with equipment in parentheses if available
   const formatExerciseName = () => {

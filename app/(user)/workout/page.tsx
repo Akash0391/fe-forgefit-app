@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCw, Plus, Notebook, Search, ArrowRight, Play, Trash, X } from "lucide-react";
+import { RotateCw, Plus, Notebook, Search, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +41,9 @@ export default function WorkoutPage() {
   };
 
   const handleConfirmDiscard = () => {
+    // Clear workout in progress flag and start time to reset timer
     localStorage.removeItem("workoutInProgress");
+    localStorage.removeItem("workoutStartTime");
     setWorkoutInProgress(false);
     setShowDiscardDialog(false);
   };
@@ -125,9 +127,9 @@ export default function WorkoutPage() {
           </div>
         </section>
 
-        {/* Workout on Progress or How to get Started Button */}
-        <div className={`fixed bottom-20 left-0 right-0 px-4 md:hidden ${workoutInProgress ? 'border-t border-gray-200 pt-3' : ''}`}>
-          {workoutInProgress ? (
+        {/* Workout on Progress */}
+        {workoutInProgress && (
+          <div className="fixed bottom-20 left-0 right-0 px-4 md:hidden border-t border-gray-200 pt-3">
             <div className="w-full bg-white rounded-[10px] px-4">
               <p className="text-lg font-regular text-muted-foreground text-center">Workout in Progress</p>
               <div className="flex gap-3">
@@ -149,26 +151,15 @@ export default function WorkoutPage() {
                 </Button>
               </div>
             </div>
-          ) : (
-            <Button
-              variant="default"
-              className="w-full justify-between text-lg bg-blue-100 text-black rounded-[10px] p-9"
-              onClick={() => {
-                // Handle How to get Started click
-                console.log("How to get started clicked");
-              }}
-            >
-              <span className="pl-2 font-regular">How to get started</span>
-              <ArrowRight className="size-[20px] mr-2" />
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Discard Confirmation Dialog */}
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <DialogContent>
           <DialogHeader>
+            <DialogTitle className="sr-only">Discard Workout</DialogTitle>
             <DialogDescription className="text-center text-lg font-regular">
               Are you sure you want to discard this workout in progress?
             </DialogDescription>

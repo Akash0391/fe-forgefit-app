@@ -11,24 +11,84 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function QuickStartPage() {
   const router = useRouter();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [duration, setDuration] = useState(0); // Duration in seconds
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Set workout in progress when component mounts
+  // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    }
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    
+    if (minutes > 0) {
+      return secs > 0 ? `${minutes}m ${secs}s` : `${minutes}m`;
+    }
+    
+    return `${seconds}s`;
+  };
+
+  // Initialize workout timer
   useEffect(() => {
+    // Check if workout start time exists in localStorage
+    const workoutStartTime = localStorage.getItem("workoutStartTime");
+    
+    if (workoutStartTime) {
+      // Calculate elapsed time from stored start time
+      const startTime = parseInt(workoutStartTime, 10);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setDuration(elapsed);
+    } else {
+      // First time starting workout - store current time
+      localStorage.setItem("workoutStartTime", Date.now().toString());
+      setDuration(0);
+    }
+
+    // Set workout in progress flag
     localStorage.setItem("workoutInProgress", "true");
+
+    // Start timer interval - update every second
+    intervalRef.current = setInterval(() => {
+      const startTime = localStorage.getItem("workoutStartTime");
+      if (startTime) {
+        const elapsed = Math.floor((Date.now() - parseInt(startTime, 10)) / 1000);
+        setDuration(elapsed);
+      }
+    }, 1000);
+
+    // Cleanup interval on unmount
     return () => {
-      // Don't clear on unmount, only when explicitly discarded
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, []);
 
   const handleFinish = () => {
     console.log("Finish workout");
-    // Clear workout in progress flag when finished
+    // Reset duration to 0
+    setDuration(0);
+    
+    // Clear timer interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    // Clear workout in progress flag and start time when finished
     localStorage.removeItem("workoutInProgress");
+    localStorage.removeItem("workoutStartTime");
     // Add finish workout logic here
   };
 
@@ -48,8 +108,18 @@ export default function QuickStartPage() {
 
   const handleConfirmDiscard = () => {
     console.log("Discard Workout clicked");
-    // Clear workout in progress flag
+    // Reset duration to 0
+    setDuration(0);
+    
+    // Clear timer interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    // Clear workout in progress flag and start time
     localStorage.removeItem("workoutInProgress");
+    localStorage.removeItem("workoutStartTime");
+    
     setShowDiscardDialog(false);
     router.back();
   };
@@ -115,7 +185,7 @@ export default function QuickStartPage() {
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Duration</p>
-          <p className="text-xl font-bold text-blue-500">11s</p>
+          <p className="text-xl font-bold text-blue-500">{formatDuration(duration)}</p>
         </button>
         <button
           onClick={handleVolumeClick}
@@ -177,6 +247,7 @@ export default function QuickStartPage() {
       <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <DialogContent>
           <DialogHeader>
+            <DialogTitle className="sr-only">Discard Workout</DialogTitle>
             <DialogDescription className="text-center text-lg font-regular">
               Are you sure you want to discard this workout?
             </DialogDescription>

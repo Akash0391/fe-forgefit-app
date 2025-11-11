@@ -93,7 +93,7 @@ export default function QuickStartPage() {
   };
 
   const handleAddExercise = () => {
-    console.log("Add Exercise clicked");
+    router.push("/workout/quick-start/add-exercise");
     // Add exercise selection logic here
   };
 
@@ -121,7 +121,7 @@ export default function QuickStartPage() {
     localStorage.removeItem("workoutStartTime");
     
     setShowDiscardDialog(false);
-    router.back();
+    router.push("/workout");
   };
 
   const handleCancelDiscard = () => {

@@ -80,3 +80,71 @@ class ApiClient {
 
 export const apiClient = new ApiClient(API_URL);
 
+// Exercise type definition
+export interface Exercise {
+  _id: string;
+  name: string;
+  description: string;
+  muscleGroups: string[];
+  equipment: string;
+  videoUrl: string;
+  gifUrl: string;
+  thumbnailUrl: string;
+  instructions: string[];
+  difficulty: string;
+  isCustom: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Exercise-related API methods
+export const exerciseApi = {
+  getAll: (params?: {
+    search?: string;
+    muscleGroup?: string;
+    equipment?: string;
+    limit?: number;
+    page?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.muscleGroup) queryParams.append('muscleGroup', params.muscleGroup);
+    if (params?.equipment) queryParams.append('equipment', params.equipment);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
+    
+    const queryString = queryParams.toString();
+    return apiClient.get<{
+      success: boolean;
+      data: Exercise[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        pages: number;
+      };
+    }>(`/api/exercises${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getById: (id: string) => apiClient.get<{
+    success: boolean;
+    data: Exercise;
+  }>(`/api/exercises/${id}`),
+
+  create: (exercise: Partial<Exercise>) => apiClient.post<{
+    success: boolean;
+    data: Exercise;
+  }>('/api/exercises', exercise),
+
+  update: (id: string, exercise: Partial<Exercise>) => apiClient.put<{
+    success: boolean;
+    data: Exercise;
+  }>(`/api/exercises/${id}`, exercise),
+
+  delete: (id: string) => apiClient.delete<{
+    success: boolean;
+    message: string;
+  }>(`/api/exercises/${id}`),
+};
+

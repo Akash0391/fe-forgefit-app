@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Exercise } from "@/lib/api";
 import { Input } from "@/components/ui/input";
+import TimerModal from "@/components/TimerModal";
 
 export default function QuickStartPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function QuickStartPage() {
   const [showDurationInHeader, setShowDurationInHeader] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showTimerModal, setShowTimerModal] = useState(false);
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -259,6 +261,10 @@ export default function QuickStartPage() {
     // Add sets logic here
   };
 
+  const handleTimerIconClick = () => {
+    setShowTimerModal(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -284,7 +290,13 @@ export default function QuickStartPage() {
 
           {/* Right: Clock and Finish Button */}
           <div className="flex items-center gap-4">
-            <AlarmClock className="size-[24px] text-muted-foreground" />
+            <button
+              onClick={handleTimerIconClick}
+              className="p-1 hover:opacity-80 transition-opacity"
+              aria-label="Open timer"
+            >
+              <AlarmClock className="size-[24px] text-muted-foreground" />
+            </button>
             <Button
               variant="default"
               onClick={handleFinish}
@@ -431,6 +443,9 @@ export default function QuickStartPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Timer Modal */}
+      <TimerModal open={showTimerModal} onClose={() => setShowTimerModal(false)} />
     </div>
   );
 }

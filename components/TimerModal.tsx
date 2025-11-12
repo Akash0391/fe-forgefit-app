@@ -17,6 +17,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerElapsed, setTimerElapsed] = useState(0); // For stopwatch
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   const handleTimerDecrease = () => {
     if (timerValue > 15) {
@@ -110,18 +111,47 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
     }
   }, [open, handleResetTimer]);
 
-  if (!open) return null;
+  // Keep modal mounted during closing animation
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setShouldRender(true);
+      // Trigger animation after a tiny delay to ensure DOM is ready
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+    } else {
+      // Start closing animation - ensure it triggers properly
+      setIsVisible(false);
+      // Wait for animation to complete before unmounting
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match duration-300
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  if (!shouldRender) return null;
 
   return (
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 z-50"
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
         onClick={onClose}
       />
       {/* Modal Content */}
       <div 
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-[10px] shadow-lg w-[calc(100%-2rem)] max-w-lg animate-in fade-in-0 zoom-in-95 duration-300"
+        className={`fixed top-1/2 left-1/2 -translate-x-1/2 z-50 bg-white rounded-[10px] shadow-lg w-[calc(100%-2rem)] max-w-lg transition-all duration-300 ease-in-out ${
+          isVisible 
+            ? "opacity-100 -translate-y-1/2" 
+            : "opacity-0 translate-y-[100vh]"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

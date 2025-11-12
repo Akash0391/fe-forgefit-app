@@ -29,6 +29,10 @@ export default function TimerSettingsPage() {
     return `${mins}m ${secs > 0 ? `${secs}s` : ""}`;
   };
 
+  const handleSoundsClick = () => {
+    router.push("/workout/quick-start/timer-settings/sounds");
+  };
+
   const handleDone = () => {
     // Save settings to localStorage or API
     // For now, just navigate back
@@ -59,7 +63,8 @@ export default function TimerSettingsPage() {
       {/* Main Content */}
       <div className="px-1 py-6">
         <div className="space-y-4 border-b-[1px] border-border pb-5">
-          <div className="flex items-center justify-between px-4">
+          <div
+          onClick={handleSoundsClick} className="flex items-center justify-between px-4">
             <Button
               variant="ghost"
               className="text-black text-lg font-regular px-0 py-2 h-9"

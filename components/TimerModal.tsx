@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Settings2 } from "lucide-react";
+import { Settings2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 interface TimerModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface TimerModalProps {
 }
 
 export default function TimerModal({ open, onClose }: TimerModalProps) {
+  const router = useRouter();
   const [timerMode, setTimerMode] = useState<"timer" | "stopwatch">("timer");
   const [timerValue, setTimerValue] = useState(60); // Timer value in seconds (default 1 minute)
   const [initialTimerValue, setInitialTimerValue] = useState(60); // Initial timer value when started
@@ -157,14 +159,20 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-2 pt-4 pb-4">
           <button
-            onClick={onClose}
+            onClick={() => router.push("/workout/quick-start/timer-settings")}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Close timer"
+            aria-label="Timer settings"
           >
             <Settings2 className="size-7 text-gray-600" />
           </button>
           <h2 className="text-xl font-semibold">Clock</h2>
-          <div className="w-9" /> {/* Spacer for centering */}
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close timer"
+          >
+            <ChevronDown className="size-7 text-gray-600" />
+          </button>
         </div>
 
         {/* Tabs */}

@@ -44,7 +44,7 @@ export default function SoundsPage() {
             }}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
           >
-            <span className="text-lg font-regular text-gray-900">Timer Sound</span>
+            <span className="text-lg font-regular text-black">Timer Sound</span>
             <div className="flex items-center gap-2">
               <span className="text-lg text-gray-500">{timerSound}</span>
               <ChevronRight className="size-5 text-gray-400" />
@@ -62,7 +62,7 @@ export default function SoundsPage() {
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors border-b-[0.5px] border-border"
           >
-            <span className="text-lg font-regular text-gray-900">Timer Volume</span>
+            <span className="text-lg font-regular text-black">Timer Volume</span>
             <div className="flex items-center gap-2">
               <span className="text-lg text-gray-500">{timerVolume}</span>
               <ChevronRight className="size-5 text-gray-400" />
@@ -76,7 +76,7 @@ export default function SoundsPage() {
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors border-b-[0.5px] border-border"
           >
-            <span className="text-lg font-regular text-gray-900">Check Set</span>
+            <span className="text-lg font-regular text-black">Check Set</span>
             <div className="flex items-center gap-2">
               <span className="text-lg text-gray-500">{checkSetVolume}</span>
               <ChevronRight className="size-5 text-gray-400" />
@@ -90,7 +90,7 @@ export default function SoundsPage() {
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors"
           >
-            <span className="text-lg font-regular text-gray-900">Live PR Volume</span>
+            <span className="text-lg font-regular text-black">Live Personal Record Volume</span>
             <div className="flex items-center gap-2">
               <span className="text-lg text-gray-500">{livePRVolume}</span>
               <ChevronRight className="size-5 text-gray-400" />

@@ -1,6 +1,17 @@
 "use client";
 
-import { AlarmClock, ChevronDown, Dumbbell, Plus, MoreVertical, Clock, Check, Timer, CheckCheck, SquareCheck } from "lucide-react";
+import {
+  AlarmClock,
+  ChevronDown,
+  Dumbbell,
+  Plus,
+  MoreVertical,
+  Clock,
+  Check,
+  Timer,
+  CheckCheck,
+  SquareCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,10 +51,13 @@ export default function QuickStartPage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showTimerModal, setShowTimerModal] = useState(false);
-  const [showFinishConfirmationModal, setShowFinishConfirmationModal] = useState(false);
-  const [finishModalMessage, setFinishModalMessage] = useState("Add an exercise");
+  const [showFinishConfirmationModal, setShowFinishConfirmationModal] =
+    useState(false);
+  const [finishModalMessage, setFinishModalMessage] =
+    useState("Add an exercise");
   const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
-  const [selectedExerciseForMenu, setSelectedExerciseForMenu] = useState<Exercise | null>(null);
+  const [selectedExerciseForMenu, setSelectedExerciseForMenu] =
+    useState<Exercise | null>(null);
   const [showSupersetModal, setShowSupersetModal] = useState(false);
   const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
 
@@ -52,19 +66,19 @@ export default function QuickStartPage() {
     if (seconds < 60) {
       return `${seconds}s`;
     }
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}min ${secs}s`;
     }
-    
+
     if (minutes > 0) {
       return secs > 0 ? `${minutes}min ${secs}s` : `${minutes}min`;
     }
-    
+
     return `${seconds}s`;
   };
 
@@ -76,11 +90,19 @@ export default function QuickStartPage() {
         const exercises = JSON.parse(exercisesJson);
         setWorkoutExercises(exercises);
         // Initialize sets for new exercises
-        setExerciseSets(prev => {
+        setExerciseSets((prev) => {
           const newSets = { ...prev };
           exercises.forEach((exercise: Exercise) => {
             if (!newSets[exercise._id]) {
-              newSets[exercise._id] = [{ setNumber: 1, previous: "-", kg: 0, reps: 0, completed: false }];
+              newSets[exercise._id] = [
+                {
+                  setNumber: 1,
+                  previous: "-",
+                  kg: 0,
+                  reps: 0,
+                  completed: false,
+                },
+              ];
             }
           });
           return newSets;
@@ -110,14 +132,14 @@ export default function QuickStartPage() {
 
   // Save superset groups to localStorage
   const saveSupersetGroups = (groups: Set<string>[]) => {
-    const groupsArray = groups.map(group => Array.from(group));
+    const groupsArray = groups.map((group) => Array.from(group));
     localStorage.setItem("workoutSupersetGroups", JSON.stringify(groupsArray));
     setSupersetGroups(groups);
   };
 
   // Check if an exercise is in a superset
   const isExerciseInSuperset = (exerciseId: string): boolean => {
-    return supersetGroups.some(group => group.has(exerciseId));
+    return supersetGroups.some((group) => group.has(exerciseId));
   };
 
   // Initialize workout timer and load exercises
@@ -129,7 +151,7 @@ export default function QuickStartPage() {
 
     // Check if workout start time exists in localStorage
     const workoutStartTime = localStorage.getItem("workoutStartTime");
-    
+
     if (workoutStartTime) {
       // Calculate elapsed time from stored start time
       const startTime = parseInt(workoutStartTime, 10);
@@ -148,7 +170,9 @@ export default function QuickStartPage() {
     intervalRef.current = setInterval(() => {
       const startTime = localStorage.getItem("workoutStartTime");
       if (startTime) {
-        const elapsed = Math.floor((Date.now() - parseInt(startTime, 10)) / 1000);
+        const elapsed = Math.floor(
+          (Date.now() - parseInt(startTime, 10)) / 1000
+        );
         setDuration(elapsed);
       }
     }, 1000);
@@ -165,7 +189,10 @@ export default function QuickStartPage() {
     const handleWorkoutExercisesUpdated = () => {
       loadWorkoutExercises();
     };
-    window.addEventListener("workoutExercisesUpdated", handleWorkoutExercisesUpdated);
+    window.addEventListener(
+      "workoutExercisesUpdated",
+      handleWorkoutExercisesUpdated
+    );
 
     // Also check for changes when page becomes visible (for same-tab navigation)
     const handleVisibilityChange = () => {
@@ -181,7 +208,10 @@ export default function QuickStartPage() {
         clearInterval(intervalRef.current);
       }
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("workoutExercisesUpdated", handleWorkoutExercisesUpdated);
+      window.removeEventListener(
+        "workoutExercisesUpdated",
+        handleWorkoutExercisesUpdated
+      );
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
@@ -199,7 +229,7 @@ export default function QuickStartPage() {
   useEffect(() => {
     const handleWindowScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Show duration when scrolling down past 50px, hide when scrolling up
       if (currentScrollY > 50 && currentScrollY > lastScrollY) {
         // Scrolling down
@@ -208,14 +238,14 @@ export default function QuickStartPage() {
         // Scrolling up or at top
         setShowDurationInHeader(false);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
     const handleContainerScroll = (e: Event) => {
       const target = e.currentTarget as HTMLElement;
       const currentScrollY = target.scrollTop;
-      
+
       // Show duration when scrolling down past 50px, hide when scrolling up
       if (currentScrollY > 50 && currentScrollY > lastScrollY) {
         // Scrolling down
@@ -224,19 +254,22 @@ export default function QuickStartPage() {
         // Scrolling up or at top
         setShowDurationInHeader(false);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
     // Listen to window scroll
     window.addEventListener("scroll", handleWindowScroll, { passive: true });
-    
+
     // Also listen to scroll events on scrollable containers (for overflow-y-auto divs)
     // Query for containers each time to catch dynamically created ones
     const attachContainerListeners = () => {
-      const scrollableContainers = document.querySelectorAll('.overflow-y-auto');
-      scrollableContainers.forEach(container => {
-        container.addEventListener("scroll", handleContainerScroll, { passive: true });
+      const scrollableContainers =
+        document.querySelectorAll(".overflow-y-auto");
+      scrollableContainers.forEach((container) => {
+        container.addEventListener("scroll", handleContainerScroll, {
+          passive: true,
+        });
       });
       return scrollableContainers;
     };
@@ -245,7 +278,7 @@ export default function QuickStartPage() {
 
     return () => {
       window.removeEventListener("scroll", handleWindowScroll);
-      scrollableContainers.forEach(container => {
+      scrollableContainers.forEach((container) => {
         container.removeEventListener("scroll", handleContainerScroll);
       });
     };
@@ -258,19 +291,19 @@ export default function QuickStartPage() {
       setShowFinishConfirmationModal(true);
       return;
     }
-    
+
     // Check if exercises exist but have no set values (all sets have kg: 0 and reps: 0)
-    const hasValidSets = workoutExercises.some(exercise => {
+    const hasValidSets = workoutExercises.some((exercise) => {
       const sets = exerciseSets[exercise._id] || [];
-      return sets.some(set => set.kg > 0 || set.reps > 0);
+      return sets.some((set) => set.kg > 0 || set.reps > 0);
     });
-    
+
     if (!hasValidSets) {
       setFinishModalMessage("Your workout has no set values");
       setShowFinishConfirmationModal(true);
       return;
     }
-    
+
     // If exercises exist and have valid sets, proceed with finishing workout
     finishWorkout();
   };
@@ -279,12 +312,12 @@ export default function QuickStartPage() {
     console.log("Finish workout");
     // Reset duration to 0
     setDuration(0);
-    
+
     // Clear timer interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Clear workout in progress flag, start time, and superset groups when finished
     localStorage.removeItem("workoutInProgress");
     localStorage.removeItem("workoutStartTime");
@@ -315,18 +348,18 @@ export default function QuickStartPage() {
     console.log("Discard Workout clicked");
     // Reset duration to 0
     setDuration(0);
-    
+
     // Clear timer interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Clear workout in progress flag, start time, exercises, and superset groups
     localStorage.removeItem("workoutInProgress");
     localStorage.removeItem("workoutStartTime");
     localStorage.removeItem("workoutExercises");
     localStorage.removeItem("workoutSupersetGroups");
-    
+
     setWorkoutExercises([]);
     setSupersetGroups([]);
     setShowDiscardDialog(false);
@@ -359,16 +392,16 @@ export default function QuickStartPage() {
   // Calculate workout progress based on completed sets
   const calculateWorkoutProgress = () => {
     if (workoutExercises.length === 0) return 0;
-    
+
     let totalSets = 0;
     let completedSets = 0;
-    
-    workoutExercises.forEach(exercise => {
+
+    workoutExercises.forEach((exercise) => {
       const sets = exerciseSets[exercise._id] || [];
       totalSets += sets.length;
-      completedSets += sets.filter(set => set.completed).length;
+      completedSets += sets.filter((set) => set.completed).length;
     });
-    
+
     if (totalSets === 0) return 0;
     return (completedSets / totalSets) * 100;
   };
@@ -394,7 +427,13 @@ export default function QuickStartPage() {
 
             {/* Center: Title */}
             <h1 className="text-lg font-regular">
-              {showDurationInHeader ? <span className="text-blue-500">{formatDuration(duration)}</span> : "Log Workout"}
+              {showDurationInHeader ? (
+                <span className="text-blue-500">
+                  {formatDuration(duration)}
+                </span>
+              ) : (
+                "Log Workout"
+              )}
             </h1>
           </div>
 
@@ -419,7 +458,7 @@ export default function QuickStartPage() {
         {/* Progress Bar */}
         {workoutExercises.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-            <div 
+            <div
               className="h-full bg-blue-500 transition-all duration-300 ease-out"
               style={{ width: `${workoutProgress}%` }}
             />
@@ -434,7 +473,9 @@ export default function QuickStartPage() {
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Duration</p>
-          <p className="text-xl font-bold text-blue-500">{formatDuration(duration)}</p>
+          <p className="text-xl font-bold text-blue-500">
+            {formatDuration(duration)}
+          </p>
         </button>
         <button
           onClick={handleVolumeClick}
@@ -495,17 +536,27 @@ export default function QuickStartPage() {
           </div>
         </>
       ) : (
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             {workoutExercises.map((exercise) => (
-              <WorkoutExerciseCard 
-                key={exercise._id} 
+              <WorkoutExerciseCard
+                key={exercise._id}
                 exercise={exercise}
-                sets={exerciseSets[exercise._id] || [{ setNumber: 1, previous: "-", kg: 0, reps: 0, completed: false }]}
+                sets={
+                  exerciseSets[exercise._id] || [
+                    {
+                      setNumber: 1,
+                      previous: "-",
+                      kg: 0,
+                      reps: 0,
+                      completed: false,
+                    },
+                  ]
+                }
                 onSetsChange={(sets) => {
-                  setExerciseSets(prev => ({
+                  setExerciseSets((prev) => ({
                     ...prev,
-                    [exercise._id]: sets
+                    [exercise._id]: sets,
                   }));
                 }}
                 onMenuClick={() => setSelectedExerciseForMenu(exercise)}
@@ -576,7 +627,10 @@ export default function QuickStartPage() {
       </Dialog>
 
       {/* Timer Modal */}
-      <TimerModal open={showTimerModal} onClose={() => setShowTimerModal(false)} />
+      <TimerModal
+        open={showTimerModal}
+        onClose={() => setShowTimerModal(false)}
+      />
 
       {/* Finish Workout Confirmation Modal */}
       <FinishWorkoutConfirmationModal
@@ -590,7 +644,11 @@ export default function QuickStartPage() {
         open={selectedExerciseForMenu !== null && !showSupersetModal}
         onClose={() => setSelectedExerciseForMenu(null)}
         exercise={selectedExerciseForMenu}
-        isInSuperset={selectedExerciseForMenu ? isExerciseInSuperset(selectedExerciseForMenu._id) : false}
+        isInSuperset={
+          selectedExerciseForMenu
+            ? isExerciseInSuperset(selectedExerciseForMenu._id)
+            : false
+        }
         onReorder={() => {
           setSelectedExerciseForMenu(null);
           router.push("/workout/quick-start/reorder-exercises");
@@ -598,7 +656,10 @@ export default function QuickStartPage() {
         onReplace={() => {
           if (selectedExerciseForMenu) {
             // Store the exercise ID to replace in sessionStorage
-            sessionStorage.setItem("replaceExerciseId", selectedExerciseForMenu._id);
+            sessionStorage.setItem(
+              "replaceExerciseId",
+              selectedExerciseForMenu._id
+            );
             setSelectedExerciseForMenu(null);
             router.push("/workout/quick-start/add-exercise?mode=replace");
           }
@@ -612,9 +673,11 @@ export default function QuickStartPage() {
           if (selectedExerciseForMenu) {
             // Remove the entire superset group that contains this exercise
             // This removes badges from all exercises in that superset
-            setSupersetGroups(prev => {
-              const updatedGroups = prev.filter(group => !group.has(selectedExerciseForMenu._id));
-              
+            setSupersetGroups((prev) => {
+              const updatedGroups = prev.filter(
+                (group) => !group.has(selectedExerciseForMenu._id)
+              );
+
               saveSupersetGroups(updatedGroups);
               return updatedGroups;
             });
@@ -623,21 +686,23 @@ export default function QuickStartPage() {
         }}
         onRemove={() => {
           if (selectedExerciseForMenu) {
-            setWorkoutExercises(prev => prev.filter(ex => ex._id !== selectedExerciseForMenu._id));
-            setExerciseSets(prev => {
+            setWorkoutExercises((prev) =>
+              prev.filter((ex) => ex._id !== selectedExerciseForMenu._id)
+            );
+            setExerciseSets((prev) => {
               const newSets = { ...prev };
               delete newSets[selectedExerciseForMenu._id];
               return newSets;
             });
             // Remove from superset groups if present
-            setSupersetGroups(prev => {
+            setSupersetGroups((prev) => {
               const newGroups = prev
-                .map(group => {
+                .map((group) => {
                   const newGroup = new Set(group);
                   newGroup.delete(selectedExerciseForMenu._id);
                   return newGroup;
                 })
-                .filter(group => group.size > 0);
+                .filter((group) => group.size > 0);
               saveSupersetGroups(newGroups);
               return newGroups;
             });
@@ -658,23 +723,25 @@ export default function QuickStartPage() {
         onConfirm={(selectedExerciseIds) => {
           // Create a new superset group with the selected exercises
           const newGroup = new Set(selectedExerciseIds);
-          
+
           // Remove exercises from existing groups if they're being added to a new group
-          setSupersetGroups(prev => {
+          setSupersetGroups((prev) => {
             // First, remove all selected exercises from existing groups
-            const updatedGroups = prev.map(group => {
-              const updatedGroup = new Set(group);
-              selectedExerciseIds.forEach(id => {
-                updatedGroup.delete(id);
-              });
-              return updatedGroup;
-            }).filter(group => group.size > 0);
+            const updatedGroups = prev
+              .map((group) => {
+                const updatedGroup = new Set(group);
+                selectedExerciseIds.forEach((id) => {
+                  updatedGroup.delete(id);
+                });
+                return updatedGroup;
+              })
+              .filter((group) => group.size > 0);
 
             // Add the new group (only if it has more than one exercise)
             if (newGroup.size > 1) {
               updatedGroups.push(newGroup);
             }
-            
+
             // Save to localStorage
             saveSupersetGroups(updatedGroups);
             return updatedGroups;
@@ -694,21 +761,34 @@ interface WorkoutExerciseCardProps {
   isInSuperset?: boolean;
 }
 
-function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSuperset = false }: WorkoutExerciseCardProps) {
+function WorkoutExerciseCard({
+  exercise,
+  sets,
+  onSetsChange,
+  onMenuClick,
+  isInSuperset = false,
+}: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   const [restTimerEnabled, setRestTimerEnabled] = useState(false);
 
   const handleAddSet = () => {
-    onSetsChange([...sets, { 
-      setNumber: sets.length + 1, 
-      previous: "-", 
-      kg: 0, 
-      reps: 0, 
-      completed: false 
-    }]);
+    onSetsChange([
+      ...sets,
+      {
+        setNumber: sets.length + 1,
+        previous: "-",
+        kg: 0,
+        reps: 0,
+        completed: false,
+      },
+    ]);
   };
 
-  const handleSetChange = (index: number, field: string, value: string | number | boolean) => {
+  const handleSetChange = (
+    index: number,
+    field: string,
+    value: string | number | boolean
+  ) => {
     const newSets = [...sets];
     newSets[index] = { ...newSets[index], [field]: value };
     onSetsChange(newSets);
@@ -733,42 +813,46 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSu
   return (
     <div className="p-2">
       {/* Exercise Header */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4">
         {/* Exercise Image/Icon */}
-        <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-          {exercise.thumbnailUrl ? (
-            <img
-              src={exercise.thumbnailUrl}
-              alt={exercise.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-              <Dumbbell className="size-5 text-gray-400" />
-            </div>
-          )}
-        </div>
-        
-        {/* Exercise Name */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-blue-600 truncate">
-            {formatExerciseName()}
-          </h3>
-          {/* Superset Badge */}
-          {isInSuperset && (
-            <div className="bg-purple-600 text-white text-[10px] font-semibold text-center py-0.5 px-2 rounded mt-1 inline-block">
-              Superset
-            </div>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+            {exercise.thumbnailUrl ? (
+              <img
+                src={exercise.thumbnailUrl}
+                alt={exercise.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <Dumbbell className="size-5 text-gray-400" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-blue-600 truncate">
+              {formatExerciseName()}
+            </h3>
+          </div>
         </div>
 
         {/* Options Menu */}
-        <button 
+        <button
           onClick={onMenuClick}
-          className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <MoreVertical className="size-5 text-gray-600" />
+          <MoreVertical className="size-7 text-gray-600" />
         </button>
+      </div>
+      {/* Exercise Name */}
+      <div className="flex-1 flex-col min-w-0">
+        {/* Superset Badge */}
+        {isInSuperset && (
+          <div className="bg-violet-600 text-white text-[10px] font-semibold text-center py-0.5 px-2 rounded mt-1 inline-block">
+            Superset
+          </div>
+        )}
       </div>
 
       {/* Notes Section */}
@@ -782,12 +866,14 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSu
       </div>
 
       {/* Rest Timer Section */}
-      <div 
-      className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
-      onClick={() => setRestTimerEnabled(!restTimerEnabled)}
+      <div
+        className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+        onClick={() => setRestTimerEnabled(!restTimerEnabled)}
       >
         <Timer className="size-7 text-blue-600" />
-        <span className="text-lg text-blue-600 font-regular">Rest Timer: OFF</span>
+        <span className="text-lg text-blue-600 font-regular">
+          Rest Timer: OFF
+        </span>
       </div>
 
       {/* Sets Table */}
@@ -808,29 +894,35 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSu
 
         {/* Sets Rows */}
         {sets.map((set, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`grid grid-cols-5 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
-              set.completed ? 'bg-green-100' : ''
+              set.completed ? "bg-green-100" : ""
             }`}
           >
-            <div className={`text-lg font-semibold text-center ${
-              set.completed ? 'text-gray-600' : 'text-gray-700'
-            }`}>
+            <div
+              className={`text-lg font-semibold text-center ${
+                set.completed ? "text-gray-600" : "text-gray-700"
+              }`}
+            >
               {set.setNumber}
             </div>
-            <div className={`text-lg font-semibold text-center ${
-              set.completed ? 'text-gray-500' : 'text-gray-500'
-            }`}>
+            <div
+              className={`text-lg font-semibold text-center ${
+                set.completed ? "text-gray-500" : "text-gray-500"
+              }`}
+            >
               {set.previous}
             </div>
             <div className="flex justify-center">
               <Input
                 type="number"
                 value={set.kg || ""}
-                onChange={(e) => handleSetChange(index, "kg", parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleSetChange(index, "kg", parseInt(e.target.value) || 0)
+                }
                 className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                  set.completed ? 'bg-green-100' : ''
+                  set.completed ? "bg-green-100" : ""
                 }`}
                 placeholder="0"
               />
@@ -839,16 +931,20 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSu
               <Input
                 type="number"
                 value={set.reps || ""}
-                onChange={(e) => handleSetChange(index, "reps", parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleSetChange(index, "reps", parseInt(e.target.value) || 0)
+                }
                 className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                  set.completed ? 'bg-green-100' : ''
+                  set.completed ? "bg-green-100" : ""
                 }`}
                 placeholder="0"
               />
             </div>
             <div className="flex justify-center">
               <button
-                onClick={() => handleSetChange(index, "completed", !set.completed)}
+                onClick={() =>
+                  handleSetChange(index, "completed", !set.completed)
+                }
                 className="cursor-pointer"
               >
                 {set.completed ? (

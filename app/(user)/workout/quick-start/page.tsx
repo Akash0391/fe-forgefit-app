@@ -559,8 +559,12 @@ export default function QuickStartPage() {
           router.push("/workout/quick-start/reorder-exercises");
         }}
         onReplace={() => {
-          console.log("Replace Exercise");
-          setSelectedExerciseForMenu(null);
+          if (selectedExerciseForMenu) {
+            // Store the exercise ID to replace in sessionStorage
+            sessionStorage.setItem("replaceExerciseId", selectedExerciseForMenu._id);
+            setSelectedExerciseForMenu(null);
+            router.push("/workout/quick-start/add-exercise?mode=replace");
+          }
         }}
         onAddToSuperset={() => {
           console.log("Add To Superset");

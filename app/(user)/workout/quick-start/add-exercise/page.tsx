@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, RotateCw, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { exerciseApi, Exercise } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
@@ -11,6 +11,8 @@ import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
 
 export default function AddExercisePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isReplaceMode = searchParams.get("mode") === "replace";
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -91,6 +93,44 @@ export default function AddExercisePage() {
   };
 
   const handleExerciseClick = (exercise: Exercise) => {
+    // If in replace mode, immediately replace and navigate back
+    if (isReplaceMode) {
+      const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
+      
+      if (replaceExerciseId) {
+        // Get existing workout exercises from localStorage
+        const existingExercisesJson = localStorage.getItem("workoutExercises");
+        const existingExercises = existingExercisesJson 
+          ? JSON.parse(existingExercisesJson) 
+          : [];
+        
+        // Find the index of the exercise to replace
+        const replaceIndex = existingExercises.findIndex(
+          (ex: Exercise) => ex._id === replaceExerciseId
+        );
+        
+        if (replaceIndex !== -1) {
+          // Replace the exercise at that index with the selected one
+          const newExercises = [...existingExercises];
+          newExercises[replaceIndex] = exercise;
+          
+          // Save back to localStorage
+          localStorage.setItem("workoutExercises", JSON.stringify(newExercises));
+          
+          // Dispatch a custom event to notify other components
+          window.dispatchEvent(new Event("workoutExercisesUpdated"));
+          
+          // Clear the replace exercise ID from sessionStorage
+          sessionStorage.removeItem("replaceExerciseId");
+          
+          console.log("Replaced exercise:", exercise);
+          router.back();
+          return;
+        }
+      }
+    }
+    
+    // Normal mode: toggle selection
     setSelectedExerciseIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(exercise._id)) {
@@ -121,6 +161,44 @@ export default function AddExercisePage() {
       selectedExerciseIds.has(exercise._id)
     );
     
+    if (isReplaceMode) {
+      // Replace mode: replace the exercise with the selected one
+      const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
+      
+      if (replaceExerciseId && selectedExercises.length > 0) {
+        // Get existing workout exercises from localStorage
+        const existingExercisesJson = localStorage.getItem("workoutExercises");
+        const existingExercises = existingExercisesJson 
+          ? JSON.parse(existingExercisesJson) 
+          : [];
+        
+        // Find the index of the exercise to replace
+        const replaceIndex = existingExercises.findIndex(
+          (ex: Exercise) => ex._id === replaceExerciseId
+        );
+        
+        if (replaceIndex !== -1) {
+          // Replace the exercise at that index with the selected one
+          const newExercises = [...existingExercises];
+          newExercises[replaceIndex] = selectedExercises[0];
+          
+          // Save back to localStorage
+          localStorage.setItem("workoutExercises", JSON.stringify(newExercises));
+          
+          // Dispatch a custom event to notify other components
+          window.dispatchEvent(new Event("workoutExercisesUpdated"));
+          
+          // Clear the replace exercise ID from sessionStorage
+          sessionStorage.removeItem("replaceExerciseId");
+          
+          console.log("Replaced exercise:", selectedExercises[0]);
+          router.back();
+          return;
+        }
+      }
+    }
+    
+    // Normal add mode: add exercises to the workout
     // Get existing workout exercises from localStorage
     const existingExercisesJson = localStorage.getItem("workoutExercises");
     const existingExercises = existingExercisesJson 
@@ -171,7 +249,9 @@ export default function AddExercisePage() {
             </span>
           </Button>
 
-          <h1 className="text-lg font-regular capitalize">add exercise</h1>
+          <h1 className="text-lg font-regular capitalize">
+            {isReplaceMode ? "Replace Exercise" : "add exercise"}
+          </h1>
 
           <Button
             variant="ghost"
@@ -262,8 +342,8 @@ export default function AddExercisePage() {
         </div>
       </div>
 
-      {/* Bottom Button - Appears when exercises are selected */}
-      {selectedExerciseIds.size > 0 && (
+      {/* Bottom Button - Appears when exercises are selected (only in normal add mode) */}
+      {selectedExerciseIds.size > 0 && !isReplaceMode && (
         <div className="flex-shrink-0 p-4 bg-background">
           <Button
             onClick={handleAddExercises}

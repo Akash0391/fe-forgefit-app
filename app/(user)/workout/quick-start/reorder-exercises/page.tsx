@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Dumbbell, Minus, Circle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Exercise } from "@/lib/api";
 
 export default function ReorderExercisesPage() {
+  const router = useRouter();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -70,6 +73,13 @@ export default function ReorderExercisesPage() {
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+  };
+
+  const handleDone = () => {
+    // Ensure current order is saved
+    saveExercises(exercises);
+    // Navigate back
+    router.back();
   };
 
   // Format exercise name with equipment in parentheses if available
@@ -175,6 +185,17 @@ export default function ReorderExercisesPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Done Button - Fixed at Bottom */}
+      <div className="sticky bottom-0 bg-background px-4 py-4">
+        <Button
+          variant="default"
+          onClick={handleDone}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-regular py-8 rounded-[10px]"
+        >
+          Done
+        </Button>
       </div>
     </div>
   );

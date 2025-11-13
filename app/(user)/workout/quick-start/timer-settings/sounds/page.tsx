@@ -9,7 +9,7 @@ export default function SoundsPage() {
   const [timerSound, setTimerSound] = useState("Default");
   const [timerVolume, setTimerVolume] = useState("High");
   const [checkSetVolume, setCheckSetVolume] = useState("High");
-  const [livePRVolume, setLivePRVolume] = useState("High");
+  const [prVolume, setPrVolume] = useState("High");
 
   useEffect(() => {
     // Load saved settings from localStorage
@@ -23,6 +23,16 @@ export default function SoundsPage() {
       if (savedTimerVolume) {
         setTimerVolume(savedTimerVolume);
       }
+
+      const savedCheckSetVolume = localStorage.getItem("checkSetVolume");
+      if (savedCheckSetVolume) {
+        setCheckSetVolume(savedCheckSetVolume);
+      }
+
+      const savedPRVolume = localStorage.getItem("prVolume");
+      if (savedPRVolume) {
+        setPrVolume(savedPRVolume);
+        }
     };
 
     loadSettings();
@@ -101,6 +111,7 @@ export default function SoundsPage() {
             onClick={() => {
               // Navigate to check set volume selection
               console.log("Select check set volume");
+              router.push("/workout/quick-start/timer-settings/sounds/select-check-set");
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors border-b-[0.5px] border-border"
           >
@@ -114,13 +125,13 @@ export default function SoundsPage() {
           <button
             onClick={() => {
               // Navigate to live PR volume selection
-              console.log("Select live PR volume");
+              router.push("/workout/quick-start/timer-settings/sounds/select-pr-volume");
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors"
           >
             <span className="text-lg font-regular text-black">Live Personal Record Volume</span>
             <div className="flex items-center gap-2">
-              <span className="text-lg text-gray-500">{livePRVolume}</span>
+              <span className="text-lg text-gray-500">{prVolume}</span>
               <ChevronRight className="size-5 text-gray-400" />
             </div>
           </button>

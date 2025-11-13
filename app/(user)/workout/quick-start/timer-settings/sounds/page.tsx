@@ -12,20 +12,25 @@ export default function SoundsPage() {
   const [livePRVolume, setLivePRVolume] = useState("High");
 
   useEffect(() => {
-    // Load saved timer sound from localStorage
-    const loadTimerSound = () => {
+    // Load saved settings from localStorage
+    const loadSettings = () => {
       const savedSound = localStorage.getItem("timerSound");
       if (savedSound) {
         setTimerSound(savedSound);
       }
+      
+      const savedTimerVolume = localStorage.getItem("timerVolume");
+      if (savedTimerVolume) {
+        setTimerVolume(savedTimerVolume);
+      }
     };
 
-    loadTimerSound();
+    loadSettings();
 
     // Reload when page becomes visible (when returning from selection page)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        loadTimerSound();
+        loadSettings();
       }
     };
 
@@ -81,8 +86,7 @@ export default function SoundsPage() {
           <h2 className="text-lg font-regular text-gray-400 mb-5 mt-2 px-4">Sounds Volume</h2>
           <button
             onClick={() => {
-              // Navigate to timer volume selection
-              console.log("Select timer volume");
+              router.push("/workout/quick-start/timer-settings/sounds/select-timer-volume");
             }}
             className="w-full flex items-center justify-between px-4 py-6 hover:bg-gray-50 transition-colors border-b-[0.5px] border-border"
           >

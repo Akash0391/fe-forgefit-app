@@ -319,10 +319,29 @@ export default function QuickStartPage() {
     setShowTimerModal(true);
   };
 
+  // Calculate workout progress based on completed sets
+  const calculateWorkoutProgress = () => {
+    if (workoutExercises.length === 0) return 0;
+    
+    let totalSets = 0;
+    let completedSets = 0;
+    
+    workoutExercises.forEach(exercise => {
+      const sets = exerciseSets[exercise._id] || [];
+      totalSets += sets.length;
+      completedSets += sets.filter(set => set.completed).length;
+    });
+    
+    if (totalSets === 0) return 0;
+    return (completedSets / totalSets) * 100;
+  };
+
+  const workoutProgress = calculateWorkoutProgress();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background border-b border-border">
+      <header className="sticky top-0 z-40 bg-background border-b border-border relative">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Left: Back Button */}
           <div className="flex items-center gap-3 flex-row">
@@ -360,6 +379,15 @@ export default function QuickStartPage() {
             </Button>
           </div>
         </div>
+        {/* Progress Bar */}
+        {workoutExercises.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+            <div 
+              className="h-full bg-blue-500 transition-all duration-300 ease-out"
+              style={{ width: `${workoutProgress}%` }}
+            />
+          </div>
+        )}
       </header>
 
       {/* Workout Summary Metrics */}

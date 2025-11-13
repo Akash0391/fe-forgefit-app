@@ -17,6 +17,18 @@ import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
 
+interface SetData {
+  setNumber: number;
+  previous: string;
+  kg: number;
+  reps: number;
+  completed: boolean;
+}
+
+interface ExerciseSets {
+  [exerciseId: string]: SetData[];
+}
+
 export default function QuickStartPage() {
   const router = useRouter();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
@@ -27,6 +39,8 @@ export default function QuickStartPage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [showFinishConfirmationModal, setShowFinishConfirmationModal] = useState(false);
+  const [finishModalMessage, setFinishModalMessage] = useState("Add an exercise");
+  const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -56,6 +70,16 @@ export default function QuickStartPage() {
       try {
         const exercises = JSON.parse(exercisesJson);
         setWorkoutExercises(exercises);
+        // Initialize sets for new exercises
+        setExerciseSets(prev => {
+          const newSets = { ...prev };
+          exercises.forEach((exercise: Exercise) => {
+            if (!newSets[exercise._id]) {
+              newSets[exercise._id] = [{ setNumber: 1, previous: "-", kg: 0, reps: 0, completed: false }];
+            }
+          });
+          return newSets;
+        });
       } catch (error) {
         console.error("Error parsing workout exercises:", error);
         setWorkoutExercises([]);
@@ -197,11 +221,24 @@ export default function QuickStartPage() {
   const handleFinish = () => {
     // Check if there are no exercises added
     if (workoutExercises.length === 0) {
+      setFinishModalMessage("Add an exercise");
       setShowFinishConfirmationModal(true);
       return;
     }
     
-    // If exercises exist, proceed with finishing workout
+    // Check if exercises exist but have no set values (all sets have kg: 0 and reps: 0)
+    const hasValidSets = workoutExercises.some(exercise => {
+      const sets = exerciseSets[exercise._id] || [];
+      return sets.some(set => set.kg > 0 || set.reps > 0);
+    });
+    
+    if (!hasValidSets) {
+      setFinishModalMessage("Your workout has no set values");
+      setShowFinishConfirmationModal(true);
+      return;
+    }
+    
+    // If exercises exist and have valid sets, proceed with finishing workout
     finishWorkout();
   };
 
@@ -393,10 +430,20 @@ export default function QuickStartPage() {
           </div>
         </>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-4">
             {workoutExercises.map((exercise) => (
-              <WorkoutExerciseCard key={exercise._id} exercise={exercise} />
+              <WorkoutExerciseCard 
+                key={exercise._id} 
+                exercise={exercise}
+                sets={exerciseSets[exercise._id] || [{ setNumber: 1, previous: "-", kg: 0, reps: 0, completed: false }]}
+                onSetsChange={(sets) => {
+                  setExerciseSets(prev => ({
+                    ...prev,
+                    [exercise._id]: sets
+                  }));
+                }}
+              />
             ))}
           </div>
 
@@ -468,6 +515,7 @@ export default function QuickStartPage() {
       <FinishWorkoutConfirmationModal
         open={showFinishConfirmationModal}
         onClose={handleCancelFinish}
+        message={finishModalMessage}
       />
     </div>
   );
@@ -476,15 +524,16 @@ export default function QuickStartPage() {
 // Workout Exercise Card Component
 interface WorkoutExerciseCardProps {
   exercise: Exercise;
+  sets: SetData[];
+  onSetsChange: (sets: SetData[]) => void;
 }
 
-function WorkoutExerciseCard({ exercise }: WorkoutExerciseCardProps) {
-  const [sets, setSets] = useState([{ setNumber: 1, previous: "-", kg: 0, reps: 0, completed: false }]);
+function WorkoutExerciseCard({ exercise, sets, onSetsChange }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   const [restTimerEnabled, setRestTimerEnabled] = useState(false);
 
   const handleAddSet = () => {
-    setSets([...sets, { 
+    onSetsChange([...sets, { 
       setNumber: sets.length + 1, 
       previous: "-", 
       kg: 0, 
@@ -496,7 +545,7 @@ function WorkoutExerciseCard({ exercise }: WorkoutExerciseCardProps) {
   const handleSetChange = (index: number, field: string, value: string | number | boolean) => {
     const newSets = [...sets];
     newSets[index] = { ...newSets[index], [field]: value };
-    setSets(newSets);
+    onSetsChange(newSets);
   };
 
   // Format exercise name with equipment in parentheses if available

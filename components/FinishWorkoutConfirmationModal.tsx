@@ -13,11 +13,13 @@ import {
 interface FinishWorkoutConfirmationModalProps {
   open: boolean;
   onClose: () => void;
+  message?: string;
 }
 
 export default function FinishWorkoutConfirmationModal({
   open,
   onClose,
+  message = "Add an exercise",
 }: FinishWorkoutConfirmationModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -25,7 +27,7 @@ export default function FinishWorkoutConfirmationModal({
         <DialogHeader>
           <DialogTitle className="sr-only">Finish Workout</DialogTitle>
           <DialogDescription className="text-center text-lg font-regular mb-4">
-            Add an exercise
+            {message}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col sm:flex-row gap-5">

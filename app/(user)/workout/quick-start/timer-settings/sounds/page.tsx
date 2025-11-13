@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 
@@ -10,6 +10,31 @@ export default function SoundsPage() {
   const [timerVolume, setTimerVolume] = useState("High");
   const [checkSetVolume, setCheckSetVolume] = useState("High");
   const [livePRVolume, setLivePRVolume] = useState("High");
+
+  useEffect(() => {
+    // Load saved timer sound from localStorage
+    const loadTimerSound = () => {
+      const savedSound = localStorage.getItem("timerSound");
+      if (savedSound) {
+        setTimerSound(savedSound);
+      }
+    };
+
+    loadTimerSound();
+
+    // Reload when page becomes visible (when returning from selection page)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadTimerSound();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,8 +64,7 @@ export default function SoundsPage() {
           <h2 className="text-lg font-regular text-gray-400 mb-5 mt-2 px-4">Sound Type</h2>
           <button
             onClick={() => {
-              // Navigate to sound selection page or open modal
-              console.log("Select timer sound");
+              router.push("/workout/quick-start/timer-settings/sounds/select-timer-sound");
             }}
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
           >

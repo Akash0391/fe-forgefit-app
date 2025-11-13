@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
+import AddToSupersetModal from "@/components/AddToSupersetModal";
 
 interface SetData {
   setNumber: number;
@@ -43,6 +44,8 @@ export default function QuickStartPage() {
   const [finishModalMessage, setFinishModalMessage] = useState("Add an exercise");
   const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
   const [selectedExerciseForMenu, setSelectedExerciseForMenu] = useState<Exercise | null>(null);
+  const [showSupersetModal, setShowSupersetModal] = useState(false);
+  const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -91,10 +94,38 @@ export default function QuickStartPage() {
     }
   };
 
+  // Load superset groups from localStorage
+  const loadSupersetGroups = () => {
+    const supersetJson = localStorage.getItem("workoutSupersetGroups");
+    if (supersetJson) {
+      try {
+        const groups = JSON.parse(supersetJson);
+        setSupersetGroups(groups.map((group: string[]) => new Set(group)));
+      } catch (error) {
+        console.error("Error parsing superset groups:", error);
+        setSupersetGroups([]);
+      }
+    }
+  };
+
+  // Save superset groups to localStorage
+  const saveSupersetGroups = (groups: Set<string>[]) => {
+    const groupsArray = groups.map(group => Array.from(group));
+    localStorage.setItem("workoutSupersetGroups", JSON.stringify(groupsArray));
+    setSupersetGroups(groups);
+  };
+
+  // Check if an exercise is in a superset
+  const isExerciseInSuperset = (exerciseId: string): boolean => {
+    return supersetGroups.some(group => group.has(exerciseId));
+  };
+
   // Initialize workout timer and load exercises
   useEffect(() => {
     // Load exercises from localStorage
     loadWorkoutExercises();
+    // Load superset groups from localStorage
+    loadSupersetGroups();
 
     // Check if workout start time exists in localStorage
     const workoutStartTime = localStorage.getItem("workoutStartTime");
@@ -254,9 +285,11 @@ export default function QuickStartPage() {
       clearInterval(intervalRef.current);
     }
     
-    // Clear workout in progress flag and start time when finished
+    // Clear workout in progress flag, start time, and superset groups when finished
     localStorage.removeItem("workoutInProgress");
     localStorage.removeItem("workoutStartTime");
+    localStorage.removeItem("workoutSupersetGroups");
+    setSupersetGroups([]);
     // Add finish workout logic here
   };
 
@@ -288,12 +321,14 @@ export default function QuickStartPage() {
       clearInterval(intervalRef.current);
     }
     
-    // Clear workout in progress flag, start time, and exercises
+    // Clear workout in progress flag, start time, exercises, and superset groups
     localStorage.removeItem("workoutInProgress");
     localStorage.removeItem("workoutStartTime");
     localStorage.removeItem("workoutExercises");
+    localStorage.removeItem("workoutSupersetGroups");
     
     setWorkoutExercises([]);
+    setSupersetGroups([]);
     setShowDiscardDialog(false);
     router.push("/workout");
   };
@@ -474,6 +509,7 @@ export default function QuickStartPage() {
                   }));
                 }}
                 onMenuClick={() => setSelectedExerciseForMenu(exercise)}
+                isInSuperset={isExerciseInSuperset(exercise._id)}
               />
             ))}
           </div>
@@ -551,9 +587,10 @@ export default function QuickStartPage() {
 
       {/* Exercise Options Modal */}
       <ExerciseOptionsModal
-        open={selectedExerciseForMenu !== null}
+        open={selectedExerciseForMenu !== null && !showSupersetModal}
         onClose={() => setSelectedExerciseForMenu(null)}
         exercise={selectedExerciseForMenu}
+        isInSuperset={selectedExerciseForMenu ? isExerciseInSuperset(selectedExerciseForMenu._id) : false}
         onReorder={() => {
           setSelectedExerciseForMenu(null);
           router.push("/workout/quick-start/reorder-exercises");
@@ -567,7 +604,21 @@ export default function QuickStartPage() {
           }
         }}
         onAddToSuperset={() => {
-          console.log("Add To Superset");
+          // Keep the selected exercise and open superset modal
+          // The ExerciseOptionsModal will close automatically due to showSupersetModal being true
+          setShowSupersetModal(true);
+        }}
+        onRemoveFromSuperset={() => {
+          if (selectedExerciseForMenu) {
+            // Remove the entire superset group that contains this exercise
+            // This removes badges from all exercises in that superset
+            setSupersetGroups(prev => {
+              const updatedGroups = prev.filter(group => !group.has(selectedExerciseForMenu._id));
+              
+              saveSupersetGroups(updatedGroups);
+              return updatedGroups;
+            });
+          }
           setSelectedExerciseForMenu(null);
         }}
         onRemove={() => {
@@ -578,8 +629,56 @@ export default function QuickStartPage() {
               delete newSets[selectedExerciseForMenu._id];
               return newSets;
             });
+            // Remove from superset groups if present
+            setSupersetGroups(prev => {
+              const newGroups = prev
+                .map(group => {
+                  const newGroup = new Set(group);
+                  newGroup.delete(selectedExerciseForMenu._id);
+                  return newGroup;
+                })
+                .filter(group => group.size > 0);
+              saveSupersetGroups(newGroups);
+              return newGroups;
+            });
           }
           setSelectedExerciseForMenu(null);
+        }}
+      />
+
+      {/* Add To Superset Modal */}
+      <AddToSupersetModal
+        open={showSupersetModal}
+        onClose={() => {
+          setShowSupersetModal(false);
+          setSelectedExerciseForMenu(null);
+        }}
+        exercises={workoutExercises}
+        currentExercise={selectedExerciseForMenu}
+        onConfirm={(selectedExerciseIds) => {
+          // Create a new superset group with the selected exercises
+          const newGroup = new Set(selectedExerciseIds);
+          
+          // Remove exercises from existing groups if they're being added to a new group
+          setSupersetGroups(prev => {
+            // First, remove all selected exercises from existing groups
+            const updatedGroups = prev.map(group => {
+              const updatedGroup = new Set(group);
+              selectedExerciseIds.forEach(id => {
+                updatedGroup.delete(id);
+              });
+              return updatedGroup;
+            }).filter(group => group.size > 0);
+
+            // Add the new group (only if it has more than one exercise)
+            if (newGroup.size > 1) {
+              updatedGroups.push(newGroup);
+            }
+            
+            // Save to localStorage
+            saveSupersetGroups(updatedGroups);
+            return updatedGroups;
+          });
         }}
       />
     </div>
@@ -592,9 +691,10 @@ interface WorkoutExerciseCardProps {
   sets: SetData[];
   onSetsChange: (sets: SetData[]) => void;
   onMenuClick: () => void;
+  isInSuperset?: boolean;
 }
 
-function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick }: WorkoutExerciseCardProps) {
+function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick, isInSuperset = false }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   const [restTimerEnabled, setRestTimerEnabled] = useState(false);
 
@@ -654,6 +754,12 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick }: Work
           <h3 className="text-lg font-semibold text-blue-600 truncate">
             {formatExerciseName()}
           </h3>
+          {/* Superset Badge */}
+          {isInSuperset && (
+            <div className="bg-purple-600 text-white text-[10px] font-semibold text-center py-0.5 px-2 rounded mt-1 inline-block">
+              Superset
+            </div>
+          )}
         </div>
 
         {/* Options Menu */}

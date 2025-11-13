@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { ArrowUpDown, RefreshCw, Plus, X } from "lucide-react";
+import { ArrowUpDown, RefreshCw, Plus, X, Minus } from "lucide-react";
 import { Exercise } from "@/lib/api";
 
 interface ExerciseOptionsModalProps {
@@ -11,7 +11,9 @@ interface ExerciseOptionsModalProps {
   onReorder: () => void;
   onReplace: () => void;
   onAddToSuperset: () => void;
+  onRemoveFromSuperset: () => void;
   onRemove: () => void;
+  isInSuperset?: boolean;
 }
 
 export default function ExerciseOptionsModal({
@@ -21,7 +23,9 @@ export default function ExerciseOptionsModal({
   onReorder,
   onReplace,
   onAddToSuperset,
+  onRemoveFromSuperset,
   onRemove,
+  isInSuperset = false,
 }: ExerciseOptionsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -74,9 +78,9 @@ export default function ExerciseOptionsModal({
       textColor: "text-gray-900",
     },
     {
-      icon: Plus,
-      label: "Add To Superset",
-      onClick: onAddToSuperset,
+      icon: isInSuperset ? Minus : Plus,
+      label: isInSuperset ? "Remove From Superset" : "Add To Superset",
+      onClick: isInSuperset ? onRemoveFromSuperset : onAddToSuperset,
       textColor: "text-gray-900",
     },
     {
@@ -114,7 +118,11 @@ export default function ExerciseOptionsModal({
                   key={index}
                   onClick={() => {
                     item.onClick();
-                    onClose();
+                    // Only close if it's not "Add To Superset" - that modal will handle closing
+                    // "Remove From Superset" closes immediately
+                    if (item.label !== "Add To Superset") {
+                      onClose();
+                    }
                   }}
                   className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
                     !isLast ? "border-b border-gray-100" : ""

@@ -15,6 +15,7 @@ import { useEffect, useState, useRef } from "react";
 import { Exercise } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
+import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
 
 export default function QuickStartPage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function QuickStartPage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showTimerModal, setShowTimerModal] = useState(false);
+  const [showFinishConfirmationModal, setShowFinishConfirmationModal] = useState(false);
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -193,6 +195,17 @@ export default function QuickStartPage() {
   }, [lastScrollY, workoutExercises.length]);
 
   const handleFinish = () => {
+    // Check if there are no exercises added
+    if (workoutExercises.length === 0) {
+      setShowFinishConfirmationModal(true);
+      return;
+    }
+    
+    // If exercises exist, proceed with finishing workout
+    finishWorkout();
+  };
+
+  const finishWorkout = () => {
     console.log("Finish workout");
     // Reset duration to 0
     setDuration(0);
@@ -206,6 +219,10 @@ export default function QuickStartPage() {
     localStorage.removeItem("workoutInProgress");
     localStorage.removeItem("workoutStartTime");
     // Add finish workout logic here
+  };
+
+  const handleCancelFinish = () => {
+    setShowFinishConfirmationModal(false);
   };
 
   const handleAddExercise = () => {
@@ -446,6 +463,12 @@ export default function QuickStartPage() {
 
       {/* Timer Modal */}
       <TimerModal open={showTimerModal} onClose={() => setShowTimerModal(false)} />
+
+      {/* Finish Workout Confirmation Modal */}
+      <FinishWorkoutConfirmationModal
+        open={showFinishConfirmationModal}
+        onClose={handleCancelFinish}
+      />
     </div>
   );
 }

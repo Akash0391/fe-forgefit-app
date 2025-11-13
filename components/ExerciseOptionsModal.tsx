@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ArrowUpDown, RefreshCw, Plus, X } from "lucide-react";
 import { Exercise } from "@/lib/api";
 
@@ -24,16 +24,41 @@ export default function ExerciseOptionsModal({
   onRemove,
 }: ExerciseOptionsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (open) {
-      setIsVisible(true);
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // Mount the component first
+      setShouldRender(true);
+      // Small delay to ensure DOM is ready before starting transition
+      // This allows the closing state to be rendered first, then transition to open
+      setTimeout(() => {
+        setIsVisible(true);
+      }, 10);
     } else {
+      // Start closing transition immediately
       setIsVisible(false);
+      // Delay unmounting to allow transition to complete
+      timeoutRef.current = setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match the transition duration
     }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [open]);
 
-  if (!open && !isVisible) return null;
+  if (!shouldRender) return null;
 
   const menuItems = [
     {
@@ -74,8 +99,8 @@ export default function ExerciseOptionsModal({
       />
       {/* Modal Content - Bottom Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-transform duration-300 ease-in-out min-h-[40vh] ${
-          isVisible ? "translate-y-0" : "translate-y-full"
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
+          isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >

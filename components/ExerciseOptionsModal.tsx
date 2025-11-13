@@ -1,0 +1,111 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { ArrowUpDown, RefreshCw, Plus, X } from "lucide-react";
+import { Exercise } from "@/lib/api";
+
+interface ExerciseOptionsModalProps {
+  open: boolean;
+  onClose: () => void;
+  exercise: Exercise | null;
+  onReorder: () => void;
+  onReplace: () => void;
+  onAddToSuperset: () => void;
+  onRemove: () => void;
+}
+
+export default function ExerciseOptionsModal({
+  open,
+  onClose,
+  exercise,
+  onReorder,
+  onReplace,
+  onAddToSuperset,
+  onRemove,
+}: ExerciseOptionsModalProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+  }, [open]);
+
+  if (!open && !isVisible) return null;
+
+  const menuItems = [
+    {
+      icon: ArrowUpDown,
+      label: "Reorder Exercises",
+      onClick: onReorder,
+      textColor: "text-gray-900",
+    },
+    {
+      icon: RefreshCw,
+      label: "Replace Exercise",
+      onClick: onReplace,
+      textColor: "text-gray-900",
+    },
+    {
+      icon: Plus,
+      label: "Add To Superset",
+      onClick: onAddToSuperset,
+      textColor: "text-gray-900",
+    },
+    {
+      icon: X,
+      label: "Remove Exercise",
+      onClick: onRemove,
+      textColor: "text-red-500",
+    },
+  ];
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={onClose}
+        style={{ pointerEvents: isVisible ? "auto" : "none" }}
+      />
+      {/* Modal Content - Bottom Sheet */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-transform duration-300 ease-in-out min-h-[40vh] ${
+          isVisible ? "translate-y-0" : "translate-y-full"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-10 pb-8">
+          <div className="bg-white rounded-[10px] overflow-hidden">
+            {menuItems.map((item, index) => {
+              const Icon = item.icon;
+              const isLast = index === menuItems.length - 1;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    item.onClick();
+                    onClose();
+                  }}
+                  className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
+                    !isLast ? "border-b border-gray-100" : ""
+                  } hover:bg-gray-50 active:bg-gray-100`}
+                >
+                  <Icon className={`size-7 ${item.textColor} flex-shrink-0`} />
+                  <span className={`text-lg font-regular ${item.textColor}`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+

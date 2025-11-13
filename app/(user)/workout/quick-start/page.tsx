@@ -16,6 +16,7 @@ import { Exercise } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
+import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 
 interface SetData {
   setNumber: number;
@@ -41,6 +42,7 @@ export default function QuickStartPage() {
   const [showFinishConfirmationModal, setShowFinishConfirmationModal] = useState(false);
   const [finishModalMessage, setFinishModalMessage] = useState("Add an exercise");
   const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
+  const [selectedExerciseForMenu, setSelectedExerciseForMenu] = useState<Exercise | null>(null);
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -471,6 +473,7 @@ export default function QuickStartPage() {
                     [exercise._id]: sets
                   }));
                 }}
+                onMenuClick={() => setSelectedExerciseForMenu(exercise)}
               />
             ))}
           </div>
@@ -545,6 +548,36 @@ export default function QuickStartPage() {
         onClose={handleCancelFinish}
         message={finishModalMessage}
       />
+
+      {/* Exercise Options Modal */}
+      <ExerciseOptionsModal
+        open={selectedExerciseForMenu !== null}
+        onClose={() => setSelectedExerciseForMenu(null)}
+        exercise={selectedExerciseForMenu}
+        onReorder={() => {
+          console.log("Reorder Exercises");
+          setSelectedExerciseForMenu(null);
+        }}
+        onReplace={() => {
+          console.log("Replace Exercise");
+          setSelectedExerciseForMenu(null);
+        }}
+        onAddToSuperset={() => {
+          console.log("Add To Superset");
+          setSelectedExerciseForMenu(null);
+        }}
+        onRemove={() => {
+          if (selectedExerciseForMenu) {
+            setWorkoutExercises(prev => prev.filter(ex => ex._id !== selectedExerciseForMenu._id));
+            setExerciseSets(prev => {
+              const newSets = { ...prev };
+              delete newSets[selectedExerciseForMenu._id];
+              return newSets;
+            });
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -554,9 +587,10 @@ interface WorkoutExerciseCardProps {
   exercise: Exercise;
   sets: SetData[];
   onSetsChange: (sets: SetData[]) => void;
+  onMenuClick: () => void;
 }
 
-function WorkoutExerciseCard({ exercise, sets, onSetsChange }: WorkoutExerciseCardProps) {
+function WorkoutExerciseCard({ exercise, sets, onSetsChange, onMenuClick }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   const [restTimerEnabled, setRestTimerEnabled] = useState(false);
 
@@ -619,7 +653,10 @@ function WorkoutExerciseCard({ exercise, sets, onSetsChange }: WorkoutExerciseCa
         </div>
 
         {/* Options Menu */}
-        <button className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button 
+          onClick={onMenuClick}
+          className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
           <MoreVertical className="size-5 text-gray-600" />
         </button>
       </div>

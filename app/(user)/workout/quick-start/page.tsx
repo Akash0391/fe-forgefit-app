@@ -55,11 +55,11 @@ export default function QuickStartPage() {
     const secs = seconds % 60;
     
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return `${hours}h ${minutes}min ${secs}s`;
     }
     
     if (minutes > 0) {
-      return secs > 0 ? `${minutes}m ${secs}s` : `${minutes}m`;
+      return secs > 0 ? `${minutes}min ${secs}s` : `${minutes}min`;
     }
     
     return `${seconds}s`;

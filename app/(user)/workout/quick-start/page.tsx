@@ -555,8 +555,8 @@ export default function QuickStartPage() {
         onClose={() => setSelectedExerciseForMenu(null)}
         exercise={selectedExerciseForMenu}
         onReorder={() => {
-          console.log("Reorder Exercises");
           setSelectedExerciseForMenu(null);
+          router.push("/workout/quick-start/reorder-exercises");
         }}
         onReplace={() => {
           console.log("Replace Exercise");

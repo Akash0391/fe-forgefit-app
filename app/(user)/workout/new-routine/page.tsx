@@ -53,7 +53,7 @@ export default function NewRoutinePage() {
         <Input
           type="text"
           placeholder="Routine title"
-          className="text-xl p-8 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-lg"
+          className="text-xl p-4 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-xl"
         />
       </div>
 

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronDown, RotateCw, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { exerciseApi, Exercise } from "@/lib/api";
+import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
 import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
 
@@ -155,78 +155,121 @@ export default function AddExercisePage() {
     window.location.reload();
   };
 
-  const handleAddExercises = () => {
+  const handleAddExercises = async () => {
     // Get selected exercises from the exercises list
     const selectedExercises = exercises.filter(exercise => 
       selectedExerciseIds.has(exercise._id)
     );
     
-    if (isReplaceMode) {
-      // Replace mode: replace the exercise with the selected one
-      const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
-      
-      if (replaceExerciseId && selectedExercises.length > 0) {
-        // Get existing workout exercises from localStorage
-        const existingExercisesJson = localStorage.getItem("workoutExercises");
-        const existingExercises = existingExercisesJson 
-          ? JSON.parse(existingExercisesJson) 
-          : [];
-        
-        // Find the index of the exercise to replace
-        const replaceIndex = existingExercises.findIndex(
-          (ex: Exercise) => ex._id === replaceExerciseId
+    if (selectedExercises.length === 0) {
+      return;
+    }
+
+    try {
+      // Get current workout from API
+      const workoutResponse = await workoutApi.getActive();
+      let currentExercises: Exercise[] = [];
+      let currentSupersetGroups: string[][] = [];
+      let currentDuration = 0;
+      let startTime: number | undefined = undefined;
+
+      if (workoutResponse.data) {
+        // Extract exercises from workout
+        currentExercises = workoutResponse.data.exercises.map((ex) => {
+          const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+          return exercise as Exercise;
+        });
+        currentSupersetGroups = workoutResponse.data.supersetGroups.map(group => 
+          group.exerciseIds.map(id => typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string)
         );
-        
-        if (replaceIndex !== -1) {
-          // Replace the exercise at that index with the selected one
-          const newExercises = [...existingExercises];
-          newExercises[replaceIndex] = selectedExercises[0];
-          
-          // Save back to localStorage
-          localStorage.setItem("workoutExercises", JSON.stringify(newExercises));
-          
-          // Dispatch a custom event to notify other components
-          window.dispatchEvent(new Event("workoutExercisesUpdated"));
-          
-          // Clear the replace exercise ID from sessionStorage
-          sessionStorage.removeItem("replaceExerciseId");
-          
-          console.log("Replaced exercise:", selectedExercises[0]);
-          router.back();
-          return;
+        currentDuration = workoutResponse.data.duration || 0;
+        if (workoutResponse.data.startTime) {
+          startTime = new Date(workoutResponse.data.startTime).getTime();
+        }
+      } else {
+        // No active workout - get startTime from localStorage if available
+        const storedStartTime = localStorage.getItem("workoutStartTime");
+        if (storedStartTime) {
+          startTime = parseInt(storedStartTime, 10);
+        } else {
+          // Create new startTime if none exists
+          startTime = Date.now();
+          localStorage.setItem("workoutStartTime", startTime.toString());
         }
       }
+
+      if (isReplaceMode) {
+        // Replace mode: replace the exercise with the selected one
+        const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
+        
+        if (replaceExerciseId && selectedExercises.length > 0) {
+          // Find the index of the exercise to replace
+          const replaceIndex = currentExercises.findIndex(
+            (ex: Exercise) => ex._id === replaceExerciseId
+          );
+          
+          if (replaceIndex !== -1) {
+            // Replace the exercise at that index with the selected one
+            const newExercises = [...currentExercises];
+            newExercises[replaceIndex] = selectedExercises[0];
+            
+            // Save to API
+            await workoutApi.save({
+              exercises: newExercises,
+              supersetGroups: currentSupersetGroups,
+              duration: currentDuration,
+              startTime: startTime,
+            });
+            
+            // Dispatch a custom event to notify other components
+            window.dispatchEvent(new Event("workoutExercisesUpdated"));
+            
+            // Clear the replace exercise ID from sessionStorage
+            sessionStorage.removeItem("replaceExerciseId");
+            
+            router.back();
+            return;
+          }
+        }
+      }
+      
+      // Normal add mode: add exercises to the workout
+      // Combine existing exercises with new ones (avoid duplicates)
+      const exerciseMap = new Map<string, Exercise>();
+      
+      // Add existing exercises
+      currentExercises.forEach((ex: Exercise) => {
+        exerciseMap.set(ex._id, ex);
+      });
+      
+      // Add new exercises (will overwrite if duplicate, but that's fine)
+      selectedExercises.forEach((ex: Exercise) => {
+        exerciseMap.set(ex._id, ex);
+      });
+      
+      // Convert to array
+      const allExercises = Array.from(exerciseMap.values());
+      
+      console.log("Saving exercises:", allExercises.length, "exercises");
+      console.log("StartTime:", startTime);
+      
+      // Save to API
+      const saveResponse = await workoutApi.save({
+        exercises: allExercises,
+        supersetGroups: currentSupersetGroups,
+        duration: currentDuration,
+        startTime: startTime,
+      });
+      
+      console.log("Exercises saved successfully:", saveResponse);
+      
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(new Event("workoutExercisesUpdated"));
+      
+      router.back();
+    } catch (error) {
+      console.error("Error adding exercises to workout:", error);
     }
-    
-    // Normal add mode: add exercises to the workout
-    // Get existing workout exercises from localStorage
-    const existingExercisesJson = localStorage.getItem("workoutExercises");
-    const existingExercises = existingExercisesJson 
-      ? JSON.parse(existingExercisesJson) 
-      : [];
-    
-    // Combine existing exercises with new ones (avoid duplicates)
-    const exerciseMap = new Map();
-    
-    // Add existing exercises
-    existingExercises.forEach((ex: Exercise) => {
-      exerciseMap.set(ex._id, ex);
-    });
-    
-    // Add new exercises (will overwrite if duplicate, but that's fine)
-    selectedExercises.forEach((ex: Exercise) => {
-      exerciseMap.set(ex._id, ex);
-    });
-    
-    // Save back to localStorage
-    const allExercises = Array.from(exerciseMap.values());
-    localStorage.setItem("workoutExercises", JSON.stringify(allExercises));
-    
-    // Dispatch a custom event to notify other components
-    window.dispatchEvent(new Event("workoutExercisesUpdated"));
-    
-    console.log("Added exercises to workout:", selectedExercises);
-    router.back();
   };
 
   const filteredExercises = exercises.filter(exercise =>

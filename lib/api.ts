@@ -148,3 +148,75 @@ export const exerciseApi = {
   }>(`/api/exercises/${id}`),
 };
 
+// Workout type definitions
+export interface SetData {
+  setNumber: number;
+  previous: string;
+  kg: number;
+  reps: number;
+  completed: boolean;
+}
+
+export interface WorkoutExercise {
+  exerciseId: string | Exercise;
+  order: number;
+  notes: string;
+  sets: SetData[];
+}
+
+export interface SupersetGroup {
+  exerciseIds: string[];
+}
+
+export interface Workout {
+  _id: string;
+  userId: string;
+  name: string;
+  exercises: WorkoutExercise[];
+  supersetGroups: SupersetGroup[];
+  duration: number;
+  startTime?: string;
+  endTime?: string;
+  status: 'in-progress' | 'completed' | 'discarded';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Workout-related API methods
+export const workoutApi = {
+  getActive: () => apiClient.get<{
+    success: boolean;
+    data: Workout | null;
+  }>('/api/workouts/active'),
+
+  save: (data: {
+    exercises: Exercise[];
+    supersetGroups: string[][];
+    duration: number;
+    startTime?: number;
+  }) => apiClient.post<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/save', data),
+
+  updateSets: (exerciseId: string, sets: SetData[]) => apiClient.put<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/sets', { exerciseId, sets }),
+
+  finish: () => apiClient.post<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/finish'),
+
+  discard: () => apiClient.post<{
+    success: boolean;
+    message: string;
+  }>('/api/workouts/discard'),
+
+  getHistory: () => apiClient.get<{
+    success: boolean;
+    data: Workout[];
+  }>('/api/workouts/history'),
+};
+

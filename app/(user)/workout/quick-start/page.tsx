@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { Exercise } from "@/lib/api";
+import { Exercise, workoutApi, SetData as ApiSetData } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
@@ -83,59 +83,141 @@ export default function QuickStartPage() {
     return `${seconds}s`;
   };
 
-  // Load workout exercises from localStorage
-  const loadWorkoutExercises = () => {
-    const exercisesJson = localStorage.getItem("workoutExercises");
-    if (exercisesJson) {
-      try {
-        const exercises = JSON.parse(exercisesJson);
-        setWorkoutExercises(exercises);
-        // Initialize sets for new exercises
-        setExerciseSets((prev) => {
-          const newSets = { ...prev };
-          exercises.forEach((exercise: Exercise) => {
-            if (!newSets[exercise._id]) {
-              newSets[exercise._id] = [
-                {
-                  setNumber: 1,
-                  previous: "-",
-                  kg: 0,
-                  reps: 0,
-                  completed: false,
-                },
-              ];
-            }
-          });
-          return newSets;
+  // Load workout from API
+  const loadWorkout = async () => {
+    try {
+      const response = await workoutApi.getActive();
+      if (response.data) {
+        const workout = response.data;
+        
+        // Extract exercises
+        const exercises = workout.exercises.map((ex) => {
+          const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+          return exercise as Exercise;
         });
-      } catch (error) {
-        console.error("Error parsing workout exercises:", error);
+        setWorkoutExercises(exercises);
+        
+        // Extract sets
+        const sets: ExerciseSets = {};
+        workout.exercises.forEach((ex) => {
+          const exerciseId = typeof ex.exerciseId === 'object' ? ex.exerciseId._id : ex.exerciseId;
+          // Ensure at least 1 default set is shown
+          if (!ex.sets || ex.sets.length === 0) {
+            sets[exerciseId] = [{
+              setNumber: 1,
+              previous: "-",
+              kg: 0,
+              reps: 0,
+              completed: false,
+            }];
+          } else {
+            sets[exerciseId] = ex.sets;
+          }
+        });
+        setExerciseSets(sets);
+        
+        // Extract superset groups
+        const groups = workout.supersetGroups.map((group) => 
+          new Set(group.exerciseIds.map((id: string | Exercise) => 
+            typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
+          ))
+        );
+        setSupersetGroups(groups);
+        
+        // Set duration and start time
+        if (workout.startTime) {
+          const startTime = new Date(workout.startTime).getTime();
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          setDuration(elapsed);
+          localStorage.setItem("workoutStartTime", startTime.toString());
+        } else {
+          // Initialize start time if not set
+          const startTime = Date.now();
+          localStorage.setItem("workoutStartTime", startTime.toString());
+          setDuration(0);
+          // Save workout with start time (don't call saveWorkout here to avoid loop)
+          const supersetGroupsArray = groups.map((group) => Array.from(group));
+          workoutApi.save({
+            exercises: exercises,
+            supersetGroups: supersetGroupsArray,
+            duration: 0,
+            startTime: startTime,
+          }).catch(err => console.error("Error saving start time:", err));
+        }
+      } else {
+        // No active workout - create one and start timer
         setWorkoutExercises([]);
-      }
-    } else {
-      setWorkoutExercises([]);
-    }
-  };
-
-  // Load superset groups from localStorage
-  const loadSupersetGroups = () => {
-    const supersetJson = localStorage.getItem("workoutSupersetGroups");
-    if (supersetJson) {
-      try {
-        const groups = JSON.parse(supersetJson);
-        setSupersetGroups(groups.map((group: string[]) => new Set(group)));
-      } catch (error) {
-        console.error("Error parsing superset groups:", error);
+        setExerciseSets({});
         setSupersetGroups([]);
+        
+        // Initialize start time and create empty workout
+        const startTime = Date.now();
+        localStorage.setItem("workoutStartTime", startTime.toString());
+        setDuration(0);
+        
+        // Create empty workout on backend with start time
+        workoutApi.save({
+          exercises: [],
+          supersetGroups: [],
+          duration: 0,
+          startTime: startTime,
+        }).catch(err => console.error("Error creating empty workout:", err));
+      }
+    } catch (error) {
+      console.error("Error loading workout:", error);
+      setWorkoutExercises([]);
+      setExerciseSets({});
+      setSupersetGroups([]);
+      
+      // Even on error, start timer if not already started
+      if (!localStorage.getItem("workoutStartTime")) {
+        const startTime = Date.now();
+        localStorage.setItem("workoutStartTime", startTime.toString());
+        setDuration(0);
+        
+        // Try to create empty workout on backend
+        workoutApi.save({
+          exercises: [],
+          supersetGroups: [],
+          duration: 0,
+          startTime: startTime,
+        }).catch(err => console.error("Error creating empty workout:", err));
       }
     }
   };
 
-  // Save superset groups to localStorage
-  const saveSupersetGroups = (groups: Set<string>[]) => {
-    const groupsArray = groups.map((group) => Array.from(group));
-    localStorage.setItem("workoutSupersetGroups", JSON.stringify(groupsArray));
-    setSupersetGroups(groups);
+  // Save workout to API
+  const saveWorkout = async () => {
+    try {
+      const supersetGroupsArray = supersetGroups.map((group) => Array.from(group));
+      const startTime = localStorage.getItem("workoutStartTime");
+      
+      // Prepare exercises with sets, ensuring at least 1 default set per exercise
+      const exercisesWithSets = workoutExercises.map((exercise) => {
+        const sets = exerciseSets[exercise._id];
+        // Ensure at least 1 default set
+        const defaultSet = [{
+          setNumber: 1,
+          previous: "-",
+          kg: 0,
+          reps: 0,
+          completed: false,
+        }];
+        return {
+          ...exercise,
+          sets: sets && sets.length > 0 ? sets : defaultSet,
+        };
+      });
+      
+      await workoutApi.save({
+        exercises: exercisesWithSets,
+        supersetGroups: supersetGroupsArray,
+        duration: duration,
+        startTime: startTime ? parseInt(startTime, 10) : undefined,
+      });
+    } catch (error) {
+      console.error("Error saving workout:", error);
+    }
   };
 
   // Check if an exercise is in a superset
@@ -145,27 +227,8 @@ export default function QuickStartPage() {
 
   // Initialize workout timer and load exercises
   useEffect(() => {
-    // Load exercises from localStorage
-    loadWorkoutExercises();
-    // Load superset groups from localStorage
-    loadSupersetGroups();
-
-    // Check if workout start time exists in localStorage
-    const workoutStartTime = localStorage.getItem("workoutStartTime");
-
-    if (workoutStartTime) {
-      // Calculate elapsed time from stored start time
-      const startTime = parseInt(workoutStartTime, 10);
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      setDuration(elapsed);
-    } else {
-      // First time starting workout - store current time
-      localStorage.setItem("workoutStartTime", Date.now().toString());
-      setDuration(0);
-    }
-
-    // Set workout in progress flag
-    localStorage.setItem("workoutInProgress", "true");
+    // Load workout from API
+    loadWorkout();
 
     // Start timer interval - update every second
     intervalRef.current = setInterval(() => {
@@ -178,17 +241,13 @@ export default function QuickStartPage() {
       }
     }, 1000);
 
-    // Listen for storage changes (when exercises are added from add-exercise page in different tab)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "workoutExercises") {
-        loadWorkoutExercises();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
     // Listen for custom event when exercises are updated in same tab
     const handleWorkoutExercisesUpdated = () => {
-      loadWorkoutExercises();
+      console.log("workoutExercisesUpdated event received, reloading workout...");
+      // Small delay to ensure backend has processed the save
+      setTimeout(() => {
+        loadWorkout();
+      }, 100);
     };
     window.addEventListener(
       "workoutExercisesUpdated",
@@ -198,7 +257,7 @@ export default function QuickStartPage() {
     // Also check for changes when page becomes visible (for same-tab navigation)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        loadWorkoutExercises();
+        loadWorkout();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -208,7 +267,6 @@ export default function QuickStartPage() {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(
         "workoutExercisesUpdated",
         handleWorkoutExercisesUpdated
@@ -217,14 +275,49 @@ export default function QuickStartPage() {
     };
   }, []);
 
-  // Reload exercises when component becomes visible (for same-tab navigation)
+  // Ensure all exercises have at least 1 default set
+  useEffect(() => {
+    const updatedSets = { ...exerciseSets };
+    let hasChanges = false;
+    
+    workoutExercises.forEach((exercise) => {
+      if (!updatedSets[exercise._id] || updatedSets[exercise._id].length === 0) {
+        updatedSets[exercise._id] = [{
+          setNumber: 1,
+          previous: "-",
+          kg: 0,
+          reps: 0,
+          completed: false,
+        }];
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      setExerciseSets(updatedSets);
+    }
+  }, [workoutExercises]);
+
+  // Reload workout when component becomes visible (for same-tab navigation)
   useEffect(() => {
     const handleFocus = () => {
-      loadWorkoutExercises();
+      loadWorkout();
     };
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, []);
+
+  // Save workout whenever exercises, sets, or superset groups change
+  useEffect(() => {
+    if (workoutExercises.length > 0) {
+      // Debounce save to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        saveWorkout();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workoutExercises.length, exerciseSets, supersetGroups.length]);
 
   // Handle scroll to show/hide duration in header
   useEffect(() => {
@@ -309,22 +402,26 @@ export default function QuickStartPage() {
     finishWorkout();
   };
 
-  const finishWorkout = () => {
-    console.log("Finish workout");
-    // Reset duration to 0
-    setDuration(0);
+  const finishWorkout = async () => {
+    try {
+      await workoutApi.finish();
+      
+      // Reset duration to 0
+      setDuration(0);
 
-    // Clear timer interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      // Clear timer interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      // Clear local state
+      localStorage.removeItem("workoutStartTime");
+      setWorkoutExercises([]);
+      setExerciseSets({});
+      setSupersetGroups([]);
+    } catch (error) {
+      console.error("Error finishing workout:", error);
     }
-
-    // Clear workout in progress flag, start time, and superset groups when finished
-    localStorage.removeItem("workoutInProgress");
-    localStorage.removeItem("workoutStartTime");
-    localStorage.removeItem("workoutSupersetGroups");
-    setSupersetGroups([]);
-    // Add finish workout logic here
   };
 
   const handleCancelFinish = () => {
@@ -345,26 +442,28 @@ export default function QuickStartPage() {
     setShowDiscardDialog(true);
   };
 
-  const handleConfirmDiscard = () => {
-    console.log("Discard Workout clicked");
-    // Reset duration to 0
-    setDuration(0);
+  const handleConfirmDiscard = async () => {
+    try {
+      await workoutApi.discard();
+      
+      // Reset duration to 0
+      setDuration(0);
 
-    // Clear timer interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      // Clear timer interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+
+      // Clear local state
+      localStorage.removeItem("workoutStartTime");
+      setWorkoutExercises([]);
+      setExerciseSets({});
+      setSupersetGroups([]);
+      setShowDiscardDialog(false);
+      router.push("/workout");
+    } catch (error) {
+      console.error("Error discarding workout:", error);
     }
-
-    // Clear workout in progress flag, start time, exercises, and superset groups
-    localStorage.removeItem("workoutInProgress");
-    localStorage.removeItem("workoutStartTime");
-    localStorage.removeItem("workoutExercises");
-    localStorage.removeItem("workoutSupersetGroups");
-
-    setWorkoutExercises([]);
-    setSupersetGroups([]);
-    setShowDiscardDialog(false);
-    router.push("/workout");
   };
 
   const handleCancelDiscard = () => {
@@ -546,21 +645,20 @@ export default function QuickStartPage() {
                 .slice(0, index)
                 .some((ex) => removingExerciseIds.has(ex._id));
               
+              // Ensure exercise has at least 1 default set
+              const defaultSet = [{
+                setNumber: 1,
+                previous: "-",
+                kg: 0,
+                reps: 0,
+                completed: false,
+              }];
+              
               return (
                 <WorkoutExerciseCard
                   key={exercise._id}
                   exercise={exercise}
-                  sets={
-                    exerciseSets[exercise._id] || [
-                      {
-                        setNumber: 1,
-                        previous: "-",
-                        kg: 0,
-                        reps: 0,
-                        completed: false,
-                      },
-                    ]
-                  }
+                  sets={exerciseSets[exercise._id] || defaultSet}
                   onSetsChange={(sets) => {
                     setExerciseSets((prev) => ({
                       ...prev,
@@ -688,8 +786,6 @@ export default function QuickStartPage() {
               const updatedGroups = prev.filter(
                 (group) => !group.has(selectedExerciseForMenu._id)
               );
-
-              saveSupersetGroups(updatedGroups);
               return updatedGroups;
             });
           }
@@ -721,7 +817,6 @@ export default function QuickStartPage() {
                     return newGroup;
                   })
                   .filter((group) => group.size > 0);
-                saveSupersetGroups(newGroups);
                 return newGroups;
               });
               // Clean up removing state
@@ -767,8 +862,7 @@ export default function QuickStartPage() {
               updatedGroups.push(newGroup);
             }
 
-            // Save to localStorage
-            saveSupersetGroups(updatedGroups);
+            // Save will happen automatically via useEffect
             return updatedGroups;
           });
         }}

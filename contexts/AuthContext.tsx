@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api";
+import { apiClient, workoutApi } from "@/lib/api";
 
 interface User {
   id: string;
@@ -94,13 +94,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       console.log("Attempting logout...");
+      
+      // Discard active workout on backend
+      try {
+        await workoutApi.discard();
+        console.log("Active workout discarded");
+      } catch (workoutError) {
+        console.error("Error discarding workout:", workoutError);
+        // Continue with logout even if workout discard fails
+      }
+      
+      // Call logout API
       await apiClient.post("/api/auth/logout");
       console.log("Logout API call successful");
     } catch (error) {
       console.error("Logout API error:", error);
       // Continue with logout even if API call fails
     } finally {
-      // Always clear user state and redirect, even if API call failed
+      // Clear all workout-related localStorage items
+      localStorage.removeItem("workoutStartTime");
+      localStorage.removeItem("workoutExercises");
+      localStorage.removeItem("workoutInProgress");
+      localStorage.removeItem("workoutSupersetGroups");
+      localStorage.removeItem("timerSound");
+      localStorage.removeItem("timerVolume");
+      localStorage.removeItem("checkSetVolume");
+      localStorage.removeItem("prVolume");
+      
+      // Clear workout-related sessionStorage items (keep authRedirect for auth flow)
+      sessionStorage.removeItem("replaceExerciseId");
+      
+      // Clear user state and redirect
       console.log("Clearing user state and redirecting to login");
       setUser(null);
       router.push("/login");

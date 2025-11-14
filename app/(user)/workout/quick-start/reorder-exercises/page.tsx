@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Dumbbell, Minus, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Exercise } from "@/lib/api";
+import { Exercise, workoutApi } from "@/lib/api";
 
 export default function ReorderExercisesPage() {
   const router = useRouter();
@@ -12,25 +12,60 @@ export default function ReorderExercisesPage() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load exercises from localStorage
+  // Load exercises from API
   useEffect(() => {
-    const exercisesJson = localStorage.getItem("workoutExercises");
-    if (exercisesJson) {
+    const loadExercises = async () => {
       try {
-        const loadedExercises = JSON.parse(exercisesJson);
-        setExercises(loadedExercises);
+        const response = await workoutApi.getActive();
+        if (response.data) {
+          const loadedExercises = response.data.exercises.map((ex) => {
+            const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+            return exercise as Exercise;
+          });
+          setExercises(loadedExercises);
+        } else {
+          setExercises([]);
+        }
       } catch (error) {
-        console.error("Error parsing workout exercises:", error);
+        console.error("Error loading workout exercises:", error);
         setExercises([]);
       }
-    }
+    };
+    loadExercises();
   }, []);
 
-  // Save exercises to localStorage
-  const saveExercises = (newExercises: Exercise[]) => {
-    localStorage.setItem("workoutExercises", JSON.stringify(newExercises));
-    // Dispatch custom event to notify other tabs/components
-    window.dispatchEvent(new Event("workoutExercisesUpdated"));
+  // Save exercises to API
+  const saveExercises = async (newExercises: Exercise[]) => {
+    try {
+      const response = await workoutApi.getActive();
+      let currentSupersetGroups: string[][] = [];
+      let currentDuration = 0;
+      let startTime: number | undefined = undefined;
+
+      if (response.data) {
+        currentSupersetGroups = response.data.supersetGroups.map(group => 
+          group.exerciseIds.map((id: string | Exercise) => 
+            typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
+          )
+        );
+        currentDuration = response.data.duration || 0;
+        if (response.data.startTime) {
+          startTime = new Date(response.data.startTime).getTime();
+        }
+      }
+
+      await workoutApi.save({
+        exercises: newExercises,
+        supersetGroups: currentSupersetGroups,
+        duration: currentDuration,
+        startTime: startTime,
+      });
+      
+      // Dispatch custom event to notify other tabs/components
+      window.dispatchEvent(new Event("workoutExercisesUpdated"));
+    } catch (error) {
+      console.error("Error saving exercises:", error);
+    }
   };
 
   const handleDragStart = (index: number) => {

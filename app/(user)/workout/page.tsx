@@ -29,6 +29,8 @@ export default function WorkoutPage() {
   };
 
   const handleStartEmptyWorkout = () => {
+    // Set workout in progress flag
+    localStorage.setItem("workoutInProgress", "true");
     router.push("/workout/quick-start");
   };
 

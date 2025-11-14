@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { workoutApi } from "@/lib/api";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -42,12 +43,24 @@ export default function WorkoutPage() {
     setShowDiscardDialog(true);
   };
 
-  const handleConfirmDiscard = () => {
-    // Clear workout in progress flag and start time to reset timer
-    localStorage.removeItem("workoutInProgress");
-    localStorage.removeItem("workoutStartTime");
-    setWorkoutInProgress(false);
-    setShowDiscardDialog(false);
+  const handleConfirmDiscard = async () => {
+    try {
+      // Discard workout on backend
+      await workoutApi.discard();
+      
+      // Clear workout in progress flag and start time to reset timer
+      localStorage.removeItem("workoutInProgress");
+      localStorage.removeItem("workoutStartTime");
+      setWorkoutInProgress(false);
+      setShowDiscardDialog(false);
+    } catch (error) {
+      console.error("Error discarding workout:", error);
+      // Even if API call fails, clear local state
+      localStorage.removeItem("workoutInProgress");
+      localStorage.removeItem("workoutStartTime");
+      setWorkoutInProgress(false);
+      setShowDiscardDialog(false);
+    }
   };
 
   const handleCancelDiscard = () => {

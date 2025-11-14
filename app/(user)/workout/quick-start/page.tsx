@@ -444,6 +444,7 @@ export default function QuickStartPage() {
 
   const handleConfirmDiscard = async () => {
     try {
+      // Discard workout on backend
       await workoutApi.discard();
       
       // Reset duration to 0
@@ -452,17 +453,34 @@ export default function QuickStartPage() {
       // Clear timer interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
 
-      // Clear local state
+      // Clear all local state
       localStorage.removeItem("workoutStartTime");
+      localStorage.removeItem("workoutInProgress");
+      setWorkoutExercises([]);
+      setExerciseSets({});
+      setSupersetGroups([]);
+      setShowDiscardDialog(false);
+      
+      // Navigate back to workout page
+      router.push("/workout");
+    } catch (error) {
+      console.error("Error discarding workout:", error);
+      // Even if API call fails, clear local state and navigate
+      setDuration(0);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      localStorage.removeItem("workoutStartTime");
+      localStorage.removeItem("workoutInProgress");
       setWorkoutExercises([]);
       setExerciseSets({});
       setSupersetGroups([]);
       setShowDiscardDialog(false);
       router.push("/workout");
-    } catch (error) {
-      console.error("Error discarding workout:", error);
     }
   };
 

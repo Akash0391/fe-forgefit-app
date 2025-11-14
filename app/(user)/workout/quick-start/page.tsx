@@ -60,6 +60,7 @@ export default function QuickStartPage() {
     useState<Exercise | null>(null);
   const [showSupersetModal, setShowSupersetModal] = useState(false);
   const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
+  const [removingExerciseIds, setRemovingExerciseIds] = useState<Set<string>>(new Set()); // Track exercises being removed for animation
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
   const formatDuration = (seconds: number): string => {
@@ -538,31 +539,41 @@ export default function QuickStartPage() {
       ) : (
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <div className="space-y-4">
-            {workoutExercises.map((exercise) => (
-              <WorkoutExerciseCard
-                key={exercise._id}
-                exercise={exercise}
-                sets={
-                  exerciseSets[exercise._id] || [
-                    {
-                      setNumber: 1,
-                      previous: "-",
-                      kg: 0,
-                      reps: 0,
-                      completed: false,
-                    },
-                  ]
-                }
-                onSetsChange={(sets) => {
-                  setExerciseSets((prev) => ({
-                    ...prev,
-                    [exercise._id]: sets,
-                  }));
-                }}
-                onMenuClick={() => setSelectedExerciseForMenu(exercise)}
-                isInSuperset={isExerciseInSuperset(exercise._id)}
-              />
-            ))}
+            {workoutExercises.map((exercise, index) => {
+              const isRemoving = removingExerciseIds.has(exercise._id);
+              // Find if any exercise before this one is being removed
+              const hasRemovingBefore = workoutExercises
+                .slice(0, index)
+                .some((ex) => removingExerciseIds.has(ex._id));
+              
+              return (
+                <WorkoutExerciseCard
+                  key={exercise._id}
+                  exercise={exercise}
+                  sets={
+                    exerciseSets[exercise._id] || [
+                      {
+                        setNumber: 1,
+                        previous: "-",
+                        kg: 0,
+                        reps: 0,
+                        completed: false,
+                      },
+                    ]
+                  }
+                  onSetsChange={(sets) => {
+                    setExerciseSets((prev) => ({
+                      ...prev,
+                      [exercise._id]: sets,
+                    }));
+                  }}
+                  onMenuClick={() => setSelectedExerciseForMenu(exercise)}
+                  isInSuperset={isExerciseInSuperset(exercise._id)}
+                  isRemoving={isRemoving}
+                  shouldSlideUp={hasRemovingBefore}
+                />
+              );
+            })}
           </div>
 
           {/* Bottom Action Buttons - Show below exercise cards */}
@@ -686,26 +697,40 @@ export default function QuickStartPage() {
         }}
         onRemove={() => {
           if (selectedExerciseForMenu) {
-            setWorkoutExercises((prev) =>
-              prev.filter((ex) => ex._id !== selectedExerciseForMenu._id)
-            );
-            setExerciseSets((prev) => {
-              const newSets = { ...prev };
-              delete newSets[selectedExerciseForMenu._id];
-              return newSets;
-            });
-            // Remove from superset groups if present
-            setSupersetGroups((prev) => {
-              const newGroups = prev
-                .map((group) => {
-                  const newGroup = new Set(group);
-                  newGroup.delete(selectedExerciseForMenu._id);
-                  return newGroup;
-                })
-                .filter((group) => group.size > 0);
-              saveSupersetGroups(newGroups);
-              return newGroups;
-            });
+            const exerciseId = selectedExerciseForMenu._id;
+            
+            // Start removal animation
+            setRemovingExerciseIds((prev) => new Set(prev).add(exerciseId));
+            
+            // After animation completes, remove the exercise
+            setTimeout(() => {
+              setWorkoutExercises((prev) =>
+                prev.filter((ex) => ex._id !== exerciseId)
+              );
+              setExerciseSets((prev) => {
+                const newSets = { ...prev };
+                delete newSets[exerciseId];
+                return newSets;
+              });
+              // Remove from superset groups if present
+              setSupersetGroups((prev) => {
+                const newGroups = prev
+                  .map((group) => {
+                    const newGroup = new Set(group);
+                    newGroup.delete(exerciseId);
+                    return newGroup;
+                  })
+                  .filter((group) => group.size > 0);
+                saveSupersetGroups(newGroups);
+                return newGroups;
+              });
+              // Clean up removing state
+              setRemovingExerciseIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(exerciseId);
+                return newSet;
+              });
+            }, 400); // Animation duration
           }
           setSelectedExerciseForMenu(null);
         }}
@@ -759,6 +784,8 @@ interface WorkoutExerciseCardProps {
   onSetsChange: (sets: SetData[]) => void;
   onMenuClick: () => void;
   isInSuperset?: boolean;
+  isRemoving?: boolean;
+  shouldSlideUp?: boolean;
 }
 
 function WorkoutExerciseCard({
@@ -767,6 +794,8 @@ function WorkoutExerciseCard({
   onSetsChange,
   onMenuClick,
   isInSuperset = false,
+  isRemoving = false,
+  shouldSlideUp = false,
 }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   const [restTimerEnabled, setRestTimerEnabled] = useState(false);
@@ -811,7 +840,20 @@ function WorkoutExerciseCard({
   };
 
   return (
-    <div className="p-2">
+    <div
+      className={`p-2 overflow-hidden ${
+        isRemoving
+          ? "opacity-0 max-h-0 mb-0"
+          : "opacity-100 max-h-[2000px]"
+      }`}
+      style={{
+        transition: isRemoving
+          ? "opacity 300ms ease-in-out, max-height 400ms ease-in-out, margin-bottom 400ms ease-in-out, transform 400ms ease-in-out"
+          : "opacity 300ms ease-in-out, max-height 400ms ease-in-out, margin-top 400ms ease-in-out, transform 400ms ease-in-out",
+        marginTop: shouldSlideUp ? "-4rem" : undefined,
+        transform: shouldSlideUp ? "translateY(0)" : "none",
+      }}
+    >
       {/* Exercise Header */}
       <div className="flex items-center justify-between gap-3 mb-4">
         {/* Exercise Image/Icon */}

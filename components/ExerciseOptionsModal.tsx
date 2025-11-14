@@ -78,7 +78,7 @@ export default function ExerciseOptionsModal({
       textColor: "text-gray-900",
     },
     {
-      icon: isInSuperset ? Minus : Plus,
+      icon: isInSuperset ? X : Plus,
       label: isInSuperset ? "Remove From Superset" : "Add To Superset",
       onClick: isInSuperset ? onRemoveFromSuperset : onAddToSuperset,
       textColor: "text-gray-900",

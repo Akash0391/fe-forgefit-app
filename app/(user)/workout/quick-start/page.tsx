@@ -849,7 +849,7 @@ function WorkoutExerciseCard({
       <div className="flex-1 flex-col min-w-0">
         {/* Superset Badge */}
         {isInSuperset && (
-          <div className="bg-violet-600 text-white text-[10px] font-semibold text-center py-0.5 px-2 rounded mt-1 inline-block">
+          <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
             Superset
           </div>
         )}

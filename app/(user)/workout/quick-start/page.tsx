@@ -1056,14 +1056,14 @@ function WorkoutExerciseCard({
           >
             <div
               className={`text-lg font-semibold text-center ${
-                set.completed ? "text-gray-600" : "text-gray-700"
+                set.completed ? "text-black" : "text-gray-700"
               }`}
             >
               {set.setNumber}
             </div>
             <div
               className={`text-lg font-semibold text-center ${
-                set.completed ? "text-gray-500" : "text-gray-500"
+                set.completed ? "text-black" : "text-gray-500"
               }`}
             >
               {set.previous}
@@ -1075,7 +1075,7 @@ function WorkoutExerciseCard({
                 onChange={(e) =>
                   handleSetChange(index, "kg", parseInt(e.target.value) || 0)
                 }
-                className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                   set.completed ? "bg-green-100" : ""
                 }`}
                 placeholder="0"
@@ -1088,7 +1088,7 @@ function WorkoutExerciseCard({
                 onChange={(e) =>
                   handleSetChange(index, "reps", parseInt(e.target.value) || 0)
                 }
-                className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                   set.completed ? "bg-green-100" : ""
                 }`}
                 placeholder="0"

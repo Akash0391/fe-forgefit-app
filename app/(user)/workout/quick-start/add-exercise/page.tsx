@@ -179,10 +179,20 @@ export default function AddExercisePage() {
           const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
           return exercise as Exercise;
         });
-        currentSupersetGroups = workoutResponse.data.supersetGroups.map(group => 
-          group.exerciseIds.map(id => typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string)
+
+        // Ensure supersetGroups and exerciseIds are properly typed
+        currentSupersetGroups = (workoutResponse.data.supersetGroups ?? []).map(group => 
+          (group.exerciseIds ?? []).map((id: unknown) => {
+            if (typeof id === "object" && id !== null && "_id" in id) {
+              // Try to extract the _id property safely
+              return (id as { _id?: string })._id ?? "";
+            }
+            return String(id);
+          })
         );
+
         currentDuration = workoutResponse.data.duration || 0;
+
         if (workoutResponse.data.startTime) {
           startTime = new Date(workoutResponse.data.startTime).getTime();
         }

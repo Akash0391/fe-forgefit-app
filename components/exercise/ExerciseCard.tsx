@@ -47,7 +47,7 @@ export function ExerciseCard({ exercise, isSelected = false, onClick, onVideoCli
     >
       {/* Blue vertical line indicator when selected */}
       <div 
-        className={`absolute left-0 top-0 bottom-0 bg-blue-600 transition-all duration-300 ease-in-out ${
+        className={`absolute left-0 top-0 bottom-0 bg-blue-600 rounded-full transition-all duration-300 ease-in-out ${
           isSelected ? 'opacity-100 w-1.5' : 'opacity-0 w-0'
         }`}
       />

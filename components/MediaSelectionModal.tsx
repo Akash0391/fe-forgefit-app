@@ -1,32 +1,21 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { ArrowUpDown, RefreshCw, Plus, X, Minus } from "lucide-react";
-import { Exercise } from "@/lib/api";
+import { ArrowUpDown, RefreshCw, Plus, X, Minus, Camera, Image, ImagePlus } from "lucide-react";
 
-interface ExerciseOptionsModalProps {
+interface MediaSelectionModalProps {
   open: boolean;
   onClose: () => void;
-  exercise: Exercise | null;
-  onReorder: () => void;
-  onReplace: () => void;
-  onAddToSuperset: () => void;
-  onRemoveFromSuperset: () => void;
-  onRemove: () => void;
-  isInSuperset?: boolean;
+  onTakePhoto: () => void;
+  onSelectFromLibrary: () => void;
 }
 
-export default function ExerciseOptionsModal({
+export default function MediaSelectionModal({
   open,
   onClose,
-  exercise,
-  onReorder,
-  onReplace,
-  onAddToSuperset,
-  onRemoveFromSuperset,
-  onRemove,
-  isInSuperset = false,
-}: ExerciseOptionsModalProps) {
+  onTakePhoto,
+  onSelectFromLibrary,
+}: MediaSelectionModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,28 +55,16 @@ export default function ExerciseOptionsModal({
 
   const menuItems = [
     {
-      icon: ArrowUpDown,
-      label: "Reorder Exercises",
-      onClick: onReorder,
-      textColor: "text-gray-900",
+      icon: Camera,
+      label: "Take Photo",
+      onClick: onTakePhoto,
+      textColor: "text-black",
     },
     {
-      icon: RefreshCw,
-      label: "Replace Exercise",
-      onClick: onReplace,
-      textColor: "text-gray-900",
-    },
-    {
-      icon: isInSuperset ? X : Plus,
-      label: isInSuperset ? "Remove From Superset" : "Add To Superset",
-      onClick: isInSuperset ? onRemoveFromSuperset : onAddToSuperset,
-      textColor: "text-gray-900",
-    },
-    {
-      icon: X,
-      label: "Remove Exercise",
-      onClick: onRemove,
-      textColor: "text-red-500",
+      icon: ImagePlus,
+      label: "Select Library Photo or Video",
+      onClick: onSelectFromLibrary,
+      textColor: "text-black",
     },
   ];
 
@@ -103,7 +80,7 @@ export default function ExerciseOptionsModal({
       />
       {/* Modal Content - Bottom Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[30vh] ${
           isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -112,6 +89,7 @@ export default function ExerciseOptionsModal({
         <div className="flex justify-center pt-2">
           <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
         </div>
+        
         <div className="px-6 py-7 pb-8">
           <div className="bg-white rounded-[10px] overflow-hidden">
             {menuItems.map((item, index) => {
@@ -122,9 +100,8 @@ export default function ExerciseOptionsModal({
                   key={index}
                   onClick={() => {
                     item.onClick();
-                    // Only close if it's not "Add To Superset" - that modal will handle closing
-                    // "Remove From Superset" closes immediately
-                    if (item.label !== "Add To Superset") {
+                    // Only close if it's not "Cancel" - that modal will handle closing
+                    if (item.label !== "Cancel") {
                       onClose();
                     }
                   }}
@@ -132,7 +109,7 @@ export default function ExerciseOptionsModal({
                     !isLast ? "border-b border-gray-100" : ""
                   } hover:bg-gray-50 active:bg-gray-100`}
                 >
-                  <Icon className={`size-7 ${item.textColor} flex-shrink-0`} />
+                  <Icon className={`size-8 ${item.textColor} flex-shrink-0`} />
                   <span className={`text-lg font-regular ${item.textColor}`}>
                     {item.label}
                   </span>
@@ -145,3 +122,4 @@ export default function ExerciseOptionsModal({
     </>
   );
 }
+

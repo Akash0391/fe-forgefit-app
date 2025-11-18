@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import WorkoutOptionsModal from "@/components/WorkoutOptionsModal";
+import DeleteWorkoutModal from "@/components/DeleteWorkoutModal";
 
 export default function HomePage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -28,6 +29,7 @@ export default function HomePage() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -184,9 +186,38 @@ export default function HomePage() {
     console.log("Edit workout:", selectedWorkout?._id);
   };
 
-  const handleDeleteWorkout = () => {
-    // TODO: Implement delete workout functionality
-    console.log("Delete workout:", selectedWorkout?._id);
+  const handleDeleteWorkoutClick = () => {
+    // Close workout options modal and open delete confirmation modal
+    setShowWorkoutModal(false);
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    // Also close workout options modal when delete modal is closed
+    setShowWorkoutModal(false);
+    setSelectedWorkout(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedWorkout) return;
+    
+    try {
+      // TODO: Implement delete workout API call
+      // await workoutApi.delete(selectedWorkout._id);
+      console.log("Delete workout:", selectedWorkout._id);
+      
+      // Remove workout from list
+      setWorkouts(workouts.filter((w) => w._id !== selectedWorkout._id));
+      
+      // Close modals
+      setShowDeleteModal(false);
+      setShowWorkoutModal(false);
+      setSelectedWorkout(null);
+    } catch (error) {
+      console.error("Error deleting workout:", error);
+      // Keep modals open on error so user can retry
+    }
   };
 
   const handleShareWorkout = () => {
@@ -400,9 +431,18 @@ export default function HomePage() {
         onClose={handleCloseWorkoutModal}
         workout={selectedWorkout}
         onEdit={handleEditWorkout}
-        onDelete={handleDeleteWorkout}
+        onDelete={handleConfirmDelete}
         onShare={handleShareWorkout}
         onToggleVisibility={handleToggleVisibility}
+        onDeleteClick={handleDeleteWorkoutClick}
+      />
+
+      {/* Delete Workout Confirmation Modal */}
+      <DeleteWorkoutModal
+        open={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        message="Are you sure you want to delete this workout?"
       />
     </div>
   );

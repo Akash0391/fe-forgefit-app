@@ -12,6 +12,7 @@ interface WorkoutOptionsModalProps {
   onDelete?: () => void;
   onShare?: () => void;
   onToggleVisibility?: () => void;
+  onDeleteClick?: () => void; // New prop to handle delete button click without closing modal
 }
 
 export default function WorkoutOptionsModal({
@@ -22,6 +23,7 @@ export default function WorkoutOptionsModal({
   onDelete,
   onShare,
   onToggleVisibility,
+  onDeleteClick,
 }: WorkoutOptionsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -123,10 +125,17 @@ export default function WorkoutOptionsModal({
                 <button
                   key={index}
                   onClick={() => {
-                    if (item.onClick) {
+                    // For delete button, use onDeleteClick if provided (to open delete modal)
+                    // Otherwise use onDelete
+                    if (item.label === "Delete Workout" && onDeleteClick) {
+                      onDeleteClick();
+                    } else if (item.onClick) {
                       item.onClick();
                     }
-                    onClose();
+                    // Don't close modal for delete button - let the delete modal handle it
+                    if (item.label !== "Delete Workout") {
+                      onClose();
+                    }
                   }}
                   className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
                     !isLast ? "border-b border-gray-100" : ""

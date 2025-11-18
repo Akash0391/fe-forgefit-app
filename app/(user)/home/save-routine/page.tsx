@@ -13,7 +13,7 @@ interface RoutineExercise {
   notes: string;
 }
 
-export default function NewRoutinePage() {
+export default function SaveRoutinePage() {
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [routineTitle, setRoutineTitle] = useState("");
   const router = useRouter();
@@ -223,15 +223,11 @@ export default function NewRoutinePage() {
                     {/* Table Header */}
                     <div className="grid grid-cols-5 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
-                      <div className="text-center">PREVIOUS</div>
                       <div className="flex items-center justify-center gap-1">
                         <Dumbbell className="size-3" />
                         KG
                       </div>
                       <div className="text-center">REPS</div>
-                      <div className="flex justify-center">
-                        <Check className="size-5 text-blue-600" />
-                      </div>
                     </div>
 
                     {/* Sets Rows */}
@@ -249,13 +245,6 @@ export default function NewRoutinePage() {
                             }`}
                           >
                             {set.setNumber}
-                          </div>
-                          <div
-                            className={`text-lg font-semibold text-center ${
-                              set.completed ? "text-black" : "text-gray-500"
-                            }`}
-                          >
-                            {set.previous}
                           </div>
                           <div className="flex justify-center">
                             <div
@@ -275,13 +264,6 @@ export default function NewRoutinePage() {
                               {set.reps || 0}
                             </div>
                           </div>
-                          <div className="flex justify-center">
-                            {set.completed ? (
-                              <SquareCheck className="size-6 text-green-600" />
-                            ) : (
-                              <SquareCheck className="size-6 text-gray-300" />
-                            )}
-                          </div>
                         </div>
                       ))
                     ) : (
@@ -295,7 +277,7 @@ export default function NewRoutinePage() {
                   <Button
                     variant="ghost"
                     onClick={() => handleAddSet(index)}
-                    className="w-full text-gray-700 bg-gray-100 py-2 h-auto"
+                    className="w-full text-gray-700 bg-gray-100 py-2 rounded-[10px] h-auto"
                   >
                     <Plus className="size-6 mr-2" />
                     <span className="text-lg font-regular">Add Set</span>
@@ -306,7 +288,7 @@ export default function NewRoutinePage() {
           </div>
 
           {/* Bottom Action Buttons - Show below exercise cards */}
-          <div className="p-4 space-y-5 pb-6">
+          <div className="p-2 space-y-5 pb-6">
             {/* Primary Button */}
             <Button
               variant="default"
@@ -322,3 +304,4 @@ export default function NewRoutinePage() {
     </div>
   );
 }
+

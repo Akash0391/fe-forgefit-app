@@ -22,8 +22,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import WorkoutOptionsModal from "@/components/WorkoutOptionsModal";
 import DeleteWorkoutModal from "@/components/DeleteWorkoutModal";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -227,6 +229,31 @@ export default function HomePage() {
   const handleToggleVisibility = () => {
     // TODO: Implement toggle visibility functionality
     console.log("Toggle visibility:", selectedWorkout?._id);
+  };
+
+  const handleSaveAsRoutine = () => {
+    if (!selectedWorkout) return;
+    
+    // Store workout data in sessionStorage to pass to new-routine page
+    const workoutData = {
+      name: selectedWorkout.name || "Quick Start Workout",
+      exercises: selectedWorkout.exercises.map((ex) => {
+        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+        return {
+          exercise: exercise,
+          sets: ex.sets || [],
+          notes: ex.notes || "",
+        };
+      }),
+      supersetGroups: selectedWorkout.supersetGroups || [],
+    };
+    
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(workoutData));
+    
+    // Close modal and navigate
+    setShowWorkoutModal(false);
+    setSelectedWorkout(null);
+    router.push("/home/save-routine");
   };
 
   if (loading) {
@@ -433,6 +460,7 @@ export default function HomePage() {
         onDelete={handleConfirmDelete}
         onShare={handleShareWorkout}
         onToggleVisibility={handleToggleVisibility}
+        onSaveAsRoutine={handleSaveAsRoutine}
         onDeleteClick={handleDeleteWorkoutClick}
       />
 

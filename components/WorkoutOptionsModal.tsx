@@ -12,6 +12,7 @@ interface WorkoutOptionsModalProps {
   onDelete?: () => void;
   onShare?: () => void;
   onToggleVisibility?: () => void;
+  onSaveAsRoutine?: () => void; // New prop to handle save as routine
   onDeleteClick?: () => void; // New prop to handle delete button click without closing modal
 }
 
@@ -23,6 +24,7 @@ export default function WorkoutOptionsModal({
   onDelete,
   onShare,
   onToggleVisibility,
+  onSaveAsRoutine,
   onDeleteClick,
 }: WorkoutOptionsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -72,7 +74,7 @@ export default function WorkoutOptionsModal({
     {
       icon: Download,
       label: "Save as Routine",
-      onClick: onToggleVisibility,
+      onClick: onSaveAsRoutine || onToggleVisibility,
       textColor: "text-gray-900",
     },
     {

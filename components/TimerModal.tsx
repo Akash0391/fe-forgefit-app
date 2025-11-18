@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Settings2, ChevronDown } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
@@ -157,7 +157,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-2 pt-4 pb-4">
+        <div className="flex items-center justify-between px-2 pt-4 pb-4 relative">
           <button
             onClick={() => router.push("/workout/quick-start/timer-settings")}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -165,14 +165,10 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
           >
             <Settings2 className="size-7 text-gray-600" />
           </button>
-          <h2 className="text-xl font-semibold">Clock</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Close timer"
-          >
-            <ChevronDown className="size-7 text-gray-600" />
-          </button>
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center text-xl font-semibold">
+            Clock
+          </div>
+          <div className="w-11"></div> {/* Spacer to balance the layout */}
         </div>
 
         {/* Tabs */}

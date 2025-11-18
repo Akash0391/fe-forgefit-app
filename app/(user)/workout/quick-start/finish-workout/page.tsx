@@ -113,7 +113,7 @@ export default function FinishWorkoutPage() {
   };
 
   const handleBack = () => {
-    router.push("/workout");
+    router.back();
   };
 
   const handleSave = async () => {

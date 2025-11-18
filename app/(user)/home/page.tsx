@@ -20,11 +20,14 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import WorkoutOptionsModal from "@/components/WorkoutOptionsModal";
 
 export default function HomePage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -165,6 +168,37 @@ export default function HomePage() {
     return sets.filter((set) => set.completed).length;
   };
 
+  // Handle workout options modal
+  const handleOpenWorkoutModal = (workout: Workout) => {
+    setSelectedWorkout(workout);
+    setShowWorkoutModal(true);
+  };
+
+  const handleCloseWorkoutModal = () => {
+    setShowWorkoutModal(false);
+    setSelectedWorkout(null);
+  };
+
+  const handleEditWorkout = () => {
+    // TODO: Implement edit workout functionality
+    console.log("Edit workout:", selectedWorkout?._id);
+  };
+
+  const handleDeleteWorkout = () => {
+    // TODO: Implement delete workout functionality
+    console.log("Delete workout:", selectedWorkout?._id);
+  };
+
+  const handleShareWorkout = () => {
+    // TODO: Implement share workout functionality
+    console.log("Share workout:", selectedWorkout?._id);
+  };
+
+  const handleToggleVisibility = () => {
+    // TODO: Implement toggle visibility functionality
+    console.log("Toggle visibility:", selectedWorkout?._id);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -284,7 +318,10 @@ export default function HomePage() {
                         </span>
                       </div>
                     </div>
-                    <button className="text-gray-600 hover:text-gray-900">
+                    <button
+                      onClick={() => handleOpenWorkoutModal(workout)}
+                      className="text-gray-600 hover:text-gray-900"
+                    >
                       <Ellipsis className="size-7" />
                     </button>
                   </div>
@@ -356,6 +393,17 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Workout Options Modal */}
+      <WorkoutOptionsModal
+        open={showWorkoutModal}
+        onClose={handleCloseWorkoutModal}
+        workout={selectedWorkout}
+        onEdit={handleEditWorkout}
+        onDelete={handleDeleteWorkout}
+        onShare={handleShareWorkout}
+        onToggleVisibility={handleToggleVisibility}
+      />
     </div>
   );
 }

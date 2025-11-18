@@ -419,6 +419,9 @@ export default function QuickStartPage() {
       setWorkoutExercises([]);
       setExerciseSets({});
       setSupersetGroups([]);
+      
+      // Navigate to finish-workout page
+      router.push("/workout/quick-start/finish-workout");
     } catch (error) {
       console.error("Error finishing workout:", error);
     }

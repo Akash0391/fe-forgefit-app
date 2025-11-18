@@ -118,7 +118,7 @@ export default function FinishWorkoutPage() {
 
   const handleSave = async () => {
     // TODO: Implement save functionality
-    router.push("/workout");
+    router.push("/workout/quick-start/finish-workout/success");
   };
 
   const handleDiscard = () => {

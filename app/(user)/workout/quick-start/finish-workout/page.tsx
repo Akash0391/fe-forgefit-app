@@ -38,7 +38,9 @@ export default function FinishWorkoutPage() {
         if (endTime > 0 && (now - endTime) < 60000) {
           // This is likely the workout we just finished
           setWorkout(latestWorkout);
-          setWorkoutTitle("");
+          setWorkoutTitle(latestWorkout.name || "");
+          setDescription(latestWorkout.description || "");
+          setVisibility(latestWorkout.visibility || "Everyone");
           setLoading(false);
           return;
         }
@@ -48,12 +50,16 @@ export default function FinishWorkoutPage() {
       const activeResponse = await workoutApi.getActive();
       if (activeResponse.data) {
         setWorkout(activeResponse.data);
-        setWorkoutTitle("");
+        setWorkoutTitle(activeResponse.data.name || "");
+        setDescription(activeResponse.data.description || "");
+        setVisibility(activeResponse.data.visibility || "Everyone");
       } else if (historyResponse.data && historyResponse.data.length > 0) {
         // Use the most recent workout even if it's older
         const latestWorkout = historyResponse.data[0];
         setWorkout(latestWorkout);
-        setWorkoutTitle("");
+        setWorkoutTitle(latestWorkout.name || "");
+        setDescription(latestWorkout.description || "");
+        setVisibility(latestWorkout.visibility || "Everyone");
       }
       setLoading(false);
     } catch (error) {
@@ -117,8 +123,25 @@ export default function FinishWorkoutPage() {
   };
 
   const handleSave = async () => {
-    // TODO: Implement save functionality
-    router.push("/workout/quick-start/finish-workout/success");
+    if (!workout) {
+      console.error("No workout data available");
+      return;
+    }
+
+    try {
+      // Save workout details (name, description, visibility)
+      await workoutApi.updateDetails(workout._id, {
+        name: workoutTitle || workout.name,
+        description: description,
+        visibility: visibility,
+      });
+
+      // Navigate to success page
+      router.push("/workout/quick-start/finish-workout/success");
+    } catch (error) {
+      console.error("Error saving workout details:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const handleDiscard = () => {

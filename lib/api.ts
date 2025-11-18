@@ -172,6 +172,8 @@ export interface Workout {
   _id: string;
   userId: string;
   name: string;
+  description?: string;
+  visibility?: 'Everyone' | 'Private';
   exercises: WorkoutExercise[];
   supersetGroups: SupersetGroup[];
   duration: number;
@@ -218,5 +220,14 @@ export const workoutApi = {
     success: boolean;
     data: Workout[];
   }>('/api/workouts/history'),
+
+  updateDetails: (workoutId: string, data: {
+    name?: string;
+    description?: string;
+    visibility?: 'Everyone' | 'Private';
+  }) => apiClient.put<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/details', { workoutId, ...data }),
 };
 

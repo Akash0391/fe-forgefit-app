@@ -43,6 +43,7 @@ export default function QuickStartPage() {
   const [showDurationInHeader, setShowDurationInHeader] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isFinishingRef = useRef(false); // Track if workout is being finished to prevent duplicate saves
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [showFinishConfirmationModal, setShowFinishConfirmationModal] =
     useState(false);
@@ -82,6 +83,9 @@ export default function QuickStartPage() {
       const response = await workoutApi.getActive();
       if (response.data) {
         const workout = response.data;
+        
+        // Set workout in progress flag when active workout is found
+        localStorage.setItem("workoutInProgress", "true");
         
         // Extract exercises
         const exercises = workout.exercises.map((ex) => {
@@ -138,7 +142,86 @@ export default function QuickStartPage() {
           }).catch(err => console.error("Error saving start time:", err));
         }
       } else {
-        // No active workout - create one and start timer
+        // No active workout - check if workoutInProgress flag is set
+        const workoutInProgress = localStorage.getItem("workoutInProgress") === "true";
+        
+        if (workoutInProgress) {
+          // Workout was in progress but not found in API - might be timing issue
+          // Wait a bit and retry once
+          setTimeout(async () => {
+            try {
+              const retryResponse = await workoutApi.getActive();
+              if (retryResponse.data) {
+                // Found it on retry, reload the workout
+                const workout = retryResponse.data;
+                const exercises = workout.exercises.map((ex) => {
+                  const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+                  return exercise as Exercise;
+                });
+                setWorkoutExercises(exercises);
+                
+                const sets: ExerciseSets = {};
+                workout.exercises.forEach((ex) => {
+                  const exerciseId = typeof ex.exerciseId === 'object' ? ex.exerciseId._id : ex.exerciseId;
+                  if (!ex.sets || ex.sets.length === 0) {
+                    sets[exerciseId] = [{
+                      setNumber: 1,
+                      previous: "-",
+                      kg: 0,
+                      reps: 0,
+                      completed: false,
+                    }];
+                  } else {
+                    sets[exerciseId] = ex.sets;
+                  }
+                });
+                setExerciseSets(sets);
+                
+                const groups = workout.supersetGroups.map((group) => 
+                  new Set(group.exerciseIds.map((id: string | Exercise) => 
+                    typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
+                  ))
+                );
+                setSupersetGroups(groups);
+                
+                if (workout.startTime) {
+                  const startTime = new Date(workout.startTime).getTime();
+                  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                  setDuration(elapsed);
+                  localStorage.setItem("workoutStartTime", startTime.toString());
+                }
+              } else {
+                // Still not found - clear the flag and create new workout
+                localStorage.removeItem("workoutInProgress");
+                setWorkoutExercises([]);
+                setExerciseSets({});
+                setSupersetGroups([]);
+                
+                const startTime = Date.now();
+                localStorage.setItem("workoutStartTime", startTime.toString());
+                localStorage.setItem("workoutInProgress", "true");
+                setDuration(0);
+                
+                workoutApi.save({
+                  exercises: [],
+                  supersetGroups: [],
+                  duration: 0,
+                  startTime: startTime,
+                }).catch(err => console.error("Error creating empty workout:", err));
+              }
+            } catch (err) {
+              console.error("Error retrying workout load:", err);
+              // Clear flag and create new workout
+              localStorage.removeItem("workoutInProgress");
+              setWorkoutExercises([]);
+              setExerciseSets({});
+              setSupersetGroups([]);
+            }
+          }, 500);
+          return;
+        }
+        
+        // No active workout and no workout in progress - create new empty workout
         setWorkoutExercises([]);
         setExerciseSets({});
         setSupersetGroups([]);
@@ -146,6 +229,7 @@ export default function QuickStartPage() {
         // Initialize start time and create empty workout
         const startTime = Date.now();
         localStorage.setItem("workoutStartTime", startTime.toString());
+        localStorage.setItem("workoutInProgress", "true");
         setDuration(0);
         
         // Create empty workout on backend with start time
@@ -166,6 +250,7 @@ export default function QuickStartPage() {
       if (!localStorage.getItem("workoutStartTime")) {
         const startTime = Date.now();
         localStorage.setItem("workoutStartTime", startTime.toString());
+        localStorage.setItem("workoutInProgress", "true");
         setDuration(0);
         
         // Try to create empty workout on backend
@@ -212,6 +297,68 @@ export default function QuickStartPage() {
       console.error("Error saving workout:", error);
     }
   };
+
+  // Auto-save workout when navigating away or component unmounts
+  useEffect(() => {
+    return () => {
+      // Don't save if workout is being finished or already finished
+      if (isFinishingRef.current) {
+        return;
+      }
+      
+      // Check if workout is still in progress
+      const workoutInProgress = localStorage.getItem("workoutInProgress") === "true";
+      if (!workoutInProgress) {
+        return; // Don't save if workout is not in progress
+      }
+      
+      // Save workout when navigating away (only if there are exercises)
+      // Use current state values from closure
+      const currentExercises = workoutExercises;
+      if (currentExercises.length > 0) {
+        // Create a save function with current state
+        const supersetGroupsArray = supersetGroups.map((group) => Array.from(group));
+        const startTime = localStorage.getItem("workoutStartTime");
+        const currentDuration = duration;
+        
+        const exercisesWithSets = currentExercises.map((exercise) => {
+          const sets = exerciseSets[exercise._id];
+          const defaultSet = [{
+            setNumber: 1,
+            previous: "-",
+            kg: 0,
+            reps: 0,
+            completed: false,
+          }];
+          return {
+            ...exercise,
+            sets: sets && sets.length > 0 ? sets : defaultSet,
+          };
+        });
+        
+        workoutApi.save({
+          exercises: exercisesWithSets,
+          supersetGroups: supersetGroupsArray,
+          duration: currentDuration,
+          startTime: startTime ? parseInt(startTime, 10) : undefined,
+        }).catch(err => console.error("Error saving workout on unmount:", err));
+      }
+    };
+  }, [workoutExercises, exerciseSets, supersetGroups, duration]); // Include dependencies so cleanup has latest values
+
+  // Auto-save workout periodically and when exercises/sets change
+  useEffect(() => {
+    // Only save if there are exercises and workout is in progress
+    const workoutInProgress = localStorage.getItem("workoutInProgress") === "true";
+    if (workoutExercises.length > 0 && workoutInProgress) {
+      // Debounce saves to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        saveWorkout().catch(err => console.error("Error auto-saving workout:", err));
+      }, 1000); // Wait 1 second after changes before saving
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [workoutExercises, exerciseSets, supersetGroups, duration]);
 
   // Check if an exercise is in a superset
   const isExerciseInSuperset = (exerciseId: string): boolean => {
@@ -397,6 +544,9 @@ export default function QuickStartPage() {
 
   const finishWorkout = async () => {
     try {
+      // Set flag to prevent auto-save on unmount
+      isFinishingRef.current = true;
+      
       await workoutApi.finish();
       
       // Reset duration to 0
@@ -409,6 +559,7 @@ export default function QuickStartPage() {
 
       // Clear local state
       localStorage.removeItem("workoutStartTime");
+      localStorage.removeItem("workoutInProgress");
       setWorkoutExercises([]);
       setExerciseSets({});
       setSupersetGroups([]);
@@ -417,6 +568,8 @@ export default function QuickStartPage() {
       router.push("/workout/quick-start/finish-workout");
     } catch (error) {
       console.error("Error finishing workout:", error);
+      // Reset flag on error
+      isFinishingRef.current = false;
     }
   };
 

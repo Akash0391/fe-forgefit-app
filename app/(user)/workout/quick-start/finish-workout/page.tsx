@@ -136,6 +136,9 @@ export default function FinishWorkoutPage() {
         visibility: visibility,
       });
 
+      // Clear workout in progress flag
+      localStorage.removeItem("workoutInProgress");
+
       // Navigate to success page
       router.push("/workout/quick-start/finish-workout/success");
     } catch (error) {

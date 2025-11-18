@@ -229,5 +229,10 @@ export const workoutApi = {
     success: boolean;
     data: Workout;
   }>('/api/workouts/details', { workoutId, ...data }),
+
+  delete: (workoutId: string) => apiClient.delete<{
+    success: boolean;
+    message: string;
+  }>(`/api/workouts/${workoutId}`),
 };
 

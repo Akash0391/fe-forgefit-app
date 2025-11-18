@@ -203,9 +203,8 @@ export default function HomePage() {
     if (!selectedWorkout) return;
     
     try {
-      // TODO: Implement delete workout API call
-      // await workoutApi.delete(selectedWorkout._id);
-      console.log("Delete workout:", selectedWorkout._id);
+      // Call delete workout API
+      await workoutApi.delete(selectedWorkout._id);
       
       // Remove workout from list
       setWorkouts(workouts.filter((w) => w._id !== selectedWorkout._id));

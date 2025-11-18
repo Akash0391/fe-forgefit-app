@@ -2,17 +2,10 @@
 
 import { RotateCw, Plus, Notebook, Search, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { workoutApi } from "@/lib/api";
+import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -43,28 +36,8 @@ export default function WorkoutPage() {
     setShowDiscardDialog(true);
   };
 
-  const handleConfirmDiscard = async () => {
-    try {
-      // Discard workout on backend
-      await workoutApi.discard();
-      
-      // Clear workout in progress flag and start time to reset timer
-      localStorage.removeItem("workoutInProgress");
-      localStorage.removeItem("workoutStartTime");
-      setWorkoutInProgress(false);
-      setShowDiscardDialog(false);
-    } catch (error) {
-      console.error("Error discarding workout:", error);
-      // Even if API call fails, clear local state
-      localStorage.removeItem("workoutInProgress");
-      localStorage.removeItem("workoutStartTime");
-      setWorkoutInProgress(false);
-      setShowDiscardDialog(false);
-    }
-  };
-
-  const handleCancelDiscard = () => {
-    setShowDiscardDialog(false);
+  const handleDiscardConfirm = () => {
+    setWorkoutInProgress(false);
   };
 
   return (
@@ -170,33 +143,13 @@ export default function WorkoutPage() {
         )}
       </div>
 
-      {/* Discard Confirmation Dialog */}
-      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="sr-only">Discard Workout</DialogTitle>
-            <DialogDescription className="text-center text-lg font-regular">
-              Are you sure you want to discard this workout in progress?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-5">
-            <Button
-              variant="default"
-              onClick={handleConfirmDiscard}
-              className="w-full sm:w-auto bg-gray-100 text-red-500 p-6 text-lg rounded-[10px]"
-            >
-              Discard Workout
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleCancelDiscard}
-              className="w-full sm:w-auto bg-gray-100 text-black p-6 text-lg rounded-[10px]"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Discard Workout Modal */}
+      <DiscardWorkoutModal
+        open={showDiscardDialog}
+        onClose={() => setShowDiscardDialog(false)}
+        onConfirm={handleDiscardConfirm}
+        message="Are you sure you want to discard this workout in progress?"
+      />
     </div>
   );
 }

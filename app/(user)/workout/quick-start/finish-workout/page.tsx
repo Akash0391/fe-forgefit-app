@@ -8,6 +8,7 @@ import { ArrowLeft, ChevronRight, ImagePlus } from "lucide-react";
 import { workoutApi, Workout, SetData } from "@/lib/api";
 import MediaSelectionModal from "@/components/MediaSelectionModal";
 import VisibilityModal from "@/components/VisibilityModal";
+import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 
 export default function FinishWorkoutPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function FinishWorkoutPage() {
   const [showHeartRate, setShowHeartRate] = useState(true);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   useEffect(() => {
     loadWorkout();
@@ -120,6 +122,10 @@ export default function FinishWorkoutPage() {
   };
 
   const handleDiscard = () => {
+    setShowDiscardDialog(true);
+  };
+
+  const handleDiscardConfirm = () => {
     router.push("/workout");
   };
 
@@ -279,6 +285,13 @@ export default function FinishWorkoutPage() {
         onVisibilityChange={setVisibility}
         showHeartRate={showHeartRate}
         onShowHeartRateChange={setShowHeartRate}
+      />
+
+      {/* Discard Workout Modal */}
+      <DiscardWorkoutModal
+        open={showDiscardDialog}
+        onClose={() => setShowDiscardDialog(false)}
+        onConfirm={handleDiscardConfirm}
       />
     </div>
   );

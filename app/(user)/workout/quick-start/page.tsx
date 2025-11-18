@@ -13,14 +13,6 @@ import {
   SquareCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Exercise, workoutApi, SetData as ApiSetData } from "@/lib/api";
@@ -29,6 +21,7 @@ import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 import AddToSupersetModal from "@/components/AddToSupersetModal";
+import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 
 interface SetData {
   setNumber: number;
@@ -445,50 +438,23 @@ export default function QuickStartPage() {
     setShowDiscardDialog(true);
   };
 
-  const handleConfirmDiscard = async () => {
-    try {
-      // Discard workout on backend
-      await workoutApi.discard();
-      
-      // Reset duration to 0
-      setDuration(0);
+  const handleDiscardConfirm = () => {
+    // Reset duration to 0
+    setDuration(0);
 
-      // Clear timer interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-
-      // Clear all local state
-      localStorage.removeItem("workoutStartTime");
-      localStorage.removeItem("workoutInProgress");
-      setWorkoutExercises([]);
-      setExerciseSets({});
-      setSupersetGroups([]);
-      setShowDiscardDialog(false);
-      
-      // Navigate back to workout page
-      router.push("/workout");
-    } catch (error) {
-      console.error("Error discarding workout:", error);
-      // Even if API call fails, clear local state and navigate
-      setDuration(0);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      localStorage.removeItem("workoutStartTime");
-      localStorage.removeItem("workoutInProgress");
-      setWorkoutExercises([]);
-      setExerciseSets({});
-      setSupersetGroups([]);
-      setShowDiscardDialog(false);
-      router.push("/workout");
+    // Clear timer interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  };
 
-  const handleCancelDiscard = () => {
-    setShowDiscardDialog(false);
+    // Clear all local state
+    setWorkoutExercises([]);
+    setExerciseSets({});
+    setSupersetGroups([]);
+    
+    // Navigate back to workout page
+    router.push("/workout");
   };
 
   const handleDurationClick = () => {
@@ -728,33 +694,12 @@ export default function QuickStartPage() {
         </div>
       )}
 
-      {/* Discard Confirmation Dialog */}
-      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="sr-only">Discard Workout</DialogTitle>
-            <DialogDescription className="text-center text-lg font-regular">
-              Are you sure you want to discard this workout?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-5">
-            <Button
-              variant="default"
-              onClick={handleConfirmDiscard}
-              className="w-full sm:w-auto bg-gray-100 text-red-500 p-6 text-lg rounded-[10px]"
-            >
-              Discard Workout
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleCancelDiscard}
-              className="w-full sm:w-auto bg-gray-100 text-black p-6 text-lg rounded-[10px]"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Discard Workout Modal */}
+      <DiscardWorkoutModal
+        open={showDiscardDialog}
+        onClose={() => setShowDiscardDialog(false)}
+        onConfirm={handleDiscardConfirm}
+      />
 
       {/* Timer Modal */}
       <TimerModal

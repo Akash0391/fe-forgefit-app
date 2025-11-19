@@ -305,10 +305,15 @@ export default function WorkoutPage() {
                     ? firstExercise.exerciseId 
                     : null;
                   
+                  const handleCardClick = () => {
+                    router.push(`/workout/routine?id=${routine._id}`);
+                  };
+                  
                   return (
                     <div
                       key={routine._id}
-                      className="bg-white rounded-[10px] p-4 shadow-sm border border-gray-100"
+                      className="bg-white rounded-[10px] p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={handleCardClick}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -322,7 +327,10 @@ export default function WorkoutPage() {
                           )}
                         </div>
                         <button
-                          onClick={() => handleRoutineOptionsClick(routine)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRoutineOptionsClick(routine);
+                          }}
                           className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                           aria-label="Routine options"
                         >
@@ -330,7 +338,10 @@ export default function WorkoutPage() {
                         </button>
                       </div>
                       <Button
-                        onClick={() => handleStartRoutine(routine)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartRoutine(routine);
+                        }}
                         className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-[10px] py-6"
                       >
                         Start Routine

@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dumbbell, Plus, MoreVertical, Check, SquareCheck, X, Timer } from "lucide-react";
+import { Dumbbell, Plus, MoreVertical, X, Timer, ChevronDown, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Exercise, SetData, workoutApi, Workout } from "@/lib/api";
 
 interface RoutineExercise {
   exercise: Exercise;
-  sets: SetData[];
+  sets: (SetData & { minReps?: number; maxReps?: number })[];
   notes: string;
 }
 
@@ -23,7 +23,13 @@ export default function EditRoutinePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [showExerciseModal, setShowExerciseModal] = useState(false);
+  const [showRepetitionModal, setShowRepetitionModal] = useState(false);
+  const [isRepetitionModalVisible, setIsRepetitionModalVisible] = useState(false);
+  const [shouldRenderRepetitionModal, setShouldRenderRepetitionModal] = useState(false);
+  const repetitionModalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [repetitionMode, setRepetitionMode] = useState<"reps" | "range">("reps");
   useEffect(() => {
     if (routineId) {
       loadRoutine();
@@ -104,7 +110,11 @@ export default function EditRoutinePage() {
         const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
         return {
           exercise: exercise as Exercise,
-          sets: ex.sets || [],
+          sets: (ex.sets || []).map((set: any) => ({
+            ...set,
+            minReps: set.minReps,
+            maxReps: set.maxReps
+          })),
           notes: ex.notes || ""
         };
       });
@@ -153,7 +163,15 @@ export default function EditRoutinePage() {
         name: routineTitle.trim(),
         exercises: exercises.map(ex => ({
           exercise: ex.exercise,
-          sets: ex.sets || [],
+          sets: (ex.sets || []).map(set => ({
+            setNumber: set.setNumber,
+            previous: set.previous,
+            kg: set.kg,
+            reps: set.reps,
+            completed: set.completed,
+            minReps: (set as any).minReps,
+            maxReps: (set as any).maxReps
+          })),
           notes: ex.notes || ""
         })),
         supersetGroups: []
@@ -192,7 +210,7 @@ export default function EditRoutinePage() {
   const handleSetChange = (
     exerciseIndex: number,
     setIndex: number,
-    field: "kg" | "reps",
+    field: "kg" | "reps" | "minReps" | "maxReps",
     value: number
   ) => {
     const updatedExercises = [...exercises];
@@ -222,6 +240,65 @@ export default function EditRoutinePage() {
     }
     return name;
   };
+
+  const handleRoutineOptionsClick = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setShowExerciseModal(true);
+  };
+
+  const handleRepetitionModeSelect = (mode: "reps" | "range") => {
+    setRepetitionMode(mode);
+    
+    // When switching to "range" mode, prefill minReps with existing reps values
+    if (mode === "range") {
+      const updatedExercises = exercises.map(exercise => ({
+        ...exercise,
+        sets: exercise.sets.map(set => {
+          // If minReps is not already set and reps has a value, use reps as minReps only
+          if (!(set as any).minReps && set.reps && set.reps > 0) {
+            return {
+              ...set,
+              minReps: set.reps,
+              maxReps: (set as any).maxReps || undefined
+            };
+          }
+          return set;
+        })
+      }));
+      setExercises(updatedExercises);
+    }
+  };
+
+  // Handle repetition modal visibility with transitions
+  useEffect(() => {
+    if (showRepetitionModal) {
+      // Clear any existing timeout
+      if (repetitionModalTimeoutRef.current) {
+        clearTimeout(repetitionModalTimeoutRef.current);
+        repetitionModalTimeoutRef.current = null;
+      }
+      // Mount the component first
+      setShouldRenderRepetitionModal(true);
+      // Small delay to ensure DOM is ready before starting transition
+      setTimeout(() => {
+        setIsRepetitionModalVisible(true);
+      }, 10);
+    } else {
+      // Start closing transition immediately
+      setIsRepetitionModalVisible(false);
+      // Delay unmounting to allow transition to complete
+      repetitionModalTimeoutRef.current = setTimeout(() => {
+        setShouldRenderRepetitionModal(false);
+      }, 300); // Match the transition duration
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (repetitionModalTimeoutRef.current) {
+        clearTimeout(repetitionModalTimeoutRef.current);
+      }
+    };
+  }, [showRepetitionModal]);
 
   if (isLoading) {
     return (
@@ -267,10 +344,10 @@ export default function EditRoutinePage() {
             className={`text-lg font-regular ${
               exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 text-white"
+                : "bg-blue-500 hover:bg-blue-600 text-white rounded-[8px] py-6"
             }`}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? "Updating..." : "Update"}
           </Button>
         </div>
       </header>
@@ -365,11 +442,11 @@ export default function EditRoutinePage() {
 
                     {/* Options Menu */}
                     <button
-                      onClick={() => handleRemoveExercise(index)}
+                      onClick={() => handleRoutineOptionsClick(routineExercise.exercise)}
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                       aria-label="Remove exercise"
                     >
-                      <X className="size-7 text-gray-600" />
+                      <MoreVertical className="size-7 text-gray-600" />
                     </button>
                   </div>
 
@@ -396,16 +473,22 @@ export default function EditRoutinePage() {
                   {/* Sets Table */}
                   <div className="mb-4">
                     {/* Table Header */}
-                    <div className="grid grid-cols-5 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
+                    <div className="grid grid-cols-3 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
-                      <div className="text-center">PREVIOUS</div>
                       <div className="flex items-center justify-center gap-1">
                         <Dumbbell className="size-3" />
                         KG
                       </div>
-                      <div className="text-center">REPS</div>
-                      <div className="flex justify-center">
-                        <Check className="size-5 text-blue-600" />
+                      <div className="flex items-center justify-center gap-1">
+                        <span>{repetitionMode === "reps" ? "REPS" : "REP RANGE"}</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowRepetitionModal(true)}
+                          className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                          aria-label="Change repetition option"
+                        >
+                          <ChevronDown className="size-4 text-gray-500" />
+                        </button>
                       </div>
                     </div>
 
@@ -414,7 +497,7 @@ export default function EditRoutinePage() {
                       sets.map((set, setIndex) => (
                         <div
                           key={setIndex}
-                          className={`grid grid-cols-5 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
+                          className={`grid grid-cols-3 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
                             set.completed ? "bg-green-100" : ""
                           }`}
                         >
@@ -424,13 +507,6 @@ export default function EditRoutinePage() {
                             }`}
                           >
                             {set.setNumber}
-                          </div>
-                          <div
-                            className={`text-lg font-semibold text-center ${
-                              set.completed ? "text-black" : "text-gray-500"
-                            }`}
-                          >
-                            {set.previous}
                           </div>
                           <div className="flex justify-center">
                             <Input
@@ -450,29 +526,60 @@ export default function EditRoutinePage() {
                               placeholder="0"
                             />
                           </div>
-                          <div className="flex justify-center">
-                            <Input
-                              type="number"
-                              value={set.reps || ""}
-                              onChange={(e) =>
-                                handleSetChange(
-                                  index,
-                                  setIndex,
-                                  "reps",
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                                set.completed ? "bg-green-100" : ""
-                              }`}
-                              placeholder="0"
-                            />
-                          </div>
-                          <div className="flex justify-center">
-                            {set.completed ? (
-                              <SquareCheck className="size-6 text-green-600" />
+                          <div className="flex justify-start items-center">
+                            {repetitionMode === "reps" ? (
+                              <Input
+                                type="number"
+                                value={set.reps || ""}
+                                onChange={(e) =>
+                                  handleSetChange(
+                                    index,
+                                    setIndex,
+                                    "reps",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                  set.completed ? "bg-green-100" : ""
+                                }`}
+                                placeholder="0"
+                              />
                             ) : (
-                              <SquareCheck className="size-6 text-gray-300" />
+                              <div className="flex items-center gap-1.5 w-full justify-start">
+                                <Input
+                                  type="number"
+                                  value={(set as any).minReps || ""}
+                                  onChange={(e) =>
+                                    handleSetChange(
+                                      index,
+                                      setIndex,
+                                      "minReps",
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                    set.completed ? "bg-green-100" : ""
+                                  }`}
+                                  placeholder="-"
+                                />
+                                <span className="text-gray-500 text-sm">to</span>
+                                <Input
+                                  type="number"
+                                  value={(set as any).maxReps || ""}
+                                  onChange={(e) =>
+                                    handleSetChange(
+                                      index,
+                                      setIndex,
+                                      "maxReps",
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                    set.completed ? "bg-green-100" : ""
+                                  }`}
+                                  placeholder="-"
+                                />
+                              </div>
                             )}
                           </div>
                         </div>
@@ -511,6 +618,71 @@ export default function EditRoutinePage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Repetition Options Modal */}
+      {shouldRenderRepetitionModal && (
+        <>
+          {/* Overlay */}
+          <div
+            className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${
+              isRepetitionModalVisible ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={() => setShowRepetitionModal(false)}
+            style={{ pointerEvents: isRepetitionModalVisible ? "auto" : "none" }}
+          />
+          {/* Modal Content - Bottom Sheet */}
+          <div
+            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
+              isRepetitionModalVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag Handle */}
+            <div className="flex justify-center pt-2">
+              <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+            </div>
+            
+            {/* Header with Title */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-regular text-center">
+                Repetition options
+              </h2>
+            </div>
+
+            <div className="px-6 py-7 pb-8">
+              <div className="bg-white rounded-[10px] overflow-hidden">
+                {[
+                  { id: "reps", label: "Reps" },
+                  { id: "range", label: "Rep range" },
+                ].map((option, index) => {
+                  const isSelected = repetitionMode === option.id;
+                  const isLast = index === 1;
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleRepetitionModeSelect(option.id as "reps" | "range")}
+                      className={`w-full flex items-center justify-between gap-5 px-6 py-6 transition-colors text-left ${
+                        !isLast ? "border-b border-gray-100" : ""
+                      } hover:bg-gray-50 active:bg-gray-100`}
+                    >
+                      <span className={`text-lg font-regular ${
+                        isSelected ? "text-blue-600" : "text-gray-900"
+                      }`}>
+                        {option.label}
+                      </span>
+                      <div className={`size-7 flex items-center justify-center flex-shrink-0 ${
+                        isSelected ? "text-blue-600" : "text-gray-400"
+                      }`}>
+                        {isSelected && <Check className="size-7" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

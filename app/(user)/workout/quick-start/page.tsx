@@ -80,6 +80,83 @@ export default function QuickStartPage() {
   // Load workout from API
   const loadWorkout = async () => {
     try {
+      // First check if we're starting a workout from a routine
+      const routineDataStr = sessionStorage.getItem("routineToWorkout");
+      if (routineDataStr) {
+        try {
+          const routineData = JSON.parse(routineDataStr);
+          // Clear sessionStorage after loading
+          sessionStorage.removeItem("routineToWorkout");
+          
+          // Extract exercises from routine data
+          const exercises = routineData.exercises.map((ex: any) => {
+            const exercise = ex.exercise || { _id: ex.exerciseId };
+            return exercise as Exercise;
+          });
+          setWorkoutExercises(exercises);
+          
+          // Extract sets
+          const sets: ExerciseSets = {};
+          routineData.exercises.forEach((ex: any) => {
+            const exerciseId = ex.exercise?._id || ex.exerciseId;
+            // Ensure at least 1 default set is shown
+            if (!ex.sets || ex.sets.length === 0) {
+              sets[exerciseId] = [{
+                setNumber: 1,
+                previous: "-",
+                kg: 0,
+                reps: 0,
+                completed: false,
+              }];
+            } else {
+              sets[exerciseId] = ex.sets;
+            }
+          });
+          setExerciseSets(sets);
+          
+          // Extract superset groups
+          const groups = (routineData.supersetGroups || []).map((group: any) => 
+            new Set(Array.isArray(group) ? group : (group.exerciseIds || []))
+          );
+          setSupersetGroups(groups);
+          
+          // Initialize start time for new workout
+          const startTime = Date.now();
+          localStorage.setItem("workoutStartTime", startTime.toString());
+          localStorage.setItem("workoutInProgress", "true");
+          setDuration(0);
+          
+          // Save the workout to backend
+          const exercisesWithSets = exercises.map((exercise: Exercise) => {
+            const exerciseSets = sets[exercise._id];
+            const defaultSet = [{
+              setNumber: 1,
+              previous: "-",
+              kg: 0,
+              reps: 0,
+              completed: false,
+            }];
+            return {
+              ...exercise,
+              sets: exerciseSets && exerciseSets.length > 0 ? exerciseSets : defaultSet,
+            };
+          });
+          
+          const supersetGroupsArray = groups.map((group: Set<string>) => Array.from(group));
+          await workoutApi.save({
+            exercises: exercisesWithSets,
+            supersetGroups: supersetGroupsArray,
+            duration: 0,
+            startTime: startTime,
+          });
+          
+          return; // Exit early since we've loaded from routine
+        } catch (error) {
+          console.error("Error loading routine data:", error);
+          // Continue to normal load flow if routine loading fails
+        }
+      }
+      
       const response = await workoutApi.getActive();
       if (response.data) {
         const workout = response.data;

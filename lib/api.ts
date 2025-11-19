@@ -180,6 +180,7 @@ export interface Workout {
   startTime?: string;
   endTime?: string;
   status: 'in-progress' | 'completed' | 'discarded';
+  isRoutine?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -234,5 +235,23 @@ export const workoutApi = {
     success: boolean;
     message: string;
   }>(`/api/workouts/${workoutId}`),
+
+  saveRoutine: (data: {
+    name: string;
+    exercises: Array<{
+      exercise: Exercise;
+      sets: SetData[];
+      notes: string;
+    }>;
+    supersetGroups?: string[][];
+  }) => apiClient.post<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/routines', data),
+
+  getRoutines: () => apiClient.get<{
+    success: boolean;
+    data: Workout[];
+  }>('/api/workouts/routines'),
 };
 

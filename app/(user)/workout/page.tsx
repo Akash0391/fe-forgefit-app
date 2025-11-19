@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { workoutApi, Workout, Exercise } from "@/lib/api";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
+import RoutineOptionsModal from "@/components/RoutineOptionsModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function WorkoutPage() {
   const [routines, setRoutines] = useState<Workout[]>([]);
   const [loadingRoutines, setLoadingRoutines] = useState(true);
   const [showRoutines, setShowRoutines] = useState(true);
+  const [selectedRoutine, setSelectedRoutine] = useState<Workout | null>(null);
+  const [showRoutineModal, setShowRoutineModal] = useState(false);
 
   useEffect(() => {
     // Check if workout is in progress
@@ -95,6 +98,36 @@ export default function WorkoutPage() {
       }
     }
     return name;
+  };
+
+  const handleRoutineOptionsClick = (routine: Workout) => {
+    setSelectedRoutine(routine);
+    setShowRoutineModal(true);
+  };
+
+  const handleRoutineModalClose = () => {
+    setShowRoutineModal(false);
+    setSelectedRoutine(null);
+  };
+
+  const handleRoutineEdit = () => {
+    // TODO: Implement edit routine name
+    console.log("Edit routine:", selectedRoutine?._id);
+  };
+
+  const handleRoutineDelete = () => {
+    // TODO: Implement delete routine
+    console.log("Delete routine:", selectedRoutine?._id);
+  };
+
+  const handleRoutineShare = () => {
+    // TODO: Implement share routine
+    console.log("Share routine:", selectedRoutine?._id);
+  };
+
+  const handleRoutineDuplicate = () => {
+    // TODO: Implement duplicate routine
+    console.log("Duplicate routine:", selectedRoutine?._id);
   };
 
   return (
@@ -231,6 +264,7 @@ export default function WorkoutPage() {
                           )}
                         </div>
                         <button
+                          onClick={() => handleRoutineOptionsClick(routine)}
                           className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                           aria-label="Routine options"
                         >
@@ -285,6 +319,17 @@ export default function WorkoutPage() {
         onClose={() => setShowDiscardDialog(false)}
         onConfirm={handleDiscardConfirm}
         message="Are you sure you want to discard this workout in progress?"
+      />
+
+      {/* Routine Options Modal */}
+      <RoutineOptionsModal
+        open={showRoutineModal}
+        onClose={handleRoutineModalClose}
+        routine={selectedRoutine}
+        onEdit={handleRoutineEdit}
+        onDelete={handleRoutineDelete}
+        onShare={handleRoutineShare}
+        onDuplicate={handleRoutineDuplicate}
       />
     </div>
   );

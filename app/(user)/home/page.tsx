@@ -43,7 +43,11 @@ export default function HomePage() {
       setLoading(true);
       const response = await workoutApi.getHistory();
       if (response.success) {
-        setWorkouts(response.data);
+        // Filter out routines - only show actual completed workouts
+        const workoutsWithoutRoutines = response.data.filter(
+          (workout: Workout) => !workout.isRoutine
+        );
+        setWorkouts(workoutsWithoutRoutines);
       }
     } catch (error) {
       console.error("Error loading workouts:", error);

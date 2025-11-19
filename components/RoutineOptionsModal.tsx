@@ -127,7 +127,10 @@ export default function RoutineOptionsModal({
                     if (item.onClick) {
                       item.onClick();
                     }
-                    onClose();
+                    // Don't close modal for delete button - let the delete confirmation modal handle it
+                    if (item.label !== "Delete Routine") {
+                      onClose();
+                    }
                   }}
                   className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
                     !isLast ? "border-b border-gray-100" : ""

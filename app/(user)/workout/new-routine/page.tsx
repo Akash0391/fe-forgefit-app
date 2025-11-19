@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dumbbell, Plus, MoreVertical, Check, SquareCheck, X, Timer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Exercise, SetData } from "@/lib/api";
+import { Exercise, SetData, workoutApi } from "@/lib/api";
 
 interface RoutineExercise {
   exercise: Exercise;
@@ -16,6 +16,8 @@ interface RoutineExercise {
 export default function NewRoutinePage() {
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [routineTitle, setRoutineTitle] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,9 +41,39 @@ export default function NewRoutinePage() {
     router.push("/workout/quick-start/add-exercise?mode=routine");
   };
 
-  const handleSave = () => {
-    console.log("Save routine", { title: routineTitle, exercises });
-    // Add save logic here
+  const handleSave = async () => {
+    if (!routineTitle.trim()) {
+      setError("Please enter a routine title");
+      return;
+    }
+
+    if (exercises.length === 0) {
+      setError("Please add at least one exercise");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      await workoutApi.saveRoutine({
+        name: routineTitle.trim(),
+        exercises: exercises.map(ex => ({
+          exercise: ex.exercise,
+          sets: ex.sets || [],
+          notes: ex.notes || ""
+        })),
+        supersetGroups: []
+      });
+
+      // Navigate back to workout page after successful save
+      router.push("/workout");
+    } catch (err: any) {
+      console.error("Error saving routine:", err);
+      setError(err.message || "Failed to save routine. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleNotesChange = (index: number, notes: string) => {
@@ -98,14 +130,14 @@ export default function NewRoutinePage() {
           <Button
             variant="default"
             onClick={handleSave}
-            disabled={exercises.length === 0}
+            disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
             className={`text-lg font-regular ${
-              exercises.length === 0
+              exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-600 text-white"
             }`}
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </header>
@@ -116,7 +148,10 @@ export default function NewRoutinePage() {
             type="text"
             placeholder="Routine title"
             value={routineTitle}
-            onChange={(e) => setRoutineTitle(e.target.value)}
+            onChange={(e) => {
+              setRoutineTitle(e.target.value);
+              setError(null);
+            }}
             className="text-xl p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-xl"
           />
           {routineTitle && (
@@ -129,6 +164,11 @@ export default function NewRoutinePage() {
             </button>
           )}
         </div>
+        {error && (
+          <div className="mt-2 text-red-500 text-sm px-4">
+            {error}
+          </div>
+        )}
       </div>
 
       {/* Main Content Area - Get Started or Exercise List */}
@@ -295,7 +335,7 @@ export default function NewRoutinePage() {
                   <Button
                     variant="ghost"
                     onClick={() => handleAddSet(index)}
-                    className="w-full text-gray-700 bg-gray-100 py-2 h-auto"
+                    className="w-full text-gray-700 bg-gray-100 py-2 h-auto rounded-[10px]"
                   >
                     <Plus className="size-6 mr-2" />
                     <span className="text-lg font-regular">Add Set</span>
@@ -306,7 +346,7 @@ export default function NewRoutinePage() {
           </div>
 
           {/* Bottom Action Buttons - Show below exercise cards */}
-          <div className="p-4 space-y-5 pb-6">
+          <div className="p-2 space-y-5 pb-6">
             {/* Primary Button */}
             <Button
               variant="default"

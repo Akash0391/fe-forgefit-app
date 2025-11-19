@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { workoutApi, Workout, Exercise } from "@/lib/api";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import RoutineOptionsModal from "@/components/RoutineOptionsModal";
+import DeleteRoutineModal from "@/components/DeleteRoutineModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function WorkoutPage() {
   const [showRoutines, setShowRoutines] = useState(true);
   const [selectedRoutine, setSelectedRoutine] = useState<Workout | null>(null);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     // Check if workout is in progress
@@ -25,6 +27,19 @@ export default function WorkoutPage() {
     
     // Fetch routines
     fetchRoutines();
+
+    // Refresh routines when page becomes visible (e.g., navigating back from another page)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchRoutines();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const fetchRoutines = async () => {
@@ -116,8 +131,28 @@ export default function WorkoutPage() {
   };
 
   const handleRoutineDelete = () => {
-    // TODO: Implement delete routine
-    console.log("Delete routine:", selectedRoutine?._id);
+    // Show delete confirmation modal
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedRoutine) return;
+
+    try {
+      await workoutApi.delete(selectedRoutine._id);
+      
+      // Refresh routines list
+      await fetchRoutines();
+      
+      // Close modals
+      setShowDeleteConfirm(false);
+      handleRoutineModalClose();
+    } catch (error) {
+      console.error("Error deleting routine:", error);
+      // Still close modals even if there's an error
+      setShowDeleteConfirm(false);
+      handleRoutineModalClose();
+    }
   };
 
   const handleRoutineShare = () => {
@@ -126,8 +161,28 @@ export default function WorkoutPage() {
   };
 
   const handleRoutineDuplicate = () => {
-    // TODO: Implement duplicate routine
-    console.log("Duplicate routine:", selectedRoutine?._id);
+    if (!selectedRoutine) return;
+    
+    // Prepare routine data in the format expected by new-routine page
+    const routineData = {
+      name: `${selectedRoutine.name} (copy)`,
+      exercises: selectedRoutine.exercises.map((ex) => {
+        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+        return {
+          exercise: exercise,
+          sets: ex.sets || [],
+          notes: ex.notes || "",
+        };
+      }),
+      supersetGroups: selectedRoutine.supersetGroups || [],
+    };
+    
+    // Store in sessionStorage for new-routine page to load
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
+    
+    // Close modal and navigate
+    handleRoutineModalClose();
+    router.push("/workout/new-routine");
   };
 
   return (
@@ -330,6 +385,18 @@ export default function WorkoutPage() {
         onDelete={handleRoutineDelete}
         onShare={handleRoutineShare}
         onDuplicate={handleRoutineDuplicate}
+      />
+
+      {/* Delete Routine Confirmation Modal */}
+      <DeleteRoutineModal
+        open={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          // Close routine options modal when delete confirmation is canceled
+          handleRoutineModalClose();
+        }}
+        onConfirm={handleDeleteConfirm}
+        routineName={selectedRoutine?.name}
       />
     </div>
   );

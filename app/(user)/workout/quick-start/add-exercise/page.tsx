@@ -13,6 +13,7 @@ export default function AddExercisePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isReplaceMode = searchParams.get("mode") === "replace";
+  const isRoutineMode = searchParams.get("mode") === "routine";
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -162,6 +163,57 @@ export default function AddExercisePage() {
     );
     
     if (selectedExercises.length === 0) {
+      return;
+    }
+
+    // Handle routine mode - store exercises in sessionStorage
+    if (isRoutineMode) {
+      const routineDataStr = sessionStorage.getItem("routineExercisesToAdd");
+      let existingExercises: any[] = [];
+      let routineId: string | null = null;
+
+      if (routineDataStr) {
+        try {
+          const data = JSON.parse(routineDataStr);
+          existingExercises = data.exercises || [];
+          routineId = data.routineId || null;
+        } catch (error) {
+          console.error("Error parsing routine data:", error);
+        }
+      }
+
+      // Convert selected exercises to RoutineExercise format
+      const newRoutineExercises = selectedExercises.map((ex) => ({
+        exercise: ex,
+        sets: [],
+        notes: ""
+      }));
+
+      // Combine with existing exercises (avoid duplicates)
+      const exerciseMap = new Map<string, any>();
+      existingExercises.forEach((ex: any) => {
+        const exerciseId = ex.exercise?._id || ex.exerciseId;
+        if (exerciseId) {
+          exerciseMap.set(exerciseId, ex);
+        }
+      });
+      newRoutineExercises.forEach((ex: any) => {
+        const exerciseId = ex.exercise._id;
+        if (!exerciseMap.has(exerciseId)) {
+          exerciseMap.set(exerciseId, ex);
+        }
+      });
+
+      // Store updated exercises back in sessionStorage
+      sessionStorage.setItem("routineExercisesToAdd", JSON.stringify({
+        routineId: routineId,
+        exercises: Array.from(exerciseMap.values())
+      }));
+
+      // Dispatch custom event to notify edit-routine page
+      window.dispatchEvent(new Event('routineExercisesAdded'));
+
+      router.back();
       return;
     }
 

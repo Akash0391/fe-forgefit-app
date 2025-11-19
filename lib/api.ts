@@ -253,5 +253,19 @@ export const workoutApi = {
     success: boolean;
     data: Workout[];
   }>('/api/workouts/routines'),
+
+  updateRoutine: (data: {
+    routineId: string;
+    name: string;
+    exercises: Array<{
+      exercise: Exercise;
+      sets: SetData[];
+      notes: string;
+    }>;
+    supersetGroups?: string[][];
+  }) => apiClient.put<{
+    success: boolean;
+    data: Workout;
+  }>('/api/workouts/routines', data),
 };
 

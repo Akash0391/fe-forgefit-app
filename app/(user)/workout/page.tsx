@@ -126,8 +126,11 @@ export default function WorkoutPage() {
   };
 
   const handleRoutineEdit = () => {
-    // TODO: Implement edit routine name
-    console.log("Edit routine:", selectedRoutine?._id);
+    if (!selectedRoutine) return;
+    
+    // Close modal and navigate to edit routine page
+    handleRoutineModalClose();
+    router.push(`/workout/edit-routine?id=${selectedRoutine._id}`);
   };
 
   const handleRoutineDelete = () => {

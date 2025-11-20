@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Dumbbell, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Dumbbell, MoreHorizontal, Share } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, workoutApi, Workout } from "@/lib/api";
@@ -166,6 +166,14 @@ export default function RoutineDetailsPage() {
           <h1 className="text-lg font-regular">Routine</h1>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10"
+              aria-label="More options"
+            >
+              <Share className="size-7" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

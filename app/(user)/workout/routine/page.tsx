@@ -33,6 +33,13 @@ export default function RoutineDetailsPage() {
     }
   }, [routineId]);
 
+  const formatReps = (set: any) => {
+  if (set?.minReps != null && set?.maxReps != null) return `${set.minReps}-${set.maxReps}`;
+  if (set?.reps != null) return String(set.reps);
+  return '-';
+};
+
+
   const loadRoutine = async () => {
     if (!routineId) return;
 
@@ -320,9 +327,7 @@ export default function RoutineDetailsPage() {
                                   {set.kg || 0}
                                 </td>
                                 <td className="py-2 text-lg pl-2">
-                                  {set.minReps && set.maxReps
-                                    ? `${set.minReps}-${set.maxReps}`
-                                    : set.reps || "-"}
+                                  {formatReps(set)}
                                 </td>
                               </tr>
                             ))}

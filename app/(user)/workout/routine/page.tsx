@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Upload, MoreVertical, Dumbbell, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Dumbbell, MoreHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, workoutApi, Workout } from "@/lib/api";
@@ -18,7 +18,6 @@ export default function RoutineDetailsPage() {
   const searchParams = useSearchParams();
   const routineId = searchParams.get("id");
   const { user } = useAuth();
-  
   const [routine, setRoutine] = useState<Workout | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,14 +170,6 @@ export default function RoutineDetailsPage() {
               variant="ghost"
               size="icon"
               className="h-10 w-10"
-              aria-label="Share"
-            >
-              <Upload className="size-7" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10"
               aria-label="More options"
             >
               <MoreHorizontal className="size-7" />
@@ -206,15 +197,15 @@ export default function RoutineDetailsPage() {
         </div>
 
         {/* Data Visualization Area */}
-        <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[200px]">
-          <div className="text-gray-400 mb-2">
+        <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px]">
+          <div className="text-gray-400 mb-4">
             <svg
               width="48"
               height="48"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -223,16 +214,16 @@ export default function RoutineDetailsPage() {
               <rect x="17" y="13" width="4" height="8" rx="1" />
             </svg>
           </div>
-          <p className="text-gray-400 text-sm">No data yet</p>
+          <p className="text-gray-400 text-lg">No data yet</p>
         </div>
 
         {/* View Filters */}
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           {(["Volume", "Reps", "Duration"] as const).map((view) => (
             <button
               key={view}
               onClick={() => setSelectedView(view)}
-              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
+              className={`flex py-2 px-6 rounded-full text-xm font-medium transition-colors ${
                 selectedView === view
                   ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600"
@@ -245,11 +236,11 @@ export default function RoutineDetailsPage() {
 
         {/* Exercises Section */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-600">Exercises</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-gray-500">Exercises</h3>
             <button
               onClick={handleEditRoutine}
-              className="text-blue-500 text-sm font-medium hover:text-blue-600"
+              className="text-blue-500 text-xm font-regular hover:text-blue-600"
             >
               Edit Routine
             </button>
@@ -269,10 +260,10 @@ export default function RoutineDetailsPage() {
                 return (
                   <div
                     key={exercise._id || index}
-                    className="bg-white rounded-[10px] border border-gray-200 p-4"
+                    className="bg-white"
                   >
                     {/* Exercise Header */}
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center gap-5 mb-2">
                       <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
                         {exercise.thumbnailUrl ? (
                           <img
@@ -293,18 +284,18 @@ export default function RoutineDetailsPage() {
 
                     {/* Sets Table */}
                     {sets.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
+                      <div className="max-w-[300px]">
+                        <table className="w-full text-left ml-2">
                           <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-2 text-sm font-medium text-gray-600">
+                            <tr>
+                              <th className="py-2 text-sm font-regular text-gray-600">
                                 SET
                               </th>
-                              <th className="text-center py-2 text-sm font-medium text-gray-600">
+                              <th className="py-2 text-sm font-regular text-gray-600">
                                 KG
                               </th>
-                              <th className="text-left py-2 text-sm font-medium text-gray-600">
-                                REP RANGE
+                              <th className="py-2 text-sm font-regular text-gray-600">
+                                REPS 
                               </th>
                             </tr>
                           </thead>
@@ -314,13 +305,13 @@ export default function RoutineDetailsPage() {
                                 key={setIndex}
                                 className="border-b border-gray-100 last:border-b-0"
                               >
-                                <td className="py-2 text-lg font-semibold">
+                                <td className="py-2 text-lg font-semibold pl-2">
                                   {set.setNumber || setIndex + 1}
                                 </td>
-                                <td className="py-2 text-center text-lg">
+                                <td className="py-2 text-lg">
                                   {set.kg || 0}
                                 </td>
-                                <td className="py-2 text-lg">
+                                <td className="py-2 text-lg pl-2">
                                   {set.minReps && set.maxReps
                                     ? `${set.minReps}-${set.maxReps}`
                                     : set.reps || "-"}
@@ -345,4 +336,3 @@ export default function RoutineDetailsPage() {
     </div>
   );
 }
-

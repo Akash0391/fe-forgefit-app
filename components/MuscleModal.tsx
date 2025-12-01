@@ -62,13 +62,13 @@ export default function MuscleModal({
 
   const menuItems = [
     { id: "all", label: "All Muscle", icon: "/icons/all.png", callback: onAll },
-    { id: "arms", label: "Arms", icon: "/icons/person.png", callback: onArms },
-    { id: "back", label: "Back", icon: "/icons/barbell.png", callback: onBack },
-    { id: "chest", label: "Chest", icon: "/icons/dumbell2.png", callback: onChest },
-    { id: "core", label: "Core", icon: "/icons/kettlebell.png", callback: onCore },
-    { id: "cardio", label: "Cardio", icon: "/icons/machine.png", callback: onCardio },
-    { id: "legs", label: "Legs", icon: "/icons/plates.png", callback: onLegs },
-    { id: "shoulders", label: "Shoulders", icon: "/icons/resistance-band.png", callback: onShoulders },
+    { id: "arms", label: "Arms", icon: "/icons/arms.png", callback: onArms },
+    { id: "back", label: "Back", icon: "/icons/back.png", callback: onBack },
+    { id: "chest", label: "Chest", icon: "/icons/chest.png", callback: onChest },
+    { id: "core", label: "Core", icon: "/icons/core.png", callback: onCore },
+    { id: "cardio", label: "Cardio", icon: "/icons/cardio.png", callback: onCardio },
+    { id: "legs", label: "Legs", icon: "/icons/legs.png", callback: onLegs },
+    { id: "shoulders", label: "Shoulders", icon: "/icons/shoulder.png", callback: onShoulders },
     { id: "other", label: "Other", icon: "/icons/ellipsis.png", callback: onOther },
   ];
 

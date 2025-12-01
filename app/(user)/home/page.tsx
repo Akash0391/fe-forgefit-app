@@ -56,6 +56,10 @@ export default function HomePage() {
     }
   };
 
+
+  const handleNotification = () => {
+    router.push("/home/notifications");
+  }
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) {
       return `0min`;
@@ -281,7 +285,7 @@ export default function HomePage() {
             <button className="text-gray-700 hover:text-gray-900 transition-colors">
               <Search className="size-7" />
             </button>
-            <button className="text-gray-700 hover:text-gray-900 transition-colors">
+            <button onClick={handleNotification} className="text-gray-700 hover:text-gray-900 transition-colors">
               <Bell className="size-7" />
             </button>
           </div>

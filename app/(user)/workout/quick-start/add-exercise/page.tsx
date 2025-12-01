@@ -9,6 +9,7 @@ import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
 import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
 import EquipmentModal from "@/components/EquipmentsModal"; // <-- import your modal
+import MuscleModal from "@/components/MuscleModal";
 
 export default function AddExercisePage() {
   const router = useRouter();
@@ -30,6 +31,9 @@ export default function AddExercisePage() {
   // New states for Equipment modal
   const [isEquipOpen, setIsEquipOpen] = useState(false);
   const [equipment, setEquipment] = useState<string>("all"); // store the selected equipment key
+
+  const [isMuscleOpen, setIsMuscleOpen] = useState(false);
+  const [muscle, setMuscle] = useState<string>("all");
 
   useEffect(() => {
     fetchExercises();
@@ -259,7 +263,7 @@ export default function AddExercisePage() {
   // --- Equipment modal handlers ---
   // Each handler sets the selected equipment and closes the modal.
   // Optionally call fetchExercises(...) here if you want to re-fetch using equipment filter.
-  const handleOnAll = () => {
+  const handleOnAllEquipment = () => {
     setEquipment("all");
     setIsEquipOpen(false);
     // TODO: fetchExercises(1) with equipment filter if your API supports it
@@ -299,6 +303,44 @@ export default function AddExercisePage() {
   const handleOnOther = () => {
     setEquipment("other");
     setIsEquipOpen(false);
+  };
+
+  const handleOnAllMuscle = () => {
+    setMuscle("all");
+    setIsMuscleOpen(false);
+    // TODO: fetchExercises(1) with equipment filter if your API supports it
+  };
+  const handleOnArms = () => {
+    setMuscle("arms");
+    setIsMuscleOpen(false);
+  };
+  const handleOnBack = () => {
+    setMuscle("back");
+    setIsMuscleOpen(false);
+  };
+  const handleOnChest = () => {
+    setMuscle("chest");
+    setIsMuscleOpen(false);
+  };
+  const handleOnCore = () => {
+    setMuscle("core");
+    setIsMuscleOpen(false);
+  };
+  const handleOnCardio = () => {
+    setMuscle("cardio");
+    setIsMuscleOpen(false);
+  };
+  const handleOnLegs = () => {
+    setMuscle("legs");
+    setIsMuscleOpen(false);
+  };
+  const handleOnShoulders = () => {
+    setMuscle("shoulders");
+    setIsMuscleOpen(false);
+  };
+  const handleOnOtherMuscle = () => {
+    setMuscle("other");
+    setIsMuscleOpen(false);
   };
 
   return (
@@ -372,8 +414,26 @@ export default function AddExercisePage() {
           <Button
             variant="default"
             className="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-black rounded-[8px] py-3 h-auto font-regular text-base border-none shadow-none transition-colors"
+            onClick={() => setIsMuscleOpen(true)}
           >
-            All Muscles
+            {/* show current selected equipment label */}
+            {muscle === "all"
+              ? "All Muscles"
+              : muscle === "none"
+              ? "None"
+              : muscle === "arms"
+              ? "Arms"
+              : muscle === "back"
+              ? "Back"
+              : muscle === "core"
+              ? "Core"
+              : muscle === "cardio"
+              ? "Cardio"
+              : muscle === "legs"
+              ? "Legs"
+              : muscle === "shoulders"
+              ? "Shoulders"
+              : "Other"}
           </Button>
         </div>
 
@@ -437,7 +497,7 @@ export default function AddExercisePage() {
       <EquipmentModal
         open={isEquipOpen}
         onClose={() => setIsEquipOpen(false)}
-        onAll={handleOnAll}
+        onAll={handleOnAllEquipment}
         onNone={handleOnNone}
         onBarbell={handleOnBarbell}
         onKettlebell={handleOnKettlebell}
@@ -448,6 +508,22 @@ export default function AddExercisePage() {
         onSBand={handleOnSBand}
         onOther={handleOnOther}
         selectedKey={equipment}
+      />
+
+      {/* Muscle Modal */}
+      <MuscleModal  
+        open={isMuscleOpen}
+        onClose={() => setIsMuscleOpen(false)}
+        onAll={handleOnAllMuscle}
+        onArms={handleOnArms}
+        onBack={handleOnBack}
+        onChest={handleOnChest}
+        onCore={handleOnCore}
+        onCardio={handleOnCardio}
+        onLegs={handleOnLegs}
+        onShoulders={handleOnShoulders}
+        onOther={handleOnOtherMuscle}
+        selectedKey={muscle}
       />
     </div>
   );

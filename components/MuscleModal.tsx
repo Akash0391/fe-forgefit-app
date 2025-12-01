@@ -7,30 +7,28 @@ interface EquipmentModalProps {
   open: boolean;
   onClose: () => void;
   onAll: () => void;
-  onNone: () => void;
-  onBarbell: () => void;
-  onKettlebell: () => void;
-  onDumbell: () => void;
-  onMachine: () => void;
-  onPlate: () => void;
-  onRBand: () => void;
-  onSBand: () => void;
+  onArms: () => void;
+  onBack: () => void;
+  onChest: () => void;
+  onCore: () => void;
+  onCardio: () => void;
+  onLegs: () => void;
+  onShoulders: () => void;
   onOther: () => void;
   selectedKey?: string;
 }
 
-export default function EquipmentModal({
+export default function MuscleModal({
   open,
   onClose,
   onAll,
-  onNone,
-  onBarbell,
-  onKettlebell,
-  onDumbell,
-  onMachine,
-  onPlate,
-  onRBand,
-  onSBand,
+  onArms,
+  onBack,
+  onChest,
+  onCore,
+  onCardio,
+  onLegs,
+  onShoulders,
   onOther,
   selectedKey: externalSelectedKey,
 }: EquipmentModalProps) {
@@ -63,15 +61,14 @@ export default function EquipmentModal({
   if (!shouldRender) return null;
 
   const menuItems = [
-    { id: "all", label: "All Equipment", icon: "/icons/all.png", callback: onAll },
-    { id: "none", label: "None", icon: "/icons/person.png", callback: onNone },
-    { id: "barbell", label: "Barbell", icon: "/icons/barbell.png", callback: onBarbell },
-    { id: "dumbell", label: "Dumbell", icon: "/icons/dumbell2.png", callback: onDumbell },
-    { id: "kettlebell", label: "Kettlebell", icon: "/icons/kettlebell.png", callback: onKettlebell },
-    { id: "machine", label: "Machine", icon: "/icons/machine.png", callback: onMachine },
-    { id: "plate", label: "Plate", icon: "/icons/plates.png", callback: onPlate },
-    { id: "rband", label: "Resistance Band", icon: "/icons/resistance-band.png", callback: onRBand },
-    { id: "sband", label: "Suspension Band", icon: "/icons/suspension-band.png", callback: onSBand },
+    { id: "all", label: "All Muscle", icon: "/icons/all.png", callback: onAll },
+    { id: "arms", label: "Arms", icon: "/icons/person.png", callback: onArms },
+    { id: "back", label: "Back", icon: "/icons/barbell.png", callback: onBack },
+    { id: "chest", label: "Chest", icon: "/icons/dumbell2.png", callback: onChest },
+    { id: "core", label: "Core", icon: "/icons/kettlebell.png", callback: onCore },
+    { id: "cardio", label: "Cardio", icon: "/icons/machine.png", callback: onCardio },
+    { id: "legs", label: "Legs", icon: "/icons/plates.png", callback: onLegs },
+    { id: "shoulders", label: "Shoulders", icon: "/icons/resistance-band.png", callback: onShoulders },
     { id: "other", label: "Other", icon: "/icons/ellipsis.png", callback: onOther },
   ];
 
@@ -105,7 +102,7 @@ export default function EquipmentModal({
         <div className="flex flex-col items-center pt-2 pb-3 mb-5 border-b border-gray-200">
           <div className="h-1.5 w-16 bg-gray-300 rounded-lg" />
           <div className="mt-5 mb-1">
-            <h2 className="text-lg font-regular text-gray-800">Equipment</h2>
+            <h2 className="text-lg font-regular text-gray-800">Muscle Group</h2>
           </div>
         </div>
 

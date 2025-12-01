@@ -425,6 +425,8 @@ export default function AddExercisePage() {
               ? "Arms"
               : muscle === "back"
               ? "Back"
+              :muscle === "chest"
+              ? "Chest"
               : muscle === "core"
               ? "Core"
               : muscle === "cardio"

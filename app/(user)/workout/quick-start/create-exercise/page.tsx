@@ -68,7 +68,7 @@ export default function CreateExercisePage() {
                 <div className="mb-2">
                     <button
                         onClick={() => {
-                            router.push("/workout/quick-start/timer-settings/sounds/select-timer-sound");
+                            router.push("/workout/quick-start/create-exercise/select-equipment");
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
@@ -85,7 +85,7 @@ export default function CreateExercisePage() {
                 <div className="mb-2">
                     <button
                         onClick={() => {
-                            router.push("/workout/quick-start/timer-settings/sounds/select-timer-sound");
+                            router.push("/workout/quick-start/create-exercise/select-primary-muscle");
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
@@ -102,7 +102,7 @@ export default function CreateExercisePage() {
                 <div className="mb-2">
                     <button
                         onClick={() => {
-                            router.push("/workout/quick-start/timer-settings/sounds/select-timer-sound");
+                            router.push("/workout/quick-start/create-exercise/select-other-muscles");
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
@@ -124,7 +124,7 @@ export default function CreateExercisePage() {
                 <div className="mb-2">
                     <button
                         onClick={() => {
-                            router.push("/workout/quick-start/timer-settings/sounds/select-timer-sound");
+                            router.push("/workout/quick-start/create-exercise/select-exercise-type");
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50  transition-colors"
                     >

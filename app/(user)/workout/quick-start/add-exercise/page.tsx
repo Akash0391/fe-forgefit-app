@@ -39,40 +39,81 @@ export default function AddExercisePage() {
     fetchExercises();
   }, []);
 
-  const fetchExercises = async (pageNum: number = 1, append: boolean = false) => {
-    try {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      console.log("Fetching exercises...");
-      // TODO: if your API supports equipment filter, pass it here, e.g. { equipment }
-      const response = await exerciseApi.getAll({ limit: 200, page: pageNum });
-      console.log("Exercises response:", response);
-      if (response.success) {
-        console.log(`Loaded ${response.data.length} exercises`);
-        if (append) {
-          setExercises((prev) => [...prev, ...response.data]);
-        } else {
-          setExercises(response.data);
-        }
-        setPagination(response.pagination);
-        setHasMore(pageNum < response.pagination.pages);
-        setPage(pageNum);
-      } else {
-        console.error("API returned success=false:", response);
-        setError("Failed to load exercises. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error fetching exercises:", error);
-      setError("Failed to load exercises. Please try again.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
+  // Add inside your component, replacing existing fetchExercises & handleSearch
+
+// map UI equipment keys -> backend/schema enum keys
+const equipmentKeyMap: Record<string, string> = {
+  all: 'all',
+  none: 'bodyweight', // interpret 'none' as bodyweight if that fits your app
+  barbell: 'barbell',
+  dumbell: 'dumbbell', // note correction: 'dumbbell' (schema uses 'dumbbell')
+  kettlebell: 'kettlebell',
+  machine: 'machine',
+  plate: 'other', // if 'plate' isn't in schema, map to 'other' or add to schema
+  rband: 'other',
+  sband: 'other',
+  other: 'other'
+};
+
+// build params using current state + overrides (overrides let us call immediately with chosen value)
+const buildFetchParams = (pageNum: number = 1, overrides: Partial<{ search: string; equipment: string; muscle: string; limit: number }> = {}) => {
+  const params: any = {
+    page: pageNum,
+    limit: overrides.limit ?? 200,
   };
+
+  const searchVal = overrides.search ?? searchQuery;
+  const equipmentVal = overrides.equipment ?? equipment;
+  const muscleVal = overrides.muscle ?? muscle;
+
+  if (searchVal && String(searchVal).trim().length > 0) params.search = String(searchVal).trim();
+
+  // normalize equipment to backend keys
+  if (equipmentVal && equipmentVal !== 'all') {
+    const mapped = equipmentKeyMap[equipmentVal] ?? equipmentVal;
+    params.equipment = mapped;
+  }
+
+  if (muscleVal && muscleVal !== 'all') {
+    params.muscle = muscleVal;
+  }
+
+  return params;
+};
+
+const fetchExercises = async (pageNum: number = 1, append: boolean = false, overrides: Partial<{ equipment: string; muscle: string; search: string }> = {}) => {
+  try {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
+    setError(null);
+
+    const params = buildFetchParams(pageNum, overrides);
+
+    console.log('Fetching exercises with params:', params);
+
+    const response = await exerciseApi.getAll(params);
+    console.log('Exercises response:', response);
+
+    if (response.success) {
+      if (append) {
+        setExercises((prev) => [...prev, ...response.data]);
+      } else {
+        setExercises(response.data);
+      }
+      setPagination(response.pagination);
+      setHasMore(pageNum < response.pagination.pages);
+      setPage(pageNum);
+    } else {
+      setError('Failed to load exercises. Please try again.');
+    }
+  } catch (err) {
+    console.error('Error fetching exercises:', err);
+    setError('Failed to load exercises. Please try again.');
+  } finally {
+    setLoading(false);
+    setLoadingMore(false);
+  }
+};
 
   const loadMoreExercises = () => {
     if (!loadingMore && hasMore) {
@@ -81,28 +122,26 @@ export default function AddExercisePage() {
   };
 
   const handleSearch = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setPage(1);
-      // TODO: pass equipment to search if supported
-      const response = await exerciseApi.getAll({
-        search: searchQuery,
-        limit: 200,
-        page: 1,
-      });
-      if (response.success) {
-        setExercises(response.data);
-        setPagination(response.pagination);
-        setHasMore(1 < response.pagination.pages);
-      }
-    } catch (error) {
-      console.error("Error searching exercises:", error);
-      setError("Failed to search exercises. Please try again.");
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    setError(null);
+    setPage(1);
+    const params = buildFetchParams(1, { search: searchQuery });
+    const response = await exerciseApi.getAll(params);
+    if (response.success) {
+      setExercises(response.data);
+      setPagination(response.pagination);
+      setHasMore(1 < response.pagination.pages);
+    } else {
+      setError('Search failed. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error searching exercises:', error);
+    setError('Failed to search exercises. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleExerciseClick = (exercise: Exercise) => {
     // If in replace mode, immediately replace and navigate back
@@ -266,81 +305,99 @@ export default function AddExercisePage() {
   const handleOnAllEquipment = () => {
     setEquipment("all");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "all" });
     // TODO: fetchExercises(1) with equipment filter if your API supports it
   };
   const handleOnNone = () => {
     setEquipment("none");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "none" });
   };
   const handleOnBarbell = () => {
     setEquipment("barbell");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "barbell" });
   };
   const handleOnDumbell = () => {
     setEquipment("dumbell");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "dumbell" });
   };
   const handleOnKettlebell = () => {
     setEquipment("kettlebell");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "kettlebell" });
   };
   const handleOnMachine = () => {
     setEquipment("machine");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "machine" });
   };
   const handleOnPlate = () => {
     setEquipment("plate");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "plate" });
   };
   const handleOnRBand = () => {
     setEquipment("rband");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "rband" });
   };
   const handleOnSBand = () => {
     setEquipment("sband");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "sband" });
   };
   const handleOnOther = () => {
     setEquipment("other");
     setIsEquipOpen(false);
+    fetchExercises(1, false, { equipment: "other" });
   };
 
   const handleOnAllMuscle = () => {
     setMuscle("all");
     setIsMuscleOpen(false);
-    // TODO: fetchExercises(1) with equipment filter if your API supports it
+    fetchExercises(1, false, { muscle: "all" });
   };
   const handleOnArms = () => {
     setMuscle("arms");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "arms" });
   };
   const handleOnBack = () => {
     setMuscle("back");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "back" });
   };
   const handleOnChest = () => {
     setMuscle("chest");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "chest" });
   };
   const handleOnCore = () => {
     setMuscle("core");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "core" });
   };
   const handleOnCardio = () => {
     setMuscle("cardio");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "cardio" });
   };
   const handleOnLegs = () => {
     setMuscle("legs");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "legs" });
   };
   const handleOnShoulders = () => {
     setMuscle("shoulders");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "shoulders" });
   };
   const handleOnOtherMuscle = () => {
     setMuscle("other");
     setIsMuscleOpen(false);
+    fetchExercises(1, false, { muscle: "other" });
   };
 
   return (

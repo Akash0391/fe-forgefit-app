@@ -100,32 +100,37 @@ export interface Exercise {
 
 // Exercise-related API methods
 export const exerciseApi = {
-  getAll: (params?: {
-    search?: string;
-    muscleGroup?: string;
-    equipment?: string;
-    limit?: number;
-    page?: number;
-  }) => {
-    const queryParams = new URLSearchParams();
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.muscleGroup) queryParams.append('muscleGroup', params.muscleGroup);
-    if (params?.equipment) queryParams.append('equipment', params.equipment);
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.page) queryParams.append('page', params.page.toString());
-    
-    const queryString = queryParams.toString();
-    return apiClient.get<{
-      success: boolean;
-      data: Exercise[];
-      pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        pages: number;
-      };
-    }>(`/api/exercises${queryString ? `?${queryString}` : ''}`);
-  },
+// inside api.ts — replace exerciseApi.getAll implementation
+getAll: (params?: {
+  search?: string;
+  muscle?: string;        // prefer 'muscle'
+  muscleGroup?: string;   // keep compat
+  equipment?: string;
+  limit?: number;
+  page?: number;
+}) => {
+  const queryParams = new URLSearchParams();
+  if (params?.search) queryParams.append('search', params.search);
+  // prefer sending `muscle` param if provided, otherwise fallback to muscleGroup
+  if (params?.muscle) queryParams.append('muscle', params.muscle);
+  else if (params?.muscleGroup) queryParams.append('muscleGroup', params.muscleGroup);
+  if (params?.equipment) queryParams.append('equipment', params.equipment);
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+  if (params?.page) queryParams.append('page', params.page.toString());
+
+  const queryString = queryParams.toString();
+  return apiClient.get<{
+    success: boolean;
+    data: Exercise[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }>(`/api/exercises${queryString ? `?${queryString}` : ''}`);
+},
+
 
   getById: (id: string) => apiClient.get<{
     success: boolean;

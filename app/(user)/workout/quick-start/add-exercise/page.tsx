@@ -410,7 +410,7 @@ export default function AddExercisePage() {
         <div className="flex items-center justify-between h-16 px-4">
           <Button
             variant="ghost"
-            onClick={() => router.back()}
+            onClick={() => window.history.back()}
             className="h-10 px-0 hover:bg-transparent"
             aria-label="Go back"
           >

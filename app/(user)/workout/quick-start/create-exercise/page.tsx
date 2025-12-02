@@ -4,11 +4,23 @@ import React from "react";
 import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-
+import MediaAssetModal from "@/components/MediaAssetModal";
+import { useState } from "react";
 
 export default function CreateExercisePage() {
     const router = useRouter();
     const [createExerciseTitle, setCreateExerciseTitle] = React.useState("");
+    const [showMediaModal, setShowMediaModal] = useState(false);
+
+    const handleTakePhoto = () => {
+        setShowMediaModal(false);
+        alert("Take Photo clicked — wire up your camera logic");
+    };
+
+    const handleSelectFromLibrary = () => {
+        setShowMediaModal(false);
+        alert("Select From Library clicked — wire up your library logic");
+    };
     return (
         <div className="min-h-screen bg-white text-gray-900">
             {/* Header */}
@@ -41,7 +53,7 @@ export default function CreateExercisePage() {
                         <button
                             aria-label="Add asset"
                             className="flex flex-col items-center justify-center"
-                            onClick={() => alert('Open asset picker')}
+                            onClick={() => setShowMediaModal(true)}
                         >
                             <div className="w-12 h-12 flex items-center justify-center">
                                 <Camera className="size-8 text-black" />
@@ -138,6 +150,14 @@ export default function CreateExercisePage() {
                     </button>
                 </div>
             </div>
+
+            {/* Media Selection Modal */}
+                  <MediaAssetModal
+                    open={showMediaModal}
+                    onClose={() => setShowMediaModal(false)}
+                    onTakePhoto={handleTakePhoto}
+                    onSelectFromLibrary={handleSelectFromLibrary}
+                  />
         </div>
     );
 }

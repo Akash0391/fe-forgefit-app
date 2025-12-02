@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, RotateCw, Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
@@ -41,79 +41,79 @@ export default function AddExercisePage() {
 
   // Add inside your component, replacing existing fetchExercises & handleSearch
 
-// map UI equipment keys -> backend/schema enum keys
-const equipmentKeyMap: Record<string, string> = {
-  all: 'all',
-  none: 'bodyweight', // interpret 'none' as bodyweight if that fits your app
-  barbell: 'barbell',
-  dumbell: 'dumbbell', // note correction: 'dumbbell' (schema uses 'dumbbell')
-  kettlebell: 'kettlebell',
-  machine: 'machine',
-  plate: 'other', // if 'plate' isn't in schema, map to 'other' or add to schema
-  rband: 'other',
-  sband: 'other',
-  other: 'other'
-};
-
-// build params using current state + overrides (overrides let us call immediately with chosen value)
-const buildFetchParams = (pageNum: number = 1, overrides: Partial<{ search: string; equipment: string; muscle: string; limit: number }> = {}) => {
-  const params: any = {
-    page: pageNum,
-    limit: overrides.limit ?? 200,
+  // map UI equipment keys -> backend/schema enum keys
+  const equipmentKeyMap: Record<string, string> = {
+    all: 'all',
+    none: 'bodyweight', // interpret 'none' as bodyweight if that fits your app
+    barbell: 'barbell',
+    dumbell: 'dumbbell', // note correction: 'dumbbell' (schema uses 'dumbbell')
+    kettlebell: 'kettlebell',
+    machine: 'machine',
+    plate: 'other', // if 'plate' isn't in schema, map to 'other' or add to schema
+    rband: 'other',
+    sband: 'other',
+    other: 'other'
   };
 
-  const searchVal = overrides.search ?? searchQuery;
-  const equipmentVal = overrides.equipment ?? equipment;
-  const muscleVal = overrides.muscle ?? muscle;
+  // build params using current state + overrides (overrides let us call immediately with chosen value)
+  const buildFetchParams = (pageNum: number = 1, overrides: Partial<{ search: string; equipment: string; muscle: string; limit: number }> = {}) => {
+    const params: any = {
+      page: pageNum,
+      limit: overrides.limit ?? 200,
+    };
 
-  if (searchVal && String(searchVal).trim().length > 0) params.search = String(searchVal).trim();
+    const searchVal = overrides.search ?? searchQuery;
+    const equipmentVal = overrides.equipment ?? equipment;
+    const muscleVal = overrides.muscle ?? muscle;
 
-  // normalize equipment to backend keys
-  if (equipmentVal && equipmentVal !== 'all') {
-    const mapped = equipmentKeyMap[equipmentVal] ?? equipmentVal;
-    params.equipment = mapped;
-  }
+    if (searchVal && String(searchVal).trim().length > 0) params.search = String(searchVal).trim();
 
-  if (muscleVal && muscleVal !== 'all') {
-    params.muscle = muscleVal;
-  }
-
-  return params;
-};
-
-const fetchExercises = async (pageNum: number = 1, append: boolean = false, overrides: Partial<{ equipment: string; muscle: string; search: string }> = {}) => {
-  try {
-    if (append) setLoadingMore(true);
-    else setLoading(true);
-    setError(null);
-
-    const params = buildFetchParams(pageNum, overrides);
-
-    console.log('Fetching exercises with params:', params);
-
-    const response = await exerciseApi.getAll(params);
-    console.log('Exercises response:', response);
-
-    if (response.success) {
-      if (append) {
-        setExercises((prev) => [...prev, ...response.data]);
-      } else {
-        setExercises(response.data);
-      }
-      setPagination(response.pagination);
-      setHasMore(pageNum < response.pagination.pages);
-      setPage(pageNum);
-    } else {
-      setError('Failed to load exercises. Please try again.');
+    // normalize equipment to backend keys
+    if (equipmentVal && equipmentVal !== 'all') {
+      const mapped = equipmentKeyMap[equipmentVal] ?? equipmentVal;
+      params.equipment = mapped;
     }
-  } catch (err) {
-    console.error('Error fetching exercises:', err);
-    setError('Failed to load exercises. Please try again.');
-  } finally {
-    setLoading(false);
-    setLoadingMore(false);
-  }
-};
+
+    if (muscleVal && muscleVal !== 'all') {
+      params.muscle = muscleVal;
+    }
+
+    return params;
+  };
+
+  const fetchExercises = async (pageNum: number = 1, append: boolean = false, overrides: Partial<{ equipment: string; muscle: string; search: string }> = {}) => {
+    try {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      setError(null);
+
+      const params = buildFetchParams(pageNum, overrides);
+
+      console.log('Fetching exercises with params:', params);
+
+      const response = await exerciseApi.getAll(params);
+      console.log('Exercises response:', response);
+
+      if (response.success) {
+        if (append) {
+          setExercises((prev) => [...prev, ...response.data]);
+        } else {
+          setExercises(response.data);
+        }
+        setPagination(response.pagination);
+        setHasMore(pageNum < response.pagination.pages);
+        setPage(pageNum);
+      } else {
+        setError('Failed to load exercises. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error fetching exercises:', err);
+      setError('Failed to load exercises. Please try again.');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
   const loadMoreExercises = () => {
     if (!loadingMore && hasMore) {
@@ -122,26 +122,26 @@ const fetchExercises = async (pageNum: number = 1, append: boolean = false, over
   };
 
   const handleSearch = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    setPage(1);
-    const params = buildFetchParams(1, { search: searchQuery });
-    const response = await exerciseApi.getAll(params);
-    if (response.success) {
-      setExercises(response.data);
-      setPagination(response.pagination);
-      setHasMore(1 < response.pagination.pages);
-    } else {
-      setError('Search failed. Please try again.');
+    try {
+      setLoading(true);
+      setError(null);
+      setPage(1);
+      const params = buildFetchParams(1, { search: searchQuery });
+      const response = await exerciseApi.getAll(params);
+      if (response.success) {
+        setExercises(response.data);
+        setPagination(response.pagination);
+        setHasMore(1 < response.pagination.pages);
+      } else {
+        setError('Search failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error searching exercises:', error);
+      setError('Failed to search exercises. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error searching exercises:', error);
-    setError('Failed to search exercises. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleExerciseClick = (exercise: Exercise) => {
     // If in replace mode, immediately replace and navigate back
@@ -299,14 +299,18 @@ const fetchExercises = async (pageNum: number = 1, append: boolean = false, over
     exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // --- Equipment modal handlers ---
-  // Each handler sets the selected equipment and closes the modal.
-  // Optionally call fetchExercises(...) here if you want to re-fetch using equipment filter.
+  const clearAllFilters = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEquipment("all");
+    setMuscle("all");
+    fetchExercises(1, false, { equipment: "all", muscle: "all" });
+  };
+
+
   const handleOnAllEquipment = () => {
     setEquipment("all");
     setIsEquipOpen(false);
     fetchExercises(1, false, { equipment: "all" });
-    // TODO: fetchExercises(1) with equipment filter if your API supports it
   };
   const handleOnNone = () => {
     setEquipment("none");
@@ -441,60 +445,79 @@ const fetchExercises = async (pageNum: number = 1, append: boolean = false, over
         </div>
 
         <div className="flex flex-row items-center gap-3">
-          <Button
-            variant="default"
-            className="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-black rounded-[8px] py-3 h-auto font-regular text-base border-none shadow-none transition-colors"
-            onClick={() => setIsEquipOpen(true)} // open modal here
+          {/* Equipment Button */}
+          <button
+            type="button"
+            onClick={() => setIsEquipOpen(true)}
+            className={`relative flex items-center justify-center flex-1 px-4 py-3 h-auto text-base rounded-[8px] border-none font-regular transition-colors
+      ${equipment && equipment !== "all" ? "bg-blue-500 text-white" : "bg-gray-100 text-black"}
+    `}
           >
-            {/* show current selected equipment label */}
-            {equipment === "all"
-              ? "All Equipment"
-              : equipment === "none"
-              ? "None"
-              : equipment === "barbell"
-              ? "Barbell"
-              : equipment === "dumbell"
-              ? "Dumbell"
-              : equipment === "kettlebell"
-              ? "Kettlebell"
-              : equipment === "machine"
-              ? "Machine"
-              : equipment === "plate"
-              ? "Plate"
-              : equipment === "rband"
-              ? "Resistance Band"
-              : equipment === "sband"
-              ? "Suspension Band"
-              : "Other"}
-          </Button>
+            <span className="truncate">
+              {equipment === "all"
+                ? "All Equipment"
+                : equipment === "none"
+                  ? "None"
+                  : equipment === "barbell"
+                    ? "Barbell"
+                    : equipment === "dumbell"
+                      ? "Dumbell"
+                      : equipment === "kettlebell"
+                        ? "Kettlebell"
+                        : equipment === "machine"
+                          ? "Machine"
+                          : equipment === "plate"
+                            ? "Plate"
+                            : equipment === "rband"
+                              ? "Resistance Band"
+                              : equipment === "sband"
+                                ? "Suspension Band"
+                                : "Other"}
+            </span>
+          </button>
 
-          <Button
-            variant="default"
-            className="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-black rounded-[8px] py-3 h-auto font-regular text-base border-none shadow-none transition-colors"
+          {/* Muscle Button */}
+          <button
+            type="button"
             onClick={() => setIsMuscleOpen(true)}
+            className={`relative flex items-center justify-center flex-1 px-4 py-3 h-auto text-base rounded-[8px] border-none font-regular transition-colors
+      ${muscle && muscle !== "all" ? "bg-blue-500 text-white" : "bg-gray-100 text-black"}
+    `}
           >
-            {/* show current selected equipment label */}
-            {muscle === "all"
-              ? "All Muscles"
-              : muscle === "none"
-              ? "None"
-              : muscle === "arms"
-              ? "Arms"
-              : muscle === "back"
-              ? "Back"
-              :muscle === "chest"
-              ? "Chest"
-              : muscle === "core"
-              ? "Core"
-              : muscle === "cardio"
-              ? "Cardio"
-              : muscle === "legs"
-              ? "Legs"
-              : muscle === "shoulders"
-              ? "Shoulders"
-              : "Other"}
-          </Button>
+            <span className="truncate">
+              {muscle === "all"
+                ? "All Muscles"
+                : muscle === "none"
+                  ? "None"
+                  : muscle === "arms"
+                    ? "Arms"
+                    : muscle === "back"
+                      ? "Back"
+                      : muscle === "chest"
+                        ? "Chest"
+                        : muscle === "core"
+                          ? "Core"
+                          : muscle === "cardio"
+                            ? "Cardio"
+                            : muscle === "legs"
+                              ? "Legs"
+                              : muscle === "shoulders"
+                                ? "Shoulders"
+                                : "Other"}
+            </span>
+          </button>
+
+          {(equipment !== "all" || muscle !== "all") && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-black"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
+
 
         {error && <div className="text-red-500 text-sm">{error}</div>}
       </div>
@@ -570,7 +593,7 @@ const fetchExercises = async (pageNum: number = 1, append: boolean = false, over
       />
 
       {/* Muscle Modal */}
-      <MuscleModal  
+      <MuscleModal
         open={isMuscleOpen}
         onClose={() => setIsMuscleOpen(false)}
         onAll={handleOnAllMuscle}

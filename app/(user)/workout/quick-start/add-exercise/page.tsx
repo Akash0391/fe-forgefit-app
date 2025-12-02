@@ -198,8 +198,7 @@ export default function AddExercisePage() {
   };
 
   const handleCreate = () => {
-    // Add logic to add selected exercise to workout
-    window.location.reload();
+    router.push('/workout/quick-start/create-exercise');
   };
 
   const handleAddExercises = async () => {

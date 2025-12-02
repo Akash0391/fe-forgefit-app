@@ -56,7 +56,7 @@ export default function SelectExercise() {
         <div className="h-16 flex items-center px-4">
           <button
             aria-label="Back"
-            onClick={() => router.back()}
+            onClick={() => window.history.back()}
             className="p-2 -ml-2 rounded-full hover:bg-gray-100"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700" />

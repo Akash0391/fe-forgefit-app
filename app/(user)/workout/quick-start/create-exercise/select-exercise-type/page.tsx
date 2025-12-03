@@ -2,11 +2,12 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useCreateExerciseStore } from "@/store/useCreateExerciseStore";    
 
 export default function SelectExercise() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+ const { exerciseType, setExerciseType } = useCreateExerciseStore();
   const items = [
     {
       id: "weight_reps",
@@ -59,8 +60,9 @@ export default function SelectExercise() {
   ];
 
   const handleSelect = (title: string) => {
+    setExerciseType(title);
+    
     const params = new URLSearchParams(searchParams.toString());
-    params.set("exerciseType", title);
 
     router.push(
       `/workout/quick-start/create-exercise?${params.toString()}`

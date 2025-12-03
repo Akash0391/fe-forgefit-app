@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useCreateExerciseStore } from "@/store/useCreateExerciseStore";
 
 export default function SelectEquipment() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
+  const { equipment, setEquipment } = useCreateExerciseStore();
   const menuItems = [
     { id: "none", label: "None", icon: "/icons/person.png" },
     { id: "barbell", label: "Barbell", icon: "/icons/barbell.png" },
@@ -21,12 +20,12 @@ export default function SelectEquipment() {
   ];
 
   const handleSelect = (label: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("equipment", label);
+    // update global create-exercise state
+    setEquipment(label);
 
-    router.push(
-      `/workout/quick-start/create-exercise?${params.toString()}`
-    );
+    // go back to Create Exercise page
+    router.push("/workout/quick-start/create-exercise");
+    // or router.back(); if you prefer history back
   };
 
   return (

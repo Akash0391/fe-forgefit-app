@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useCreateExerciseStore } from "@/store/useCreateExerciseStore";
 
 export default function SelectOtherMuscle() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+const { otherMuscles, setOtherMuscles } = useCreateExerciseStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   // initialise Set from URL if present
@@ -53,7 +54,7 @@ export default function SelectOtherMuscle() {
 
   const params = new URLSearchParams(searchParams.toString());
   // use labels, nicely formatted
-  params.set("otherMuscles", selectedLabels.join(", "));
+  setOtherMuscles(selectedLabels.join(", "));
 
   router.push(
     `/workout/quick-start/create-exercise?${params.toString()}`

@@ -8,55 +8,66 @@ import { useState, useEffect } from "react";
 import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
 import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
-import EquipmentModal from "@/components/EquipmentsModal"; // <-- import your modal
+import EquipmentModal from "@/components/EquipmentsModal";
 import MuscleModal from "@/components/MuscleModal";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export default function AddExercisePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isReplaceMode = searchParams.get("mode") === "replace";
   const isRoutineMode = searchParams.get("mode") === "routine";
+
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingCustom, setLoadingCustom] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [pagination, setPagination] = useState<{ total: number; pages: number } | null>(null);
 
-  // New states for Equipment modal
   const [isEquipOpen, setIsEquipOpen] = useState(false);
-  const [equipment, setEquipment] = useState<string>("all"); // store the selected equipment key
-
+  const [equipment, setEquipment] = useState<string>("all");
   const [isMuscleOpen, setIsMuscleOpen] = useState(false);
   const [muscle, setMuscle] = useState<string>("all");
 
   useEffect(() => {
-    fetchExercises();
+    fetchExercises(1, false);
+    fetchCustomExercises();
   }, []);
-
-  // Add inside your component, replacing existing fetchExercises & handleSearch
 
   // map UI equipment keys -> backend/schema enum keys
   const equipmentKeyMap: Record<string, string> = {
-    all: 'all',
-    none: 'bodyweight', // interpret 'none' as bodyweight if that fits your app
-    barbell: 'barbell',
-    dumbell: 'dumbbell', // note correction: 'dumbbell' (schema uses 'dumbbell')
-    kettlebell: 'kettlebell',
-    machine: 'machine',
-    plate: 'other', // if 'plate' isn't in schema, map to 'other' or add to schema
-    rband: 'other',
-    sband: 'other',
-    other: 'other'
+    all: "all",
+    none: "other", // map 'none' to 'other' or another value you prefer
+    barbell: "barbell",
+    dumbell: "dumbbell", // correct schema key
+    kettlebell: "kettlebell",
+    machine: "machine",
+    plate: "plate",
+    rband: "rband",
+    sband: "sband",
+    other: "other",
   };
 
-  // build params using current state + overrides (overrides let us call immediately with chosen value)
-  const buildFetchParams = (pageNum: number = 1, overrides: Partial<{ search: string; equipment: string; muscle: string; limit: number }> = {}) => {
+  const buildFetchParams = (
+    pageNum: number = 1,
+    overrides: Partial<{
+      search: string;
+      equipment: string;
+      muscle: string;
+      limit: number;
+      isCustom: string;
+    }> = {}
+  ) => {
     const params: any = {
       page: pageNum,
       limit: overrides.limit ?? 200,
@@ -65,34 +76,49 @@ export default function AddExercisePage() {
     const searchVal = overrides.search ?? searchQuery;
     const equipmentVal = overrides.equipment ?? equipment;
     const muscleVal = overrides.muscle ?? muscle;
+    const isCustomVal = overrides.isCustom;
 
-    if (searchVal && String(searchVal).trim().length > 0) params.search = String(searchVal).trim();
+    if (searchVal && String(searchVal).trim().length > 0)
+      params.search = String(searchVal).trim();
 
-    // normalize equipment to backend keys
-    if (equipmentVal && equipmentVal !== 'all') {
+    if (equipmentVal && equipmentVal !== "all") {
       const mapped = equipmentKeyMap[equipmentVal] ?? equipmentVal;
       params.equipment = mapped;
     }
 
-    if (muscleVal && muscleVal !== 'all') {
+    if (muscleVal && muscleVal !== "all") {
       params.muscle = muscleVal;
+    }
+
+    if (typeof isCustomVal !== "undefined") {
+      params.isCustom = isCustomVal;
     }
 
     return params;
   };
 
-  const fetchExercises = async (pageNum: number = 1, append: boolean = false, overrides: Partial<{ equipment: string; muscle: string; search: string }> = {}) => {
+  const fetchExercises = async (
+    pageNum: number = 1,
+    append: boolean = false,
+    overrides: Partial<{
+      equipment: string;
+      muscle: string;
+      search: string;
+      isCustom: string;
+    }> = {}
+  ) => {
     try {
       if (append) setLoadingMore(true);
       else setLoading(true);
       setError(null);
 
-      const params = buildFetchParams(pageNum, overrides);
-
-      console.log('Fetching exercises with params:', params);
+      // by default, we only want NON custom for the "Popular" list
+      const params = buildFetchParams(pageNum, {
+        ...overrides,
+        isCustom: overrides.isCustom ?? "false",
+      });
 
       const response = await exerciseApi.getAll(params);
-      console.log('Exercises response:', response);
 
       if (response.success) {
         if (append) {
@@ -104,14 +130,33 @@ export default function AddExercisePage() {
         setHasMore(pageNum < response.pagination.pages);
         setPage(pageNum);
       } else {
-        setError('Failed to load exercises. Please try again.');
+        setError("Failed to load exercises. Please try again.");
       }
     } catch (err) {
-      console.error('Error fetching exercises:', err);
-      setError('Failed to load exercises. Please try again.');
+      console.error("Error fetching exercises:", err);
+      setError("Failed to load exercises. Please try again.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
+    }
+  };
+
+  const fetchCustomExercises = async () => {
+    try {
+      setLoadingCustom(true);
+      const res = await fetch(`${API_BASE}/exercises/custom`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setCustomExercises(json.data);
+      } else {
+        console.error("Failed to fetch custom exercises:", json);
+      }
+    } catch (err) {
+      console.error("Error fetching custom exercises:", err);
+    } finally {
+      setLoadingCustom(false);
     }
   };
 
@@ -126,65 +171,55 @@ export default function AddExercisePage() {
       setLoading(true);
       setError(null);
       setPage(1);
-      const params = buildFetchParams(1, { search: searchQuery });
+      const params = buildFetchParams(1, {
+        search: searchQuery,
+        isCustom: "false",
+      });
       const response = await exerciseApi.getAll(params);
       if (response.success) {
         setExercises(response.data);
         setPagination(response.pagination);
         setHasMore(1 < response.pagination.pages);
       } else {
-        setError('Search failed. Please try again.');
+        setError("Search failed. Please try again.");
       }
     } catch (error) {
-      console.error('Error searching exercises:', error);
-      setError('Failed to search exercises. Please try again.');
+      console.error("Error searching exercises:", error);
+      setError("Failed to search exercises. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleExerciseClick = (exercise: Exercise) => {
-    // If in replace mode, immediately replace and navigate back
     if (isReplaceMode) {
       const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
 
       if (replaceExerciseId) {
-        // Get existing workout exercises from localStorage
         const existingExercisesJson = localStorage.getItem("workoutExercises");
         const existingExercises = existingExercisesJson ? JSON.parse(existingExercisesJson) : [];
 
-        // Find the index of the exercise to replace
-        const replaceIndex = existingExercises.findIndex((ex: Exercise) => ex._id === replaceExerciseId);
+        const replaceIndex = existingExercises.findIndex(
+          (ex: Exercise) => ex._id === replaceExerciseId
+        );
 
         if (replaceIndex !== -1) {
-          // Replace the exercise at that index with the selected one
           const newExercises = [...existingExercises];
           newExercises[replaceIndex] = exercise;
 
-          // Save back to localStorage
           localStorage.setItem("workoutExercises", JSON.stringify(newExercises));
-
-          // Dispatch a custom event to notify other components
           window.dispatchEvent(new Event("workoutExercisesUpdated"));
-
-          // Clear the replace exercise ID from sessionStorage
           sessionStorage.removeItem("replaceExerciseId");
-
-          console.log("Replaced exercise:", exercise);
           router.back();
           return;
         }
       }
     }
 
-    // Normal mode: toggle selection
     setSelectedExerciseIds((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(exercise._id)) {
-        newSet.delete(exercise._id);
-      } else {
-        newSet.add(exercise._id);
-      }
+      if (newSet.has(exercise._id)) newSet.delete(exercise._id);
+      else newSet.add(exercise._id);
       return newSet;
     });
   };
@@ -198,19 +233,18 @@ export default function AddExercisePage() {
   };
 
   const handleCreate = () => {
-    router.push('/workout/quick-start/create-exercise');
+    router.push("/workout/quick-start/create-exercise");
   };
 
+  // ... (handleAddExercises stays exactly as you already had it) ...
+
   const handleAddExercises = async () => {
-    // Get selected exercises from the exercises list
-    const selectedExercises = exercises.filter((exercise) => selectedExerciseIds.has(exercise._id));
+    const selectedExercises = [...exercises, ...customExercises].filter((exercise) =>
+      selectedExerciseIds.has(exercise._id)
+    );
 
-    if (selectedExercises.length === 0) {
-      return;
-    }
+    if (selectedExercises.length === 0) return;
 
-    // (routine + replace + add logic unchanged) ...
-    // (kept for brevity — paste your existing logic here)
     try {
       const workoutResponse = await workoutApi.getActive();
       let currentExercises: Exercise[] = [];
@@ -248,12 +282,13 @@ export default function AddExercisePage() {
         }
       }
 
-      // Replace mode handling...
       if (isReplaceMode) {
         const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
 
         if (replaceExerciseId && selectedExercises.length > 0) {
-          const replaceIndex = currentExercises.findIndex((ex: Exercise) => ex._id === replaceExerciseId);
+          const replaceIndex = currentExercises.findIndex(
+            (ex: Exercise) => ex._id === replaceExerciseId
+          );
 
           if (replaceIndex !== -1) {
             const newExercises = [...currentExercises];
@@ -263,7 +298,7 @@ export default function AddExercisePage() {
               exercises: newExercises,
               supersetGroups: currentSupersetGroups,
               duration: currentDuration,
-              startTime: startTime,
+              startTime,
             });
 
             window.dispatchEvent(new Event("workoutExercisesUpdated"));
@@ -274,17 +309,16 @@ export default function AddExercisePage() {
         }
       }
 
-      // Normal add mode: combine and save
       const exerciseMap = new Map<string, Exercise>();
-      currentExercises.forEach((ex: Exercise) => exerciseMap.set(ex._id, ex));
-      selectedExercises.forEach((ex: Exercise) => exerciseMap.set(ex._id, ex));
+      currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
+      selectedExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
       const allExercises = Array.from(exerciseMap.values());
 
       await workoutApi.save({
         exercises: allExercises,
         supersetGroups: currentSupersetGroups,
         duration: currentDuration,
-        startTime: startTime,
+        startTime,
       });
 
       window.dispatchEvent(new Event("workoutExercisesUpdated"));
@@ -294,7 +328,11 @@ export default function AddExercisePage() {
     }
   };
 
-  const filteredExercises = exercises.filter((exercise) =>
+  const filteredPopular = exercises.filter((exercise) =>
+    exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCustom = customExercises.filter((exercise) =>
     exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -302,110 +340,110 @@ export default function AddExercisePage() {
     if (e) e.stopPropagation();
     setEquipment("all");
     setMuscle("all");
-    fetchExercises(1, false, { equipment: "all", muscle: "all" });
+    fetchExercises(1, false, { equipment: "all", muscle: "all", isCustom: "false" });
   };
 
-
+  // equipment + muscle handlers: just add `isCustom: "false"` to fetchExercises calls
   const handleOnAllEquipment = () => {
     setEquipment("all");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "all" });
+    fetchExercises(1, false, { equipment: "all", isCustom: "false" });
   };
   const handleOnNone = () => {
     setEquipment("none");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "none" });
+    fetchExercises(1, false, { equipment: "none", isCustom: "false" });
   };
   const handleOnBarbell = () => {
     setEquipment("barbell");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "barbell" });
+    fetchExercises(1, false, { equipment: "barbell", isCustom: "false" });
   };
   const handleOnDumbell = () => {
     setEquipment("dumbell");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "dumbell" });
+    fetchExercises(1, false, { equipment: "dumbell", isCustom: "false" });
   };
   const handleOnKettlebell = () => {
     setEquipment("kettlebell");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "kettlebell" });
+    fetchExercises(1, false, { equipment: "kettlebell", isCustom: "false" });
   };
   const handleOnMachine = () => {
     setEquipment("machine");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "machine" });
+    fetchExercises(1, false, { equipment: "machine", isCustom: "false" });
   };
   const handleOnPlate = () => {
     setEquipment("plate");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "plate" });
+    fetchExercises(1, false, { equipment: "plate", isCustom: "false" });
   };
   const handleOnRBand = () => {
     setEquipment("rband");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "rband" });
+    fetchExercises(1, false, { equipment: "rband", isCustom: "false" });
   };
   const handleOnSBand = () => {
     setEquipment("sband");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "sband" });
+    fetchExercises(1, false, { equipment: "sband", isCustom: "false" });
   };
   const handleOnOther = () => {
     setEquipment("other");
     setIsEquipOpen(false);
-    fetchExercises(1, false, { equipment: "other" });
+    fetchExercises(1, false, { equipment: "other", isCustom: "false" });
   };
 
   const handleOnAllMuscle = () => {
     setMuscle("all");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "all" });
+    fetchExercises(1, false, { muscle: "all", isCustom: "false" });
   };
   const handleOnArms = () => {
     setMuscle("arms");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "arms" });
+    fetchExercises(1, false, { muscle: "arms", isCustom: "false" });
   };
   const handleOnBack = () => {
     setMuscle("back");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "back" });
+    fetchExercises(1, false, { muscle: "back", isCustom: "false" });
   };
   const handleOnChest = () => {
     setMuscle("chest");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "chest" });
+    fetchExercises(1, false, { muscle: "chest", isCustom: "false" });
   };
   const handleOnCore = () => {
     setMuscle("core");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "core" });
+    fetchExercises(1, false, { muscle: "core", isCustom: "false" });
   };
   const handleOnCardio = () => {
     setMuscle("cardio");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "cardio" });
+    fetchExercises(1, false, { muscle: "cardio", isCustom: "false" });
   };
   const handleOnLegs = () => {
     setMuscle("legs");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "legs" });
+    fetchExercises(1, false, { muscle: "legs", isCustom: "false" });
   };
   const handleOnShoulders = () => {
     setMuscle("shoulders");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "shoulders" });
+    fetchExercises(1, false, { muscle: "shoulders", isCustom: "false" });
   };
   const handleOnOtherMuscle = () => {
     setMuscle("other");
     setIsMuscleOpen(false);
-    fetchExercises(1, false, { muscle: "other" });
+    fetchExercises(1, false, { muscle: "other", isCustom: "false" });
   };
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Fixed Header */}
+      {/* Header */}
       <header className="flex-shrink-0 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
           <Button
@@ -417,7 +455,9 @@ export default function AddExercisePage() {
             <span className="text-lg font-regular text-blue-600">Cancel</span>
           </Button>
 
-          <h1 className="text-lg font-regular capitalize">{isReplaceMode ? "Replace Exercise" : "add exercise"}</h1>
+          <h1 className="text-lg font-regular capitalize">
+            {isReplaceMode ? "Replace Exercise" : "add exercise"}
+          </h1>
 
           <Button
             variant="ghost"
@@ -430,7 +470,7 @@ export default function AddExercisePage() {
         </div>
       </header>
 
-      {/* Fixed Search and Filter Section */}
+      {/* Search + filters */}
       <div className="flex-shrink-0 p-4 space-y-4 bg-background">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 size-5 text-gray-400 pointer-events-none z-10" />
@@ -456,22 +496,22 @@ export default function AddExercisePage() {
               {equipment === "all"
                 ? "All Equipment"
                 : equipment === "none"
-                  ? "None"
-                  : equipment === "barbell"
-                    ? "Barbell"
-                    : equipment === "dumbell"
-                      ? "Dumbell"
-                      : equipment === "kettlebell"
-                        ? "Kettlebell"
-                        : equipment === "machine"
-                          ? "Machine"
-                          : equipment === "plate"
-                            ? "Plate"
-                            : equipment === "rband"
-                              ? "Resistance Band"
-                              : equipment === "sband"
-                                ? "Suspension Band"
-                                : "Other"}
+                ? "None"
+                : equipment === "barbell"
+                ? "Barbell"
+                : equipment === "dumbell"
+                ? "Dumbell"
+                : equipment === "kettlebell"
+                ? "Kettlebell"
+                : equipment === "machine"
+                ? "Machine"
+                : equipment === "plate"
+                ? "Plate"
+                : equipment === "rband"
+                ? "Resistance Band"
+                : equipment === "sband"
+                ? "Suspension Band"
+                : "Other"}
             </span>
           </button>
 
@@ -487,22 +527,22 @@ export default function AddExercisePage() {
               {muscle === "all"
                 ? "All Muscles"
                 : muscle === "none"
-                  ? "None"
-                  : muscle === "arms"
-                    ? "Arms"
-                    : muscle === "back"
-                      ? "Back"
-                      : muscle === "chest"
-                        ? "Chest"
-                        : muscle === "core"
-                          ? "Core"
-                          : muscle === "cardio"
-                            ? "Cardio"
-                            : muscle === "legs"
-                              ? "Legs"
-                              : muscle === "shoulders"
-                                ? "Shoulders"
-                                : "Other"}
+                ? "None"
+                : muscle === "arms"
+                ? "Arms"
+                : muscle === "back"
+                ? "Back"
+                : muscle === "chest"
+                ? "Chest"
+                : muscle === "core"
+                ? "Core"
+                : muscle === "cardio"
+                ? "Cardio"
+                : muscle === "legs"
+                ? "Legs"
+                : muscle === "shoulders"
+                ? "Shoulders"
+                : "Other"}
             </span>
           </button>
 
@@ -517,16 +557,16 @@ export default function AddExercisePage() {
           )}
         </div>
 
-
         {error && <div className="text-red-500 text-sm">{error}</div>}
       </div>
 
-      {/* Scrollable Exercise Cards Area */}
+      {/* Scrollable list */}
       <div
         className="flex-1 overflow-y-auto"
         onScroll={(e) => {
           const target = e.target as HTMLDivElement;
-          const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+          const scrollBottom =
+            target.scrollHeight - target.scrollTop - target.clientHeight;
           if (scrollBottom < 200 && !loadingMore && hasMore) {
             loadMoreExercises();
           }
@@ -534,45 +574,87 @@ export default function AddExercisePage() {
       >
         <div className="p-4">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading exercises...</div>
-          ) : filteredExercises.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchQuery ? "No exercises found matching your search." : "No exercises available."}
+              Loading exercises...
+            </div>
+          ) : filteredPopular.length === 0 && filteredCustom.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              {searchQuery
+                ? "No exercises found matching your search."
+                : "No exercises available."}
             </div>
           ) : (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-black">Popular Exercises</h2>
-              {filteredExercises.map((exercise) => (
-                <ExerciseCard
-                  key={exercise._id}
-                  exercise={exercise}
-                  isSelected={selectedExerciseIds.has(exercise._id)}
-                  onClick={() => handleExerciseClick(exercise)}
-                  onVideoClick={(e) => handleVideoIconClick(exercise, e)}
-                />
-              ))}
-              {loadingMore && <div className="text-center py-4 text-gray-500">Loading more exercises...</div>}
-              {!hasMore && filteredExercises.length > 0 && (
-                <div className="text-center py-4 text-gray-500 text-sm">All exercises loaded ({filteredExercises.length} total)</div>
-              )}
+            <div className="space-y-6">
+              {/* Custom section */}
+              {loadingCustom ? (
+                <div className="text-center text-gray-500 text-sm">
+                  Loading custom exercises...
+                </div>
+              ) : filteredCustom.length > 0 ? (
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-black">
+                    Custom Exercises
+                  </h2>
+                  {filteredCustom.map((exercise) => (
+                    <ExerciseCard
+                      key={exercise._id}
+                      exercise={exercise}
+                      isSelected={selectedExerciseIds.has(exercise._id)}
+                      onClick={() => handleExerciseClick(exercise)}
+                      onVideoClick={(e) => handleVideoIconClick(exercise, e)}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Popular section */}
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-black">
+                  Popular Exercises
+                </h2>
+                {filteredPopular.map((exercise) => (
+                  <ExerciseCard
+                    key={exercise._id}
+                    exercise={exercise}
+                    isSelected={selectedExerciseIds.has(exercise._id)}
+                    onClick={() => handleExerciseClick(exercise)}
+                    onVideoClick={(e) => handleVideoIconClick(exercise, e)}
+                  />
+                ))}
+                {loadingMore && (
+                  <div className="text-center py-4 text-gray-500">
+                    Loading more exercises...
+                  </div>
+                )}
+                {!hasMore && filteredPopular.length > 0 && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    All exercises loaded ({filteredPopular.length} total)
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Bottom Button - Appears when exercises are selected (only in normal add mode) */}
+      {/* Bottom button */}
       {selectedExerciseIds.size > 0 && !isReplaceMode && (
         <div className="flex-shrink-0 p-4 bg-background">
           <Button
             onClick={handleAddExercises}
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-[8px] font-regular text-lg"
           >
-            Add {selectedExerciseIds.size} {selectedExerciseIds.size === 1 ? "exercise" : "exercises"}
+            Add {selectedExerciseIds.size}{" "}
+            {selectedExerciseIds.size === 1 ? "exercise" : "exercises"}
           </Button>
         </div>
       )}
 
-      <ExerciseVideoModal exercise={selectedExercise} open={showVideoModal} onClose={() => setShowVideoModal(false)} />
+      <ExerciseVideoModal
+        exercise={selectedExercise}
+        open={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+      />
 
       {/* Equipment Modal */}
       <EquipmentModal

@@ -42,7 +42,18 @@ export default function AddExercisePage() {
   useEffect(() => {
     fetchExercises(1, false);
     fetchCustomExercises();
+
+    const handleCustomUpdated = () => {
+      fetchCustomExercises();
+    };
+
+    window.addEventListener("customExerciseUpdated", handleCustomUpdated);
+
+    return () => {
+      window.removeEventListener("customExerciseUpdated", handleCustomUpdated);
+    };
   }, []);
+
 
   // map UI equipment keys -> backend/schema enum keys
   const equipmentKeyMap: Record<string, string> = {
@@ -144,7 +155,7 @@ export default function AddExercisePage() {
   const fetchCustomExercises = async () => {
     try {
       setLoadingCustom(true);
-      const res = await fetch(`${API_BASE}/exercises/custom`, {
+      const res = await fetch(`${API_BASE}/api/exercises/custom`, {
         credentials: "include",
       });
       const json = await res.json();
@@ -322,7 +333,7 @@ export default function AddExercisePage() {
       });
 
       window.dispatchEvent(new Event("workoutExercisesUpdated"));
-      router.back();
+      router.push("/workout/quick-start");
     } catch (error) {
       console.error("Error adding exercises to workout:", error);
     }
@@ -335,6 +346,15 @@ export default function AddExercisePage() {
   const filteredCustom = customExercises.filter((exercise) =>
     exercise.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const customIds = new Set(filteredCustom.map((ex) => ex._id));
+
+  // Custom first, then popular ones that are not already in custom
+  const mergedExercises = [
+    ...filteredCustom,
+    ...filteredPopular.filter((ex) => !customIds.has(ex._id)),
+  ];
+
 
   const clearAllFilters = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -448,7 +468,7 @@ export default function AddExercisePage() {
         <div className="flex items-center justify-between h-16 px-4">
           <Button
             variant="ghost"
-            onClick={() => window.history.back()}
+            onClick={() => router.push("/workout/quick-start")}
             className="h-10 px-0 hover:bg-transparent"
             aria-label="Go back"
           >
@@ -496,22 +516,22 @@ export default function AddExercisePage() {
               {equipment === "all"
                 ? "All Equipment"
                 : equipment === "none"
-                ? "None"
-                : equipment === "barbell"
-                ? "Barbell"
-                : equipment === "dumbell"
-                ? "Dumbell"
-                : equipment === "kettlebell"
-                ? "Kettlebell"
-                : equipment === "machine"
-                ? "Machine"
-                : equipment === "plate"
-                ? "Plate"
-                : equipment === "rband"
-                ? "Resistance Band"
-                : equipment === "sband"
-                ? "Suspension Band"
-                : "Other"}
+                  ? "None"
+                  : equipment === "barbell"
+                    ? "Barbell"
+                    : equipment === "dumbell"
+                      ? "Dumbell"
+                      : equipment === "kettlebell"
+                        ? "Kettlebell"
+                        : equipment === "machine"
+                          ? "Machine"
+                          : equipment === "plate"
+                            ? "Plate"
+                            : equipment === "rband"
+                              ? "Resistance Band"
+                              : equipment === "sband"
+                                ? "Suspension Band"
+                                : "Other"}
             </span>
           </button>
 
@@ -527,22 +547,22 @@ export default function AddExercisePage() {
               {muscle === "all"
                 ? "All Muscles"
                 : muscle === "none"
-                ? "None"
-                : muscle === "arms"
-                ? "Arms"
-                : muscle === "back"
-                ? "Back"
-                : muscle === "chest"
-                ? "Chest"
-                : muscle === "core"
-                ? "Core"
-                : muscle === "cardio"
-                ? "Cardio"
-                : muscle === "legs"
-                ? "Legs"
-                : muscle === "shoulders"
-                ? "Shoulders"
-                : "Other"}
+                  ? "None"
+                  : muscle === "arms"
+                    ? "Arms"
+                    : muscle === "back"
+                      ? "Back"
+                      : muscle === "chest"
+                        ? "Chest"
+                        : muscle === "core"
+                          ? "Core"
+                          : muscle === "cardio"
+                            ? "Cardio"
+                            : muscle === "legs"
+                              ? "Legs"
+                              : muscle === "shoulders"
+                                ? "Shoulders"
+                                : "Other"}
             </span>
           </button>
 
@@ -572,47 +592,19 @@ export default function AddExercisePage() {
           }
         }}
       >
-        <div className="p-4">
-          {loading ? (
-            <div className="text-center py-8 text-gray-500">
-              Loading exercises...
-            </div>
-          ) : filteredPopular.length === 0 && filteredCustom.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {searchQuery
-                ? "No exercises found matching your search."
-                : "No exercises available."}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Custom section */}
-              {loadingCustom ? (
-                <div className="text-center text-gray-500 text-sm">
-                  Loading custom exercises...
-                </div>
-              ) : filteredCustom.length > 0 ? (
-                <div className="space-y-3">
-                  <h2 className="text-lg font-semibold text-black">
-                    Custom Exercises
-                  </h2>
-                  {filteredCustom.map((exercise) => (
-                    <ExerciseCard
-                      key={exercise._id}
-                      exercise={exercise}
-                      isSelected={selectedExerciseIds.has(exercise._id)}
-                      onClick={() => handleExerciseClick(exercise)}
-                      onVideoClick={(e) => handleVideoIconClick(exercise, e)}
-                    />
-                  ))}
-                </div>
-              ) : null}
+        <div className="space-y-10 px-4">
 
-              {/* Popular section */}
-              <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-black">
-                  Popular Exercises
+          {/* ✅ Custom Exercises Section (ON TOP) */}
+          {filteredCustom.length > 0 && (
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-base font-semibold text-gray-700">
+                  Custom Exercises ({filteredCustom.length})
                 </h2>
-                {filteredPopular.map((exercise) => (
+              </div>
+
+              <div className="space-y-2">
+                {filteredCustom.map((exercise) => (
                   <ExerciseCard
                     key={exercise._id}
                     exercise={exercise}
@@ -621,20 +613,40 @@ export default function AddExercisePage() {
                     onVideoClick={(e) => handleVideoIconClick(exercise, e)}
                   />
                 ))}
-                {loadingMore && (
-                  <div className="text-center py-4 text-gray-500">
-                    Loading more exercises...
-                  </div>
-                )}
-                {!hasMore && filteredPopular.length > 0 && (
-                  <div className="text-center py-4 text-gray-500 text-sm">
-                    All exercises loaded ({filteredPopular.length} total)
-                  </div>
-                )}
               </div>
             </div>
           )}
+
+          {/* ✅ All / Popular Exercises (BELOW Custom) */}
+          <div>
+            <h2 className="text-base font-semibold text-gray-700 mb-2">
+              All Exercises
+            </h2>
+
+            <div className="space-y-2">
+              {filteredPopular.map((exercise) => (
+                <ExerciseCard
+                  key={exercise._id}
+                  exercise={exercise}
+                  isSelected={selectedExerciseIds.has(exercise._id)}
+                  onClick={() => handleExerciseClick(exercise)}
+                  onVideoClick={(e) => handleVideoIconClick(exercise, e)}
+                />
+              ))}
+            </div>
+
+            {loadingMore && (
+              <div className="text-center py-4 text-gray-500">
+                Loading more exercises...
+              </div>
+            )}
+
+            
+          </div>
+
         </div>
+
+
       </div>
 
       {/* Bottom button */}

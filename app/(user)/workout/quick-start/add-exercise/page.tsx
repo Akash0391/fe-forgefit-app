@@ -11,6 +11,11 @@ import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
 import EquipmentModal from "@/components/EquipmentsModal";
 import MuscleModal from "@/components/MuscleModal";
 
+// Remove " (Something)" at the end of a name, e.g. "Chest (Dumbbell)" → "Chest"
+const stripEquipmentFromName = (name: string) =>
+  name.replace(/\s*\([^)]*\)\s*$/, "");
+
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -611,8 +616,12 @@ export default function AddExercisePage() {
                     isSelected={selectedExerciseIds.has(exercise._id)}
                     onClick={() => handleExerciseClick(exercise)}
                     onVideoClick={(e) => handleVideoIconClick(exercise, e)}
+                    // 🔽 NEW
+                    variant="custom"
+                    displayTitle={stripEquipmentFromName(exercise.name)}
                   />
                 ))}
+
               </div>
             </div>
           )}
@@ -641,7 +650,7 @@ export default function AddExercisePage() {
               </div>
             )}
 
-            
+
           </div>
 
         </div>

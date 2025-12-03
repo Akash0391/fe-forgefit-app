@@ -6,12 +6,19 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import MediaAssetModal from "@/components/MediaAssetModal";
 import { useCreateExerciseStore } from "@/store/useCreateExerciseStore";
+import { createExerciseSchema, CreateExerciseForm } from "@/lib/createExerciseSchema";
+
 
 const API_BASE =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export default function CreateExercisePage() {
     const router = useRouter();
+
+    const [errors, setErrors] = useState<
+        Partial<Record<keyof CreateExerciseForm, string>>
+    >({});
+
 
     // UI-only modal state can stay local
     const [showMediaModal, setShowMediaModal] = useState(false);
@@ -40,19 +47,45 @@ export default function CreateExercisePage() {
     };
 
     const handleSave = async () => {
-        if (!title.trim()) {
-            alert("Please enter an exercise name");
+        // 1. Build data in the shape the schema expects
+        const formData: CreateExerciseForm = {
+            title: title.trim(),
+            equipment: equipment ?? "",
+            primaryMuscle: primaryMuscle ?? "",
+            exerciseType: exerciseType ?? "",
+            otherMuscles: otherMuscles ?? undefined,
+        };
+
+        // 2. Run validation
+        const result = createExerciseSchema.safeParse(formData);
+
+        if (!result.success) {
+            const flat = result.error.flatten().fieldErrors;
+            const fieldErrors: Partial<Record<keyof CreateExerciseForm, string>> = {};
+
+            (Object.keys(flat) as (keyof CreateExerciseForm)[]).forEach((key) => {
+                const msg = flat[key]?.[0];
+                if (msg) fieldErrors[key] = msg;
+            });
+
+            setErrors(fieldErrors);
+            // ❌ stop here, don't call API
             return;
         }
 
+        // ✅ clear errors if everything is ok
+        setErrors({});
+
         setIsSaving(true);
         try {
+            const valid = result.data;
+
             const body = {
-                name: title.trim(),
-                equipment: equipment || undefined,
-                primaryMuscle: primaryMuscle || undefined,
-                otherMuscles: otherMuscles
-                    ? otherMuscles.split(",").map((s) => s.trim())
+                name: valid.title,
+                equipment: valid.equipment || undefined,
+                primaryMuscle: valid.primaryMuscle || undefined,
+                otherMuscles: valid.otherMuscles
+                    ? valid.otherMuscles.split(",").map((s) => s.trim())
                     : [],
                 description: "",
                 difficulty: "beginner",
@@ -71,10 +104,8 @@ export default function CreateExercisePage() {
                 throw new Error(json.message || "Failed to create exercise");
             }
 
-            // clear draft
             reset();
             window.dispatchEvent(new Event("customExerciseUpdated"));
-
             router.push("/workout/quick-start/add-exercise?section=custom");
         } catch (err) {
             console.error(err);
@@ -83,6 +114,7 @@ export default function CreateExercisePage() {
             setIsSaving(false);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-white text-gray-900">
@@ -114,7 +146,7 @@ export default function CreateExercisePage() {
                 </div>
             </header>
 
-            <main className="px-6">
+            <main className="px-4">
                 {/* Asset upload circle */}
                 <div className="w-full flex flex-col gap-2 items-center justify-center mt-12">
                     <div className="w-36 h-36 rounded-full border border-gray-200 flex items-center justify-center">
@@ -137,10 +169,18 @@ export default function CreateExercisePage() {
                         type="text"
                         placeholder="Exercise Name"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}  // 👈 Zustand
+                        onChange={(e) => {setTitle(e.target.value)
+                            setErrors((prev) => ({ ...prev, title: undefined }));
+                        }}  // 👈 Zustand
                         className="text-xl font-bold border-none bg-transparent p-1 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
+
+
+
                 </div>
+                {errors.title && (
+                    <p className="text-lg text-red-500 mt-2">{errors.title}</p>
+                )}
             </main>
 
             <div className="py-2 px-4">
@@ -164,7 +204,10 @@ export default function CreateExercisePage() {
                                 <span className="text-lg text-blue-500">Select</span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
+                            {errors.equipment && (
+                                <p className="text-lg text-red-500">{errors.equipment}</p>
+                            )}
                             <ChevronRight className="size-7 text-gray-400" />
                         </div>
                     </button>
@@ -192,7 +235,10 @@ export default function CreateExercisePage() {
                                 <span className="text-lg text-blue-500">Select</span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
+                            {errors.primaryMuscle && (
+                                <p className="text-lg text-red-500 mt-1">{errors.primaryMuscle}</p>
+                            )}
                             <ChevronRight className="size-7 text-gray-400" />
                         </div>
                     </button>
@@ -251,7 +297,10 @@ export default function CreateExercisePage() {
                                 <span className="text-lg text-blue-500">Select</span>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
+                            {errors.exerciseType && (
+                                <p className="text-lg text-red-500 mt-1">{errors.exerciseType}</p>
+                            )}
                             <ChevronRight className="size-7 text-gray-400" />
                         </div>
                     </button>

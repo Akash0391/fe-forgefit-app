@@ -48,16 +48,16 @@ export default function SelectOtherMuscle() {
   };
 
   return (
-    <div className="bg-white text-gray-900 min-h-screen relative pb-28">
+    <div className="bg-white text-gray-900 relative pb-28">
       {/* Header */}
       <header className="sticky top-0 bg-white z-20 border-b border-gray-100">
-        <div className="h-16 flex items-center px-4">
+        <div className="h-16 flex items-center px-2">
           <button
             aria-label="Back"
             className="mr-2 rounded-full p-2 hover:bg-gray-50"
             onClick={() => window.history.back()}
           >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
+            <ArrowLeft className="size-7 text-gray-700" />
           </button>
 
           <h1 className="flex-1 text-center text-lg font-regular">Secondary Muscle Groups</h1>

@@ -52,7 +52,9 @@ export default function CreateExercisePage() {
                     <button
                         aria-label="Back"
                         className="mr-2 rounded-full"
-                        onClick={() => window.history.back()}
+                        onClick={() =>
+                            router.push("/workout/quick-start/add-exercise") // <- your Add Exercise route
+                        }
                     >
                         <ArrowLeft className="size-7 text-gray-700" />
                     </button>
@@ -196,8 +198,8 @@ export default function CreateExercisePage() {
                         onClick={() => {
                             router.push(
                                 withCurrentParams(
-                                "/workout/quick-start/create-exercise/select-exercise-type"
-                            ));
+                                    "/workout/quick-start/create-exercise/select-exercise-type"
+                                ));
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50  transition-colors"
                     >

@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 export default function SelectEquipment() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const menuItems = [
     { id: "none", label: "None", icon: "/icons/person.png" },
@@ -14,30 +15,22 @@ export default function SelectEquipment() {
     { id: "kettlebell", label: "Kettlebell", icon: "/icons/kettlebell.png" },
     { id: "machine", label: "Machine", icon: "/icons/machine.png" },
     { id: "plate", label: "Plate", icon: "/icons/plates.png" },
-    {
-      id: "rband",
-      label: "Resistance Band",
-      icon: "/icons/resistance-band.png",
-    },
-    {
-      id: "sband",
-      label: "Suspension Band",
-      icon: "/icons/suspension-band.png",
-    },
+    { id: "rband", label: "Resistance Band", icon: "/icons/resistance-band.png" },
+    { id: "sband", label: "Suspension Band", icon: "/icons/suspension-band.png" },
     { id: "other", label: "Other", icon: "/icons/ellipsis.png" },
   ];
 
   const handleSelect = (label: string) => {
-    // Go back to create-exercise page with selected equipment in query param
-    const encoded = encodeURIComponent(label);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("equipment", label);
+
     router.push(
-      `/workout/quick-start/create-exercise?equipment=${encoded}`
+      `/workout/quick-start/create-exercise?${params.toString()}`
     );
   };
 
   return (
     <div className="bg-white text-gray-900">
-      {/* Header */}
       <header className="sticky top-0 bg-white z-20 border-b border-gray-100">
         <div className="h-16 flex items-center px-4">
           <button
@@ -71,9 +64,7 @@ export default function SelectEquipment() {
               />
             </div>
 
-            <span className="flex-1 text-lg text-gray-800">
-              {item.label}
-            </span>
+            <span className="flex-1 text-lg text-gray-800">{item.label}</span>
           </button>
         ))}
       </div>

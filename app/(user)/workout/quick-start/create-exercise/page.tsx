@@ -13,13 +13,21 @@ export default function CreateExercisePage() {
     const [createExerciseTitle, setCreateExerciseTitle] = useState("");
     const [showMediaModal, setShowMediaModal] = useState(false);
     const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
+    const [selectedPrimaryMuscle, setSelectedPrimaryMuscle] = useState<string | null>(null);
+    const [selectedOtherMuscles, setSelectedOtherMuscles] = useState<string | null>(null);
+    const [selectedExerciseType, setSelectedExerciseType] = useState<string | null>(null);
 
     // Get selected equipment from query params when we come back
     useEffect(() => {
-        const equipmentFromUrl = searchParams.get("equipment");
-        if (equipmentFromUrl) {
-            setSelectedEquipment(equipmentFromUrl);
-        }
+        const equipment = searchParams.get("equipment");
+        const primaryMuscle = searchParams.get("primaryMuscle");
+        const otherMuscles = searchParams.get("otherMuscles");
+        const exerciseType = searchParams.get("exerciseType");
+
+        if (equipment) setSelectedEquipment(equipment);
+        if (primaryMuscle) setSelectedPrimaryMuscle(primaryMuscle);
+        if (otherMuscles) setSelectedOtherMuscles(otherMuscles);
+        if (exerciseType) setSelectedExerciseType(exerciseType);
     }, [searchParams]);
 
     const handleTakePhoto = () => {
@@ -32,6 +40,10 @@ export default function CreateExercisePage() {
         alert("Select From Library clicked — wire up your library logic");
     };
 
+    const withCurrentParams = (basePath: string) => {
+        const current = searchParams.toString();
+        return current ? `${basePath}?${current}` : basePath;
+    };
     return (
         <div className="min-h-screen bg-white text-gray-900">
             {/* Header */}
@@ -94,7 +106,9 @@ export default function CreateExercisePage() {
                     <button
                         onClick={() => {
                             router.push(
-                                "/workout/quick-start/create-exercise/select-equipment"
+                                withCurrentParams(
+                                    "/workout/quick-start/create-exercise/select-equipment"
+                                )
                             );
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
@@ -122,8 +136,9 @@ export default function CreateExercisePage() {
                     <button
                         onClick={() => {
                             router.push(
-                                "/workout/quick-start/create-exercise/select-primary-muscle"
-                            );
+                                withCurrentParams(
+                                    "/workout/quick-start/create-exercise/select-primary-muscle"
+                                ));
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
@@ -131,7 +146,13 @@ export default function CreateExercisePage() {
                             <span className="text-lg font-regular text-black">
                                 Primary Muscle Group
                             </span>
-                            <span className="text-lg text-blue-500">Select</span>
+                            {selectedPrimaryMuscle ? (
+                                <span className="text-lg text-gray-500">
+                                    {selectedPrimaryMuscle}
+                                </span>
+                            ) : (
+                                <span className="text-lg text-blue-500">Select</span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <ChevronRight className="size-7 text-gray-400" />
@@ -144,8 +165,9 @@ export default function CreateExercisePage() {
                     <button
                         onClick={() => {
                             router.push(
-                                "/workout/quick-start/create-exercise/select-other-muscles"
-                            );
+                                withCurrentParams(
+                                    "/workout/quick-start/create-exercise/select-other-muscles"
+                                ));
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
@@ -153,10 +175,14 @@ export default function CreateExercisePage() {
                             <span className="text-lg font-regular text-black">
                                 Other Muscles
                             </span>
-                            <span className="text-lg text-blue-500">
-                                Select{" "}
-                                <span className="text-lg text-gray-400">(optional)</span>
-                            </span>
+                            {selectedOtherMuscles ? (
+                                selectedOtherMuscles
+                            ) : (
+                                <span className="text-lg text-blue-500">
+                                    Select{" "}
+                                    <span className="text-lg text-gray-400">(optional)</span>
+                                </span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <ChevronRight className="size-7 text-gray-400" />
@@ -169,8 +195,9 @@ export default function CreateExercisePage() {
                     <button
                         onClick={() => {
                             router.push(
+                                withCurrentParams(
                                 "/workout/quick-start/create-exercise/select-exercise-type"
-                            );
+                            ));
                         }}
                         className="w-full flex justify-between py-3 hover:bg-gray-50  transition-colors"
                     >
@@ -178,7 +205,13 @@ export default function CreateExercisePage() {
                             <span className="text-lg font-regular text-black">
                                 Exercise Type
                             </span>
-                            <span className="text-lg text-blue-500">Select</span>
+                            {selectedExerciseType ? (
+                                <span className="text-lg text-gray-500">
+                                    {selectedExerciseType}
+                                </span>
+                            ) : (
+                                <span className="text-lg text-blue-500">Select</span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <ChevronRight className="size-7 text-gray-400" />

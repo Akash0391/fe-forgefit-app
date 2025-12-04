@@ -167,6 +167,7 @@ export interface WorkoutExercise {
   order: number;
   notes: string;
   sets: SetData[];
+  restTimerSeconds?: number;
 }
 
 export interface SupersetGroup {
@@ -247,6 +248,7 @@ export const workoutApi = {
       exercise: Exercise;
       sets: SetData[];
       notes: string;
+      restTimerSeconds?: number;
     }>;
     supersetGroups?: string[][];
   }) => apiClient.post<{
@@ -266,6 +268,7 @@ export const workoutApi = {
       exercise: Exercise;
       sets: SetData[];
       notes: string;
+      restTimerSeconds?: number;
     }>;
     supersetGroups?: string[][];
   }) => apiClient.put<{

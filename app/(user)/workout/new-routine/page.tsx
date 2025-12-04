@@ -158,7 +158,8 @@ export default function NewRoutinePage() {
         exercises: exercises.map(ex => ({
           exercise: ex.exercise,
           sets: ex.sets || [],
-          notes: ex.notes || ""
+          notes: ex.notes || "",
+          restTimerSeconds: ex.restTimerSeconds ?? 0,
         })),
         supersetGroups: []
       });

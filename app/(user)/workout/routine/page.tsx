@@ -11,7 +11,20 @@ interface RoutineExercise {
   exercise: Exercise;
   sets: any[];
   notes: string;
+  restTimerSeconds?: number;
 }
+
+const formatRestTimerLabel = (seconds?: number): string => {
+  if (!seconds || seconds === 0) return "OFF";
+  if (seconds < 60) return `${seconds}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remain = seconds % 60;
+
+  if (remain === 0) return `${minutes}m`;
+  return `${minutes}m ${remain}s`;
+};
+
 
 export default function RoutineDetailsPage() {
   const router = useRouter();
@@ -34,10 +47,10 @@ export default function RoutineDetailsPage() {
   }, [routineId]);
 
   const formatReps = (set: any) => {
-  if (set?.minReps != null && set?.maxReps != null) return `${set.minReps}-${set.maxReps}`;
-  if (set?.reps != null) return String(set.reps);
-  return '-';
-};
+    if (set?.minReps != null && set?.maxReps != null) return `${set.minReps}-${set.maxReps}`;
+    if (set?.reps != null) return String(set.reps);
+    return '-';
+  };
 
 
   const loadRoutine = async () => {
@@ -46,7 +59,7 @@ export default function RoutineDetailsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Fetch all routines and find the one we need
       const response = await workoutApi.getRoutines();
       const foundRoutine = response.data.find((r: Workout) => r._id === routineId);
@@ -58,14 +71,15 @@ export default function RoutineDetailsPage() {
       }
 
       setRoutine(foundRoutine);
-      
+
       // Convert routine exercises to RoutineExercise format
       const routineExercises: RoutineExercise[] = foundRoutine.exercises.map((ex: any) => {
         const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
         return {
           exercise: exercise as Exercise,
           sets: ex.sets || [],
-          notes: ex.notes || ""
+          notes: ex.notes || "",
+          restTimerSeconds: ex.restTimerSeconds ?? 0,
         };
       });
 
@@ -80,7 +94,7 @@ export default function RoutineDetailsPage() {
 
   const handleStartRoutine = () => {
     if (!routine) return;
-    
+
     // Store routine data in sessionStorage to start as a workout
     const workoutData = {
       name: routine.name || "Quick Start Workout",
@@ -94,9 +108,9 @@ export default function RoutineDetailsPage() {
       }),
       supersetGroups: routine.supersetGroups || [],
     };
-    
+
     sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
-    
+
     // Set workout in progress and navigate to quick start
     localStorage.setItem("workoutInProgress", "true");
     router.push("/workout/quick-start");
@@ -169,9 +183,9 @@ export default function RoutineDetailsPage() {
           >
             <ArrowLeft className="size-7" />
           </Button>
-          
+
           <h1 className="text-lg font-regular">Routine</h1>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -238,11 +252,10 @@ export default function RoutineDetailsPage() {
             <button
               key={view}
               onClick={() => setSelectedView(view)}
-              className={`flex py-2 px-6 rounded-full text-xm font-medium transition-colors ${
-                selectedView === view
+              className={`flex py-2 px-6 rounded-full text-xm font-medium transition-colors ${selectedView === view
                   ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600"
-              }`}
+                }`}
             >
               {view}
             </button>
@@ -271,7 +284,7 @@ export default function RoutineDetailsPage() {
               exercises.map((routineExercise, index) => {
                 const exercise = routineExercise.exercise;
                 const sets = routineExercise.sets || [];
-                
+
                 return (
                   <div
                     key={exercise._id || index}
@@ -297,6 +310,11 @@ export default function RoutineDetailsPage() {
                       </h4>
                     </div>
 
+                    <p className="text-sm text-blue-600 mb-2 ml-[3.5rem]">
+                      Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
+                    </p>
+
+
                     {/* Sets Table */}
                     {sets.length > 0 ? (
                       <div className="max-w-[300px]">
@@ -310,7 +328,7 @@ export default function RoutineDetailsPage() {
                                 KG
                               </th>
                               <th className="py-2 text-sm font-regular text-gray-600">
-                                REPS 
+                                REPS
                               </th>
                             </tr>
                           </thead>

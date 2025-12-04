@@ -9,6 +9,7 @@ import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import RoutineOptionsModal from "@/components/RoutineOptionsModal";
 import DeleteRoutineModal from "@/components/DeleteRoutineModal";
 import { FolderModal } from "@/components/FolderModal";
+import FolderOptionModal from "@/components/FolderOptionModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -21,9 +22,11 @@ export default function WorkoutPage() {
   const [showRoutineModal, setShowRoutineModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [folders, setFolders] = useState<RoutineFolder[]>([]);
-const [loadingFolders, setLoadingFolders] = useState(true);
-const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [loadingFolders, setLoadingFolders] = useState(true);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+  const [showFolderOptionModal, setShowFolderOptionModal] = useState(false);
 
 
 
@@ -63,16 +66,16 @@ const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
   };
 
   const fetchFolders = async () => {
-  try {
-    setLoadingFolders(true);
-    const res = await workoutApi.getRoutineFolders();
-    setFolders(res.data || []);
-  } catch (err) {
-    console.error("Error fetching routine folders:", err);
-  } finally {
-    setLoadingFolders(false);
-  }
-};
+    try {
+      setLoadingFolders(true);
+      const res = await workoutApi.getRoutineFolders();
+      setFolders(res.data || []);
+    } catch (err) {
+      console.error("Error fetching routine folders:", err);
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
 
 
   const handleRefresh = () => {
@@ -299,59 +302,60 @@ const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
         </section>
 
         {/* Folders Section – from backend, above My Routines */}
-{!loadingFolders &&
-  folders.map((folder) => {
-    const expanded = expandedFolders[folder._id] ?? true;
+        {!loadingFolders &&
+          folders.map((folder) => {
+            const expanded = expandedFolders[folder._id] ?? true;
 
-    return (
-      <section key={folder._id} className="mt-4">
-        {/* Folder header (e.g., "Gym") */}
-        <button
-          onClick={() =>
-            setExpandedFolders((prev) => ({
-              ...prev,
-              [folder._id]: !expanded,
-            }))
-          }
-          className="flex items-center justify-between w-full mb-2"
-        >
-          <div className="flex items-center gap-2">
-            {expanded ? (
-              <ChevronDown className="size-5 text-gray-400" />
-            ) : (
-              <ChevronRight className="size-5 text-gray-400" />
-            )}
-            <span className="text-lg font-semibold text-gray-500">
-              {folder.name}
-            </span>
-          </div>
+            return (
+              <section key={folder._id} className="mt-4">
+                {/* Folder header (e.g., "Gym") */}
+                <button
+                  onClick={() =>
+                    setExpandedFolders((prev) => ({
+                      ...prev,
+                      [folder._id]: !expanded,
+                    }))
+                  }
+                  className="flex items-center justify-between w-full mb-2"
+                >
+                  <div className="flex items-center gap-2">
+                    {expanded ? (
+                      <ChevronDown className="size-5 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="size-5 text-gray-400" />
+                    )}
+                    <span className="text-lg font-semibold text-gray-500">
+                      {folder.name}
+                    </span>
+                  </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // later: folder options (rename/delete)
-            }}
-            className="p-1 rounded-full hover:bg-gray-100"
-          >
-            <MoreHorizontal className="size-7 text-gray-900" />
-          </button>
-        </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();  
+                      setShowFolderOptionModal(true);
+                      // later: folder options (rename/delete)
+                    }}
+                    className="p-1 rounded-full hover:bg-gray-100"
+                  >
+                    <MoreHorizontal className="size-7 text-gray-900" />
+                  </button>
+                </button>
 
-        {/* Folder content */}
-        {expanded && (
-          <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
-            <button
-              onClick={() => router.push("/workout/new-routine")}
-              className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
-            >
-              <Plus className="size-5" />
-              <span>Add new routine</span>
-            </button>
-          </div>
-        )}
-      </section>
-    );
-  })}
+                {/* Folder content */}
+                {expanded && (
+                  <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
+                    <button
+                      onClick={() => router.push("/workout/new-routine")}
+                      className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
+                    >
+                      <Plus className="size-5" />
+                      <span>Add new routine</span>
+                    </button>
+                  </div>
+                )}
+              </section>
+            );
+          })}
 
 
 
@@ -493,23 +497,32 @@ const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
       {/* Create Folder Modal */}
       <FolderModal
         open={showCreateFolderModal}
-  onClose={() => setShowCreateFolderModal(false)}
-  onSave={async (name) => {
-    try {
-      const res = await workoutApi.createRoutineFolder(name);
-      setFolders((prev) => [...prev, res.data]);
-      setExpandedFolders((prev) => ({
-        ...prev,
-        [res.data._id]: true,
-      }));
-    } catch (err) {
-      console.error("Error creating folder:", err);
-    } finally {
-      setShowCreateFolderModal(false);
-    }
-  }}
+        onClose={() => setShowCreateFolderModal(false)}
+        onSave={async (name) => {
+          try {
+            const res = await workoutApi.createRoutineFolder(name);
+            setFolders((prev) => [...prev, res.data]);
+            setExpandedFolders((prev) => ({
+              ...prev,
+              [res.data._id]: true,
+            }));
+          } catch (err) {
+            console.error("Error creating folder:", err);
+          } finally {
+            setShowCreateFolderModal(false);
+          }
+        }}
       />
 
+
+      <FolderOptionModal
+        open={showFolderOptionModal}
+        onClose={() => setShowFolderOptionModal(false)}
+        onRename={() => {}}
+        onDeleteFolder={() => {}}
+        onAddNewRoutine={() => {}}
+        onReorder={() => {}}
+      />  
     </div>
   );
 }

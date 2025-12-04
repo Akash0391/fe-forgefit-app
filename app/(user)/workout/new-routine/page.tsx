@@ -21,25 +21,50 @@ export default function NewRoutinePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Load workout data from sessionStorage if available
-    const workoutDataStr = sessionStorage.getItem("workoutToRoutine");
-    if (workoutDataStr) {
-      try {
-        const workoutData = JSON.parse(workoutDataStr);
-        setRoutineTitle(workoutData.name || "");
-        setExercises(workoutData.exercises || []);
-        // Clear sessionStorage after loading
-        sessionStorage.removeItem("workoutToRoutine");
-      } catch (error) {
-        console.error("Error loading workout data:", error);
-      }
+  // 1) If there's an in-progress routine draft, use that
+  const draftStr = sessionStorage.getItem("newRoutineDraft");
+  if (draftStr) {
+    try {
+      const draft = JSON.parse(draftStr);
+      setRoutineTitle(draft.name || "");
+      setExercises(draft.exercises || []);
+    } catch (error) {
+      console.error("Error loading routine draft:", error);
+    } finally {
+      // Clear so we don't reuse it forever
+      sessionStorage.removeItem("newRoutineDraft");
     }
-  }, []);
+    return; // ⬅️ don't also load workoutToRoutine in this case
+  }
+
+  // 2) Fallback: original workoutToRoutine logic
+  const workoutDataStr = sessionStorage.getItem("workoutToRoutine");
+  if (workoutDataStr) {
+    try {
+      const workoutData = JSON.parse(workoutDataStr);
+      setRoutineTitle(workoutData.name || "");
+      setExercises(workoutData.exercises || []);
+      sessionStorage.removeItem("workoutToRoutine");
+    } catch (error) {
+      console.error("Error loading workout data:", error);
+    }
+  }
+}, []);
+
 
   const handleAddExercise = () => {
-    // Navigate to add exercise page
-    router.push("/workout/new-routine/add-exercise");
+  // Save current routine draft so AddExercisePage can extend it
+  const draft = {
+    name: routineTitle,
+    exercises, // this is RoutineExercise[]
   };
+
+  sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
+
+  // Go to the routine-specific add exercise page
+  router.push("/workout/new-routine/add-exercise");
+};
+
 
   const handleSave = async () => {
     if (!routineTitle.trim()) {

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
@@ -22,8 +22,9 @@ const API_BASE =
 export default function AddExercisePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isReplaceMode = searchParams.get("mode") === "replace";
-  const isRoutineMode = searchParams.get("mode") === "routine";
+  const pathname = usePathname();
+   const isReplaceMode = searchParams.get("mode") === "replace";
+  const isRoutineSource = pathname.startsWith("/workout/new-routine");
 
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
@@ -255,94 +256,139 @@ export default function AddExercisePage() {
   // ... (handleAddExercises stays exactly as you already had it) ...
 
   const handleAddExercises = async () => {
-    const selectedExercises = [...exercises, ...customExercises].filter((exercise) =>
-      selectedExerciseIds.has(exercise._id)
-    );
+  const selectedExercises = [...exercises, ...customExercises].filter((exercise) =>
+    selectedExerciseIds.has(exercise._id)
+  );
 
-    if (selectedExercises.length === 0) return;
+  if (selectedExercises.length === 0) return;
 
+  // 🔹 CASE 1: we're adding exercises for a routine
+  if (isRoutineSource) {
     try {
-      const workoutResponse = await workoutApi.getActive();
-      let currentExercises: Exercise[] = [];
-      let currentSupersetGroups: string[][] = [];
-      let currentDuration = 0;
-      let startTime: number | undefined = undefined;
+      const draftStr = sessionStorage.getItem("newRoutineDraft");
+      let draft: { name?: string; exercises?: any[] } = {};
 
-      if (workoutResponse.data) {
-        currentExercises = workoutResponse.data.exercises.map((ex) => {
-          const exercise = typeof ex.exerciseId === "object" ? ex.exerciseId : { _id: ex.exerciseId };
-          return exercise as Exercise;
-        });
+      if (draftStr) {
+        draft = JSON.parse(draftStr);
+      }
 
-        currentSupersetGroups = (workoutResponse.data.supersetGroups ?? []).map((group) =>
+      const existingExercises: any[] = draft.exercises || [];
+      const existingIds = new Set(
+        existingExercises.map((re) => re.exercise?._id)
+      );
+
+      // Wrap into RoutineExercise shape: { exercise, sets, notes }
+      const newRoutineExercises = selectedExercises
+        .filter((ex) => !existingIds.has(ex._id)) // avoid duplicates
+        .map((ex) => ({
+          exercise: ex,
+          sets: [],      // start with no sets
+          notes: "",     // empty notes
+        }));
+
+      const updatedDraft = {
+        ...draft,
+        exercises: [...existingExercises, ...newRoutineExercises],
+      };
+
+      sessionStorage.setItem("newRoutineDraft", JSON.stringify(updatedDraft));
+    } catch (error) {
+      console.error("Error updating routine draft:", error);
+    }
+
+    // Go back to the routine builder
+    router.push("/workout/new-routine");
+    return; // ⬅️ don't run quick-start logic
+  }
+
+  // 🔹 CASE 2: default behavior (Quick Start flow) – your existing logic
+  try {
+    const workoutResponse = await workoutApi.getActive();
+    let currentExercises: Exercise[] = [];
+    let currentSupersetGroups: string[][] = [];
+    let currentDuration = 0;
+    let startTime: number | undefined = undefined;
+
+    if (workoutResponse.data) {
+      currentExercises = workoutResponse.data.exercises.map((ex) => {
+        const exercise =
+          typeof ex.exerciseId === "object"
+            ? ex.exerciseId
+            : { _id: ex.exerciseId };
+        return exercise as Exercise;
+      });
+
+      currentSupersetGroups = (workoutResponse.data.supersetGroups ?? []).map(
+        (group) =>
           (group.exerciseIds ?? []).map((id: unknown) => {
             if (typeof id === "object" && id !== null && "_id" in id) {
               return (id as { _id?: string })._id ?? "";
             }
             return String(id);
           })
+      );
+
+      currentDuration = workoutResponse.data.duration || 0;
+
+      if (workoutResponse.data.startTime) {
+        startTime = new Date(workoutResponse.data.startTime).getTime();
+      }
+    } else {
+      const storedStartTime = localStorage.getItem("workoutStartTime");
+      if (storedStartTime) {
+        startTime = parseInt(storedStartTime, 10);
+      } else {
+        startTime = Date.now();
+        localStorage.setItem("workoutStartTime", startTime.toString());
+      }
+    }
+
+    if (isReplaceMode) {
+      const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
+
+      if (replaceExerciseId && selectedExercises.length > 0) {
+        const replaceIndex = currentExercises.findIndex(
+          (ex: Exercise) => ex._id === replaceExerciseId
         );
 
-        currentDuration = workoutResponse.data.duration || 0;
+        if (replaceIndex !== -1) {
+          const newExercises = [...currentExercises];
+          newExercises[replaceIndex] = selectedExercises[0];
 
-        if (workoutResponse.data.startTime) {
-          startTime = new Date(workoutResponse.data.startTime).getTime();
-        }
-      } else {
-        const storedStartTime = localStorage.getItem("workoutStartTime");
-        if (storedStartTime) {
-          startTime = parseInt(storedStartTime, 10);
-        } else {
-          startTime = Date.now();
-          localStorage.setItem("workoutStartTime", startTime.toString());
-        }
-      }
+          await workoutApi.save({
+            exercises: newExercises,
+            supersetGroups: currentSupersetGroups,
+            duration: currentDuration,
+            startTime,
+          });
 
-      if (isReplaceMode) {
-        const replaceExerciseId = sessionStorage.getItem("replaceExerciseId");
-
-        if (replaceExerciseId && selectedExercises.length > 0) {
-          const replaceIndex = currentExercises.findIndex(
-            (ex: Exercise) => ex._id === replaceExerciseId
-          );
-
-          if (replaceIndex !== -1) {
-            const newExercises = [...currentExercises];
-            newExercises[replaceIndex] = selectedExercises[0];
-
-            await workoutApi.save({
-              exercises: newExercises,
-              supersetGroups: currentSupersetGroups,
-              duration: currentDuration,
-              startTime,
-            });
-
-            window.dispatchEvent(new Event("workoutExercisesUpdated"));
-            sessionStorage.removeItem("replaceExerciseId");
-            router.back();
-            return;
-          }
+          window.dispatchEvent(new Event("workoutExercisesUpdated"));
+          sessionStorage.removeItem("replaceExerciseId");
+          router.back();
+          return;
         }
       }
-
-      const exerciseMap = new Map<string, Exercise>();
-      currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
-      selectedExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
-      const allExercises = Array.from(exerciseMap.values());
-
-      await workoutApi.save({
-        exercises: allExercises,
-        supersetGroups: currentSupersetGroups,
-        duration: currentDuration,
-        startTime,
-      });
-
-      window.dispatchEvent(new Event("workoutExercisesUpdated"));
-      router.push("/workout/quick-start");
-    } catch (error) {
-      console.error("Error adding exercises to workout:", error);
     }
-  };
+
+    const exerciseMap = new Map<string, Exercise>();
+    currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
+    selectedExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
+    const allExercises = Array.from(exerciseMap.values());
+
+    await workoutApi.save({
+      exercises: allExercises,
+      supersetGroups: currentSupersetGroups,
+      duration: currentDuration,
+      startTime,
+    });
+
+    window.dispatchEvent(new Event("workoutExercisesUpdated"));
+    router.push("/workout/quick-start");
+  } catch (error) {
+    console.error("Error adding exercises to workout:", error);
+  }
+};
+
 
   const filteredPopular = exercises.filter((exercise) =>
     exercise.name.toLowerCase().includes(searchQuery.toLowerCase())

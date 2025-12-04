@@ -6,11 +6,13 @@ import { Dumbbell, Plus, MoreVertical, Check, SquareCheck, X, Timer } from "luci
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, SetData, workoutApi } from "@/lib/api";
-
+import { RestTimerModal } from "@/components/RestTimerModal";
 interface RoutineExercise {
   exercise: Exercise;
   sets: SetData[];
   notes: string;
+
+  restTimerSeconds?: number; // ✅ NEW
 }
 
 export default function NewRoutinePage() {
@@ -18,6 +20,10 @@ export default function NewRoutinePage() {
   const [routineTitle, setRoutineTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
+
+  const REST_TIMER_OPTIONS = [25, 30, 35]; // you can add more if you want
+
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +33,13 @@ export default function NewRoutinePage() {
       try {
         const draft = JSON.parse(draftStr);
         setRoutineTitle(draft.name || "");
-        setExercises(draft.exercises || []);
+        setExercises(
+          (draft.exercises || []).map((ex: RoutineExercise) => ({
+            ...ex,
+            restTimerSeconds: ex.restTimerSeconds ?? 35,
+          }))
+        );
+
       } catch (error) {
         console.error("Error loading routine draft:", error);
       } finally {
@@ -43,7 +55,13 @@ export default function NewRoutinePage() {
       try {
         const workoutData = JSON.parse(workoutDataStr);
         setRoutineTitle(workoutData.name || "");
-        setExercises(workoutData.exercises || []);
+        setExercises(
+          (workoutData.exercises || []).map((ex: RoutineExercise) => ({
+            ...ex,
+            restTimerSeconds: ex.restTimerSeconds ?? 35,
+          }))
+        );
+
         sessionStorage.removeItem("workoutToRoutine");
       } catch (error) {
         console.error("Error loading workout data:", error);
@@ -51,6 +69,25 @@ export default function NewRoutinePage() {
     }
   }, []);
 
+
+  const openRestTimerSheet = (exerciseIndex: number) => {
+    setRestTimerExerciseIndex(exerciseIndex);
+  };
+
+  const closeRestTimerSheet = () => {
+    setRestTimerExerciseIndex(null);
+  };
+
+  const handleRestTimerSelect = (seconds: number) => {
+    setExercises(prev => {
+      if (restTimerExerciseIndex === null) return prev;
+      const updated = [...prev];
+      const ex = { ...updated[restTimerExerciseIndex] };
+      ex.restTimerSeconds = seconds;
+      updated[restTimerExerciseIndex] = ex;
+      return updated;
+    });
+  };
 
 
   const handleSetFieldChange = (
@@ -298,12 +335,14 @@ export default function NewRoutinePage() {
                   {/* Rest Timer Section */}
                   <div
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+                    onClick={() => openRestTimerSheet(index)}
                   >
                     <Timer className="size-7 text-blue-600" />
                     <span className="text-lg text-blue-600 font-regular">
-                      Rest Timer: OFF
+                      Rest Timer: {routineExercise.restTimerSeconds ?? 35}s
                     </span>
                   </div>
+
 
                   {/* Sets Table */}
                   <div className="mb-4">
@@ -399,6 +438,24 @@ export default function NewRoutinePage() {
           </div>
         </div>
       )}
+
+
+      <RestTimerModal
+        open={restTimerExerciseIndex !== null}
+        exerciseName={
+          restTimerExerciseIndex !== null
+            ? formatExerciseName(exercises[restTimerExerciseIndex].exercise)
+            : ""
+        }
+        currentSeconds={
+          restTimerExerciseIndex !== null
+            ? exercises[restTimerExerciseIndex].restTimerSeconds ?? 35
+            : 35
+        }
+        onSelect={handleRestTimerSelect}
+        onClose={closeRestTimerSheet}
+      />
+
     </div>
   );
 }

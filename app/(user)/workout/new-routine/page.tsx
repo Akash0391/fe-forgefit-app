@@ -144,7 +144,7 @@ export default function NewRoutinePage() {
         <div className="flex items-center justify-between h-16 px-4">
           {/* Left: Edit Profile */}
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/workout")}
             aria-label="Go back"
             className="text-blue-500 text-lg font-regular">Cancel</button>
 

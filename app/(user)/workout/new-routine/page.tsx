@@ -21,49 +21,72 @@ export default function NewRoutinePage() {
   const router = useRouter();
 
   useEffect(() => {
-  // 1) If there's an in-progress routine draft, use that
-  const draftStr = sessionStorage.getItem("newRoutineDraft");
-  if (draftStr) {
-    try {
-      const draft = JSON.parse(draftStr);
-      setRoutineTitle(draft.name || "");
-      setExercises(draft.exercises || []);
-    } catch (error) {
-      console.error("Error loading routine draft:", error);
-    } finally {
-      // Clear so we don't reuse it forever
-      sessionStorage.removeItem("newRoutineDraft");
+    // 1) If there's an in-progress routine draft, use that
+    const draftStr = sessionStorage.getItem("newRoutineDraft");
+    if (draftStr) {
+      try {
+        const draft = JSON.parse(draftStr);
+        setRoutineTitle(draft.name || "");
+        setExercises(draft.exercises || []);
+      } catch (error) {
+        console.error("Error loading routine draft:", error);
+      } finally {
+        // Clear so we don't reuse it forever
+        sessionStorage.removeItem("newRoutineDraft");
+      }
+      return; // ⬅️ don't also load workoutToRoutine in this case
     }
-    return; // ⬅️ don't also load workoutToRoutine in this case
-  }
 
-  // 2) Fallback: original workoutToRoutine logic
-  const workoutDataStr = sessionStorage.getItem("workoutToRoutine");
-  if (workoutDataStr) {
-    try {
-      const workoutData = JSON.parse(workoutDataStr);
-      setRoutineTitle(workoutData.name || "");
-      setExercises(workoutData.exercises || []);
-      sessionStorage.removeItem("workoutToRoutine");
-    } catch (error) {
-      console.error("Error loading workout data:", error);
+    // 2) Fallback: original workoutToRoutine logic
+    const workoutDataStr = sessionStorage.getItem("workoutToRoutine");
+    if (workoutDataStr) {
+      try {
+        const workoutData = JSON.parse(workoutDataStr);
+        setRoutineTitle(workoutData.name || "");
+        setExercises(workoutData.exercises || []);
+        sessionStorage.removeItem("workoutToRoutine");
+      } catch (error) {
+        console.error("Error loading workout data:", error);
+      }
     }
-  }
-}, []);
+  }, []);
 
 
-  const handleAddExercise = () => {
-  // Save current routine draft so AddExercisePage can extend it
-  const draft = {
-    name: routineTitle,
-    exercises, // this is RoutineExercise[]
+
+  const handleSetFieldChange = (
+    exerciseIndex: number,
+    setIndex: number,
+    field: "kg" | "reps",
+    value: number
+  ) => {
+    setExercises(prev => {
+      const updated = [...prev];
+      const exercise = { ...updated[exerciseIndex] };
+      const sets = [...(exercise.sets || [])];
+
+      const currentSet = { ...sets[setIndex] };
+      currentSet[field] = isNaN(value) ? 0 : value;
+
+      sets[setIndex] = currentSet;
+      exercise.sets = sets;
+      updated[exerciseIndex] = exercise;
+
+      return updated;
+    });
   };
 
-  sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
+  const handleAddExercise = () => {
+    // Save current routine draft so AddExercisePage can extend it
+    const draft = {
+      name: routineTitle,
+      exercises, // this is RoutineExercise[]
+    };
 
-  // Go to the routine-specific add exercise page
-  router.push("/workout/new-routine/add-exercise");
-};
+    sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
+
+    // Go to the routine-specific add exercise page
+    router.push("/workout/new-routine/add-exercise");
+  };
 
 
   const handleSave = async () => {
@@ -157,8 +180,8 @@ export default function NewRoutinePage() {
             onClick={handleSave}
             disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
             className={`text-lg font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 text-white"
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
           >
             {isSaving ? "Saving..." : "Save"}
@@ -287,15 +310,11 @@ export default function NewRoutinePage() {
                     {/* Table Header */}
                     <div className="grid grid-cols-5 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
-                      <div className="text-center">PREVIOUS</div>
                       <div className="flex items-center justify-center gap-1">
                         <Dumbbell className="size-3" />
                         KG
                       </div>
                       <div className="text-center">REPS</div>
-                      <div className="flex justify-center">
-                        <Check className="size-5 text-blue-600" />
-                      </div>
                     </div>
 
                     {/* Sets Rows */}
@@ -312,34 +331,36 @@ export default function NewRoutinePage() {
                           >
                             {set.setNumber}
                           </div>
-                          <div
-                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-500"
-                              }`}
-                          >
-                            {set.previous}
-                          </div>
                           <div className="flex justify-center">
-                            <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${set.completed ? "bg-green-100" : ""
-                                }`}
-                            >
-                              {set.kg || 0}
-                            </div>
+                            <Input
+                              type="number"
+                              value={set.kg ?? 0}
+                              onChange={(e) =>
+                                handleSetFieldChange(
+                                  index,
+                                  setIndex,
+                                  "kg",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className={`w-full border-none h-8 px-2 text-lg text-center ${set.completed ? "bg-green-100" : ""}`}
+                            />
                           </div>
+
                           <div className="flex justify-center">
-                            <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${set.completed ? "bg-green-100" : ""
-                                }`}
-                            >
-                              {set.reps || 0}
-                            </div>
-                          </div>
-                          <div className="flex justify-center">
-                            {set.completed ? (
-                              <SquareCheck className="size-6 text-green-600" />
-                            ) : (
-                              <SquareCheck className="size-6 text-gray-300" />
-                            )}
+                            <Input
+                              type="number"
+                              value={set.reps ?? 0}
+                              onChange={(e) =>
+                                handleSetFieldChange(
+                                  index,
+                                  setIndex,
+                                  "reps",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className={`w-full border-none h-8 px-2 text-lg text-center ${set.completed ? "bg-green-100" : ""}`}
+                            />
                           </div>
                         </div>
                       ))

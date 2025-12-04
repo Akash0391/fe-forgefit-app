@@ -1,10 +1,10 @@
 "use client";
 
-import { RotateCw, Plus, Notebook, Search, Play, X, ChevronDown, ChevronRight, MoreHorizontal, FolderPlus } from "lucide-react";
+import { RotateCw, Plus, Notebook, Search, Play, X, ChevronDown, ChevronRight, MoreHorizontal, FolderPlus, MoreVertical, MoreHorizontalIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { workoutApi, Workout, Exercise } from "@/lib/api";
+import { workoutApi, Workout, Exercise, RoutineFolder } from "@/lib/api";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import RoutineOptionsModal from "@/components/RoutineOptionsModal";
 import DeleteRoutineModal from "@/components/DeleteRoutineModal";
@@ -20,7 +20,12 @@ export default function WorkoutPage() {
   const [selectedRoutine, setSelectedRoutine] = useState<Workout | null>(null);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [folders, setFolders] = useState<RoutineFolder[]>([]);
+const [loadingFolders, setLoadingFolders] = useState(true);
+const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+
 
   useEffect(() => {
     // Check if workout is in progress
@@ -29,6 +34,7 @@ export default function WorkoutPage() {
 
     // Fetch routines
     fetchRoutines();
+    fetchFolders();
 
     // Refresh routines when page becomes visible (e.g., navigating back from another page)
     const handleVisibilityChange = () => {
@@ -55,6 +61,19 @@ export default function WorkoutPage() {
       setLoadingRoutines(false);
     }
   };
+
+  const fetchFolders = async () => {
+  try {
+    setLoadingFolders(true);
+    const res = await workoutApi.getRoutineFolders();
+    setFolders(res.data || []);
+  } catch (err) {
+    console.error("Error fetching routine folders:", err);
+  } finally {
+    setLoadingFolders(false);
+  }
+};
+
 
   const handleRefresh = () => {
     fetchRoutines();
@@ -279,6 +298,63 @@ export default function WorkoutPage() {
           </div>
         </section>
 
+        {/* Folders Section – from backend, above My Routines */}
+{!loadingFolders &&
+  folders.map((folder) => {
+    const expanded = expandedFolders[folder._id] ?? true;
+
+    return (
+      <section key={folder._id} className="mt-4">
+        {/* Folder header (e.g., "Gym") */}
+        <button
+          onClick={() =>
+            setExpandedFolders((prev) => ({
+              ...prev,
+              [folder._id]: !expanded,
+            }))
+          }
+          className="flex items-center justify-between w-full mb-2"
+        >
+          <div className="flex items-center gap-2">
+            {expanded ? (
+              <ChevronDown className="size-5 text-gray-400" />
+            ) : (
+              <ChevronRight className="size-5 text-gray-400" />
+            )}
+            <span className="text-lg font-semibold text-gray-500">
+              {folder.name}
+            </span>
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // later: folder options (rename/delete)
+            }}
+            className="p-1 rounded-full hover:bg-gray-100"
+          >
+            <MoreHorizontal className="size-7 text-gray-900" />
+          </button>
+        </button>
+
+        {/* Folder content */}
+        {expanded && (
+          <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
+            <button
+              onClick={() => router.push("/workout/new-routine")}
+              className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
+            >
+              <Plus className="size-5" />
+              <span>Add new routine</span>
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  })}
+
+
+
         {/* My Routines Section – only show when there is at least 1 routine */}
         {!loadingRoutines && routines.length > 0 && (
           <section>
@@ -417,12 +493,21 @@ export default function WorkoutPage() {
       {/* Create Folder Modal */}
       <FolderModal
         open={showCreateFolderModal}
-        onClose={() => setShowCreateFolderModal(false)}
-        onSave={(name) => {
-          // TODO: later call API to actually create folder
-          console.log("Create folder:", name);
-          setShowCreateFolderModal(false);
-        }}
+  onClose={() => setShowCreateFolderModal(false)}
+  onSave={async (name) => {
+    try {
+      const res = await workoutApi.createRoutineFolder(name);
+      setFolders((prev) => [...prev, res.data]);
+      setExpandedFolders((prev) => ({
+        ...prev,
+        [res.data._id]: true,
+      }));
+    } catch (err) {
+      console.error("Error creating folder:", err);
+    } finally {
+      setShowCreateFolderModal(false);
+    }
+  }}
       />
 
     </div>

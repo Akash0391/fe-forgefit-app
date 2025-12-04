@@ -191,6 +191,15 @@ export interface Workout {
   updatedAt: string;
 }
 
+export interface RoutineFolder {
+  _id: string;
+  userId: string;
+  name: string;
+  order?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Workout-related API methods
 export const workoutApi = {
   getActive: () => apiClient.get<{
@@ -275,5 +284,20 @@ export const workoutApi = {
     success: boolean;
     data: Workout;
   }>('/api/workouts/routines', data),
+
+  getRoutineFolders: () =>
+    apiClient.get<{
+      success: boolean;
+      data: RoutineFolder[];
+    }>('/api/workouts/folders'),
+
+  createRoutineFolder: (name: string) =>
+    apiClient.post<{
+      success: boolean;
+      data: RoutineFolder;
+    }>('/api/workouts/folders', { name }),
 };
+
+
+
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCw, Plus, Notebook, Search, Play, X, ChevronDown, ChevronUp, MoreVertical, ChevronRight, MoreHorizontal, FolderPlus } from "lucide-react";
+import { RotateCw, Plus, Notebook, Search, Play, X, ChevronDown, ChevronRight, MoreHorizontal, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -8,6 +8,7 @@ import { workoutApi, Workout, Exercise } from "@/lib/api";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import RoutineOptionsModal from "@/components/RoutineOptionsModal";
 import DeleteRoutineModal from "@/components/DeleteRoutineModal";
+import { FolderModal } from "@/components/FolderModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function WorkoutPage() {
   const [selectedRoutine, setSelectedRoutine] = useState<Workout | null>(null);
   const [showRoutineModal, setShowRoutineModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
 
   useEffect(() => {
     // Check if workout is in progress
@@ -247,9 +249,7 @@ export default function WorkoutPage() {
             {/* ✅ Show folder icon ONLY if at least one routine exists */}
             {!loadingRoutines && routines.length > 0 && (
               <button
-                onClick={() => {
-                  router.push("/workout/new-routine");
-                }}
+                onClick={() => setShowCreateFolderModal(true)}
                 className="flex items-center justify-center rounded-[10px] p-2 transition-colors cursor-pointer"
                 aria-label="New Routine"
               >
@@ -413,6 +413,18 @@ export default function WorkoutPage() {
         onConfirm={handleDeleteConfirm}
         routineName={selectedRoutine?.name}
       />
+
+      {/* Create Folder Modal */}
+      <FolderModal
+        open={showCreateFolderModal}
+        onClose={() => setShowCreateFolderModal(false)}
+        onSave={(name) => {
+          // TODO: later call API to actually create folder
+          console.log("Create folder:", name);
+          setShowCreateFolderModal(false);
+        }}
+      />
+
     </div>
   );
 }

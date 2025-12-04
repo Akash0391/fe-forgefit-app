@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, workoutApi, Workout } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import DetailRoutineOptionModal from "@/components/DetailRoutineOptionModal";
 
 interface RoutineExercise {
   exercise: Exercise;
@@ -36,6 +37,10 @@ export default function RoutineDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"Volume" | "Reps" | "Duration">("Volume");
+  const [showRoutineModal, setShowRoutineModal] = useState(false);
+  const [selectedRoutine, setSelectedRoutine] = useState<Workout | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
 
   useEffect(() => {
     if (routineId) {
@@ -92,6 +97,55 @@ export default function RoutineDetailsPage() {
     }
   };
 
+  const handleRoutineDuplicate = () => {
+    if (!selectedRoutine) return;
+
+    // Prepare routine data in the format expected by new-routine page
+    const routineData = {
+      name: `${selectedRoutine.name} (copy)`,
+      exercises: selectedRoutine.exercises.map((ex) => {
+        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
+        return {
+          exercise: exercise,
+          sets: ex.sets || [],
+          notes: ex.notes || "",
+        };
+      }),
+      supersetGroups: selectedRoutine.supersetGroups || [],
+    };
+
+    // Store in sessionStorage for new-routine page to load
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
+
+    // Close modal and navigate
+    handleRoutineModalClose();
+    router.push("/workout/new-routine");
+  };
+
+  const handleRoutineDelete = () => {
+    // Show delete confirmation modal
+    setShowDeleteConfirm(true);
+  };
+
+  const handleRoutineModalClose = () => {
+    setShowRoutineModal(false);
+    setSelectedRoutine(null);
+  };
+
+  const handleRoutineEdit = () => {
+    if (!selectedRoutine) return;
+
+    // Close modal and navigate to edit routine page
+    handleRoutineModalClose();
+    router.push(`/workout/edit-routine?id=${selectedRoutine._id}`);
+  };
+
+  const handleRoutineOptionsClick = (routine: Workout) => {
+    setSelectedRoutine(routine);
+    setShowRoutineModal(true);
+  };
+
+  
   const handleStartRoutine = () => {
     if (!routine) return;
 
@@ -200,6 +254,10 @@ export default function RoutineDetailsPage() {
               size="icon"
               className="h-10 w-10"
               aria-label="More options"
+              onClick={(e) => {
+                            e.stopPropagation();
+                            handleRoutineOptionsClick(routine);
+                          }}
             >
               <MoreHorizontal className="size-7" />
             </Button>
@@ -253,8 +311,8 @@ export default function RoutineDetailsPage() {
               key={view}
               onClick={() => setSelectedView(view)}
               className={`flex py-2 px-6 rounded-full text-xm font-medium transition-colors ${selectedView === view
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-600"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-100 text-gray-600"
                 }`}
             >
               {view}
@@ -311,13 +369,13 @@ export default function RoutineDetailsPage() {
                     </div>
 
                     <div
-                    className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
-                  >
-                    <Timer className="size-7 text-blue-600" />
-                    <span className="text-lg text-blue-600 font-regular">
-                      Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
-                    </span>
-                  </div>
+                      className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+                    >
+                      <Timer className="size-7 text-blue-600" />
+                      <span className="text-lg text-blue-600 font-regular">
+                        Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
+                      </span>
+                    </div>
 
 
                     {/* Sets Table */}
@@ -369,6 +427,15 @@ export default function RoutineDetailsPage() {
           </div>
         </div>
       </div>
+
+      <DetailRoutineOptionModal
+        open={showRoutineModal}
+        onClose={handleRoutineModalClose}
+        routine={selectedRoutine}
+        onEdit={handleRoutineEdit}
+        onDelete={handleRoutineDelete}
+        onDuplicate={handleRoutineDuplicate}
+      />
     </div>
   );
 }

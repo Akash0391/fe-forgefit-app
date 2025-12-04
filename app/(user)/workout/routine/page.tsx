@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Dumbbell, MoreHorizontal, Share } from "lucide-react";
+import { ArrowLeft, Dumbbell, MoreHorizontal, Share, Timer } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, workoutApi, Workout } from "@/lib/api";
@@ -310,9 +310,14 @@ export default function RoutineDetailsPage() {
                       </h4>
                     </div>
 
-                    <p className="text-sm text-blue-600 mb-2 ml-[3.5rem]">
+                    <div
+                    className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+                  >
+                    <Timer className="size-7 text-blue-600" />
+                    <span className="text-lg text-blue-600 font-regular">
                       Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
-                    </p>
+                    </span>
+                  </div>
 
 
                     {/* Sets Table */}

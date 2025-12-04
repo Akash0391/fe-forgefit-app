@@ -15,6 +15,18 @@ interface RoutineExercise {
   restTimerSeconds?: number; // ✅ NEW
 }
 
+const formatRestTimerLabel = (seconds: number): string => {
+  if (seconds === 0) return "OFF";
+  if (seconds < 60) return `${seconds}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remain = seconds % 60;
+
+  if (remain === 0) return `${minutes}m`;
+  return `${minutes}m ${remain}s`;
+};
+
+
 export default function NewRoutinePage() {
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [routineTitle, setRoutineTitle] = useState("");
@@ -339,7 +351,7 @@ export default function NewRoutinePage() {
                   >
                     <Timer className="size-7 text-blue-600" />
                     <span className="text-lg text-blue-600 font-regular">
-                      Rest Timer: {routineExercise.restTimerSeconds ?? 35}s
+                      Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds ?? 35)}
                     </span>
                   </div>
 

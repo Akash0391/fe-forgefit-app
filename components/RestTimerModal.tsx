@@ -14,9 +14,20 @@ interface RestTimerModalProps {
 // OFF + 5s steps up to 5 minutes (300s)
 const DEFAULT_REST_OPTIONS: number[] = (() => {
   const arr: number[] = [0]; // 0 = OFF
-  for (let s = 5; s <= 300; s += 5) arr.push(s);
+
+  // 5s gap from 0 → 2 minutes (120s)
+  for (let s = 5; s <= 120; s += 5) {
+    arr.push(s);
+  }
+
+  // 15s gap from 2 minutes → 5 minutes (300s)
+  for (let s = 135; s <= 300; s += 15) {
+    arr.push(s);
+  }
+
   return arr;
 })();
+
 
 function formatSecondsLabel(seconds: number): string {
   if (seconds === 0) return "OFF";
@@ -25,7 +36,7 @@ function formatSecondsLabel(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remain = seconds % 60;
 
-  if (remain === 0) return `${minutes}m`;
+  if (remain === 0) return `${minutes}m ${remain}s`;
   return `${minutes}m ${remain}s`;
 }
 

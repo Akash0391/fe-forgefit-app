@@ -244,15 +244,18 @@ export default function WorkoutPage() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold">Routines</h2>
-            <button
-              onClick={() => {
-                router.push("/workout/new-routine");
-              }}
-              className="flex items-center justify-center rounded-[10px] p-2 transition-colors cursor-pointer"
-              aria-label="New Routine"
-            >
-              <FolderPlus className="size-[26px]" />
-            </button>
+            {/* ✅ Show folder icon ONLY if at least one routine exists */}
+            {!loadingRoutines && routines.length > 0 && (
+              <button
+                onClick={() => {
+                  router.push("/workout/new-routine");
+                }}
+                className="flex items-center justify-center rounded-[10px] p-2 transition-colors cursor-pointer"
+                aria-label="New Routine"
+              >
+                <FolderPlus className="size-[26px]" />
+              </button>
+            )}
           </div>
           <div className="flex flex-row gap-2">
             <button

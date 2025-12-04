@@ -6,18 +6,32 @@ import { Dumbbell, Plus, MoreVertical, X, Timer, ChevronDown, Check } from "luci
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Exercise, SetData, workoutApi, Workout } from "@/lib/api";
+import { RestTimerModal } from "@/components/RestTimerModal";
 
 interface RoutineExercise {
   exercise: Exercise;
   sets: (SetData & { minReps?: number; maxReps?: number })[];
   notes: string;
+  restTimerSeconds?: number;
 }
+
+const formatRestTimerLabel = (seconds?: number): string => {
+  if (!seconds || seconds === 0) return "OFF";
+  if (seconds < 60) return `${seconds}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remain = seconds % 60;
+
+  if (remain === 0) return `${minutes}m`;
+  return `${minutes}m ${remain}s`;
+};
+
 
 export default function EditRoutinePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const routineId = searchParams.get("id");
-  
+
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [routineTitle, setRoutineTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -30,6 +44,7 @@ export default function EditRoutinePage() {
   const [shouldRenderRepetitionModal, setShouldRenderRepetitionModal] = useState(false);
   const repetitionModalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [repetitionMode, setRepetitionMode] = useState<"reps" | "range">("reps");
+  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
   useEffect(() => {
     if (routineId) {
       loadRoutine();
@@ -62,17 +77,17 @@ export default function EditRoutinePage() {
 
     // Check on mount and when page becomes visible
     checkForNewExercises();
-    
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkForNewExercises();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     // Listen for focus event (when user navigates back to this tab/page)
     window.addEventListener('focus', checkForNewExercises);
-    
+
     // Listen for custom event dispatched when exercises are added in routine mode
     const handleExercisesAdded = () => {
       checkForNewExercises();
@@ -92,7 +107,7 @@ export default function EditRoutinePage() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Fetch all routines and find the one we need
       const response = await workoutApi.getRoutines();
       const routine = response.data.find((r: Workout) => r._id === routineId);
@@ -104,7 +119,7 @@ export default function EditRoutinePage() {
       }
 
       setRoutineTitle(routine.name || "");
-      
+
       // Convert routine exercises to RoutineExercise format
       const routineExercises: RoutineExercise[] = routine.exercises.map((ex: any) => {
         const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
@@ -115,7 +130,8 @@ export default function EditRoutinePage() {
             minReps: set.minReps,
             maxReps: set.maxReps
           })),
-          notes: ex.notes || ""
+          notes: ex.notes || "",
+          restTimerSeconds: ex.restTimerSeconds ?? 0,
         };
       });
 
@@ -126,6 +142,25 @@ export default function EditRoutinePage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openRestTimerSheet = (exerciseIndex: number) => {
+    setRestTimerExerciseIndex(exerciseIndex);
+  };
+
+  const closeRestTimerSheet = () => {
+    setRestTimerExerciseIndex(null);
+  };
+
+  const handleRestTimerSelect = (seconds: number) => {
+    setExercises(prev => {
+      if (restTimerExerciseIndex === null) return prev;
+      const updated = [...prev];
+      const ex = { ...updated[restTimerExerciseIndex] };
+      ex.restTimerSeconds = seconds;
+      updated[restTimerExerciseIndex] = ex;
+      return updated;
+    });
   };
 
   const handleAddExercise = () => {
@@ -172,7 +207,8 @@ export default function EditRoutinePage() {
             minReps: (set as any).minReps,
             maxReps: (set as any).maxReps
           })),
-          notes: ex.notes || ""
+          notes: ex.notes || "",
+          restTimerSeconds: ex.restTimerSeconds ?? 0,
         })),
         supersetGroups: []
       });
@@ -248,7 +284,7 @@ export default function EditRoutinePage() {
 
   const handleRepetitionModeSelect = (mode: "reps" | "range") => {
     setRepetitionMode(mode);
-    
+
     // When switching to "range" mode, prefill minReps with existing reps values
     if (mode === "range") {
       const updatedExercises = exercises.map(exercise => ({
@@ -325,7 +361,7 @@ export default function EditRoutinePage() {
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Left: Cancel */}
-          <button 
+          <button
             onClick={() => router.back()}
             aria-label="Go back"
             className="text-blue-500 text-lg font-regular"
@@ -341,11 +377,10 @@ export default function EditRoutinePage() {
             variant="default"
             onClick={handleSave}
             disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
-            className={`text-lg font-regular ${
-              exercises.length === 0 || isSaving || !routineTitle.trim()
+            className={`text-lg font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-600 text-white rounded-[8px] py-6"
-            }`}
+              }`}
           >
             {isSaving ? "Updating..." : "Update"}
           </Button>
@@ -409,7 +444,7 @@ export default function EditRoutinePage() {
             {exercises.map((routineExercise, index) => {
               const exercise = routineExercise.exercise;
               const sets = routineExercise.sets || [];
-              
+
               return (
                 <div
                   key={exercise._id || index}
@@ -463,12 +498,14 @@ export default function EditRoutinePage() {
                   {/* Rest Timer Section */}
                   <div
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+                    onClick={() => openRestTimerSheet(index)}
                   >
                     <Timer className="size-7 text-blue-600" />
                     <span className="text-lg text-blue-600 font-regular">
-                      Rest Timer: OFF
+                      Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
                     </span>
                   </div>
+
 
                   {/* Sets Table */}
                   <div className="mb-4">
@@ -497,14 +534,12 @@ export default function EditRoutinePage() {
                       sets.map((set, setIndex) => (
                         <div
                           key={setIndex}
-                          className={`grid grid-cols-3 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
-                            set.completed ? "bg-green-100" : ""
-                          }`}
+                          className={`grid grid-cols-3 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${set.completed ? "bg-green-100" : ""
+                            }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${
-                              set.completed ? "text-black" : "text-gray-700"
-                            }`}
+                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
+                              }`}
                           >
                             {set.setNumber}
                           </div>
@@ -520,9 +555,8 @@ export default function EditRoutinePage() {
                                   parseInt(e.target.value) || 0
                                 )
                               }
-                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                                set.completed ? "bg-green-100" : ""
-                              }`}
+                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                                }`}
                               placeholder="0"
                             />
                           </div>
@@ -539,9 +573,8 @@ export default function EditRoutinePage() {
                                     parseInt(e.target.value) || 0
                                   )
                                 }
-                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                                  set.completed ? "bg-green-100" : ""
-                                }`}
+                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                                  }`}
                                 placeholder="0"
                               />
                             ) : (
@@ -557,9 +590,8 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                                    set.completed ? "bg-green-100" : ""
-                                  }`}
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                                    }`}
                                   placeholder="-"
                                 />
                                 <span className="text-gray-500 text-sm">to</span>
@@ -574,9 +606,8 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
-                                    set.completed ? "bg-green-100" : ""
-                                  }`}
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                                    }`}
                                   placeholder="-"
                                 />
                               </div>
@@ -625,24 +656,22 @@ export default function EditRoutinePage() {
         <>
           {/* Overlay */}
           <div
-            className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${
-              isRepetitionModalVisible ? "opacity-100" : "opacity-0"
-            }`}
+            className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${isRepetitionModalVisible ? "opacity-100" : "opacity-0"
+              }`}
             onClick={() => setShowRepetitionModal(false)}
             style={{ pointerEvents: isRepetitionModalVisible ? "auto" : "none" }}
           />
           {/* Modal Content - Bottom Sheet */}
           <div
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
-              isRepetitionModalVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-            }`}
+            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isRepetitionModalVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag Handle */}
             <div className="flex justify-center pt-2">
               <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
             </div>
-            
+
             {/* Header with Title */}
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-regular text-center">
@@ -662,18 +691,15 @@ export default function EditRoutinePage() {
                     <button
                       key={option.id}
                       onClick={() => handleRepetitionModeSelect(option.id as "reps" | "range")}
-                      className={`w-full flex items-center justify-between gap-5 px-6 py-6 transition-colors text-left ${
-                        !isLast ? "border-b border-gray-100" : ""
-                      } hover:bg-gray-50 active:bg-gray-100`}
+                      className={`w-full flex items-center justify-between gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
+                        } hover:bg-gray-50 active:bg-gray-100`}
                     >
-                      <span className={`text-lg font-regular ${
-                        isSelected ? "text-blue-600" : "text-gray-900"
-                      }`}>
+                      <span className={`text-lg font-regular ${isSelected ? "text-blue-600" : "text-gray-900"
+                        }`}>
                         {option.label}
                       </span>
-                      <div className={`size-7 flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? "text-blue-600" : "text-gray-400"
-                      }`}>
+                      <div className={`size-7 flex items-center justify-center flex-shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"
+                        }`}>
                         {isSelected && <Check className="size-7" />}
                       </div>
                     </button>
@@ -684,6 +710,22 @@ export default function EditRoutinePage() {
           </div>
         </>
       )}
+
+      <RestTimerModal
+              open={restTimerExerciseIndex !== null}
+              exerciseName={
+                restTimerExerciseIndex !== null
+                  ? formatExerciseName(exercises[restTimerExerciseIndex].exercise)
+                  : ""
+              }
+              currentSeconds={
+                restTimerExerciseIndex !== null
+                  ? exercises[restTimerExerciseIndex].restTimerSeconds ?? 35
+                  : 35
+              }
+              onSelect={handleRestTimerSelect}
+              onClose={closeRestTimerSheet}
+            />
     </div>
   );
 }

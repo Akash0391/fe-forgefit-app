@@ -77,6 +77,10 @@ export default function WorkoutPage() {
     setWorkoutInProgress(false);
   };
 
+  const handleExploreRoutines = () => {
+    router.push("/workout/explore-routine");
+  }
+
   const handleStartRoutine = (routine: Workout) => {
     // Store routine data in sessionStorage to start as a workout
     const workoutData = {
@@ -262,7 +266,7 @@ export default function WorkoutPage() {
             </button>
             <button
               onClick={() => {
-                router.push("/workout/explore-routines");
+                handleExploreRoutines();
               }}
               className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-8 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >

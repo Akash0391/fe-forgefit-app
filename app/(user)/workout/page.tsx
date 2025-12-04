@@ -24,7 +24,7 @@ export default function WorkoutPage() {
     // Check if workout is in progress
     const inProgress = localStorage.getItem("workoutInProgress") === "true";
     setWorkoutInProgress(inProgress);
-    
+
     // Fetch routines
     fetchRoutines();
 
@@ -95,9 +95,9 @@ export default function WorkoutPage() {
       }),
       supersetGroups: routine.supersetGroups || [],
     };
-    
+
     sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
-    
+
     // Set workout in progress and navigate to quick start
     localStorage.setItem("workoutInProgress", "true");
     router.push("/workout/quick-start");
@@ -131,7 +131,7 @@ export default function WorkoutPage() {
 
   const handleRoutineEdit = () => {
     if (!selectedRoutine) return;
-    
+
     // Close modal and navigate to edit routine page
     handleRoutineModalClose();
     router.push(`/workout/edit-routine?id=${selectedRoutine._id}`);
@@ -147,10 +147,10 @@ export default function WorkoutPage() {
 
     try {
       await workoutApi.delete(selectedRoutine._id);
-      
+
       // Refresh routines list
       await fetchRoutines();
-      
+
       // Close modals
       setShowDeleteConfirm(false);
       handleRoutineModalClose();
@@ -169,7 +169,7 @@ export default function WorkoutPage() {
 
   const handleRoutineDuplicate = () => {
     if (!selectedRoutine) return;
-    
+
     // Prepare routine data in the format expected by new-routine page
     const routineData = {
       name: `${selectedRoutine.name} (copy)`,
@@ -183,10 +183,10 @@ export default function WorkoutPage() {
       }),
       supersetGroups: selectedRoutine.supersetGroups || [],
     };
-    
+
     // Store in sessionStorage for new-routine page to load
     sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
-    
+
     // Close modal and navigate
     handleRoutineModalClose();
     router.push("/workout/new-routine");
@@ -276,43 +276,36 @@ export default function WorkoutPage() {
           </div>
         </section>
 
-        {/* My Routines Section */}
-        <section>
-          <button
-            onClick={() => setShowRoutines(!showRoutines)}
-            className="flex items-center gap-2 mb-5 w-full text-left"
-          >
-            {showRoutines ? (
-              <ChevronDown className="size-6 text-gray-400" />
-            ) : (
-              <ChevronRight className="size-6 text-gray-400" />
-            )}
-            <h2 className="text-lg text-gray-400 font-semibold">
-              My Routines ({routines.length})
-            </h2>
-          </button>
-
-          {showRoutines && (
-            <div className="space-y-4">
-              {loadingRoutines ? (
-                <div className="text-center py-8 text-gray-500">
-                  Loading routines...
-                </div>
-              ) : routines.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No routines yet. Create your first routine!
-                </div>
+        {/* My Routines Section – only show when there is at least 1 routine */}
+        {!loadingRoutines && routines.length > 0 && (
+          <section>
+            <button
+              onClick={() => setShowRoutines(!showRoutines)}
+              className="flex items-center gap-2 mb-5 w-full text-left"
+            >
+              {showRoutines ? (
+                <ChevronDown className="size-6 text-gray-400" />
               ) : (
-                routines.map((routine) => {
+                <ChevronRight className="size-6 text-gray-400" />
+              )}
+              <h2 className="text-lg text-gray-400 font-semibold">
+                My Routines ({routines.length})
+              </h2>
+            </button>
+
+            {showRoutines && (
+              <div className="space-y-4">
+                {routines.map((routine) => {
                   const firstExercise = routine.exercises[0];
-                  const exercise = typeof firstExercise?.exerciseId === 'object' 
-                    ? firstExercise.exerciseId 
-                    : null;
-                  
+                  const exercise =
+                    typeof firstExercise?.exerciseId === "object"
+                      ? firstExercise.exerciseId
+                      : null;
+
                   const handleCardClick = () => {
                     router.push(`/workout/routine?id=${routine._id}`);
                   };
-                  
+
                   return (
                     <div
                       key={routine._id}
@@ -352,11 +345,12 @@ export default function WorkoutPage() {
                       </Button>
                     </div>
                   );
-                })
-              )}
-            </div>
-          )}
-        </section>
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
 
         {/* Workout on Progress */}
         {workoutInProgress && (

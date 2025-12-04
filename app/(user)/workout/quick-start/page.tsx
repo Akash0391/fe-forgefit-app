@@ -78,268 +78,315 @@ export default function QuickStartPage() {
   };
 
   // Load workout from API
-  const loadWorkout = async () => {
-    try {
-      // First check if we're starting a workout from a routine
-      const routineDataStr = sessionStorage.getItem("routineToWorkout");
-      if (routineDataStr) {
-        try {
-          const routineData = JSON.parse(routineDataStr);
-          // Clear sessionStorage after loading
-          sessionStorage.removeItem("routineToWorkout");
-          
-          // Extract exercises from routine data
-          const exercises = routineData.exercises.map((ex: any) => {
-            const exercise = ex.exercise || { _id: ex.exerciseId };
-            return exercise as Exercise;
-          });
-          setWorkoutExercises(exercises);
-          
-          // Extract sets
-          const sets: ExerciseSets = {};
-          routineData.exercises.forEach((ex: any) => {
-            const exerciseId = ex.exercise?._id || ex.exerciseId;
-            // Ensure at least 1 default set is shown
-            if (!ex.sets || ex.sets.length === 0) {
-              sets[exerciseId] = [{
+ const loadWorkout = async () => {
+  try {
+    // 1) First check if we're starting a workout from a routine
+    const routineDataStr = sessionStorage.getItem("routineToWorkout");
+    if (routineDataStr) {
+      try {
+        const routineData = JSON.parse(routineDataStr);
+        // Clear sessionStorage after loading
+        sessionStorage.removeItem("routineToWorkout");
+
+        // Extract exercises from routine data
+        const exercises = routineData.exercises.map((ex: any) => {
+          const exercise = ex.exercise || { _id: ex.exerciseId };
+          return exercise as Exercise;
+        });
+        setWorkoutExercises(exercises);
+
+        // Extract sets
+        const sets: ExerciseSets = {};
+        routineData.exercises.forEach((ex: any) => {
+          const exerciseId = ex.exercise?._id || ex.exerciseId;
+          if (!ex.sets || ex.sets.length === 0) {
+            sets[exerciseId] = [
+              {
                 setNumber: 1,
                 previous: "-",
                 kg: 0,
                 reps: 0,
                 completed: false,
-              }];
-            } else {
-              sets[exerciseId] = ex.sets;
-            }
-          });
-          setExerciseSets(sets);
-          
-          // Extract superset groups
-          const groups = (routineData.supersetGroups || []).map((group: any) => 
-            new Set(Array.isArray(group) ? group : (group.exerciseIds || []))
-          );
-          setSupersetGroups(groups);
-          
-          // Initialize start time for new workout
-          const startTime = Date.now();
-          localStorage.setItem("workoutStartTime", startTime.toString());
-          localStorage.setItem("workoutInProgress", "true");
-          setDuration(0);
-          
-          // Save the workout to backend
-          const exercisesWithSets = exercises.map((exercise: Exercise) => {
-            const exerciseSets = sets[exercise._id];
-            const defaultSet = [{
-              setNumber: 1,
-              previous: "-",
-              kg: 0,
-              reps: 0,
-              completed: false,
-            }];
-            return {
-              ...exercise,
-              sets: exerciseSets && exerciseSets.length > 0 ? exerciseSets : defaultSet,
-            };
-          });
-          
-          const supersetGroupsArray = groups.map((group: Set<string>) => Array.from(group));
-          await workoutApi.save({
-            exercises: exercisesWithSets,
-            supersetGroups: supersetGroupsArray,
-            duration: 0,
-            startTime: startTime,
-          });
-          
-          return; // Exit early since we've loaded from routine
-        } catch (error) {
-          console.error("Error loading routine data:", error);
-          // Continue to normal load flow if routine loading fails
-        }
-      }
-      
-      const response = await workoutApi.getActive();
-      if (response.data) {
-        const workout = response.data;
-        
-        // Set workout in progress flag when active workout is found
-        localStorage.setItem("workoutInProgress", "true");
-        
-        // Extract exercises
-        const exercises = workout.exercises.map((ex) => {
-          const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-          return exercise as Exercise;
-        });
-        setWorkoutExercises(exercises);
-        
-        // Extract sets
-        const sets: ExerciseSets = {};
-        workout.exercises.forEach((ex) => {
-          const exerciseId = typeof ex.exerciseId === 'object' ? ex.exerciseId._id : ex.exerciseId;
-          // Ensure at least 1 default set is shown
-          if (!ex.sets || ex.sets.length === 0) {
-            sets[exerciseId] = [{
-              setNumber: 1,
-              previous: "-",
-              kg: 0,
-              reps: 0,
-              completed: false,
-            }];
+              },
+            ];
           } else {
             sets[exerciseId] = ex.sets;
           }
         });
         setExerciseSets(sets);
-        
+
         // Extract superset groups
-        const groups = workout.supersetGroups.map((group) => 
-          new Set(group.exerciseIds.map((id: string | Exercise) => 
-            typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
-          ))
+        const groups = (routineData.supersetGroups || []).map((group: any) =>
+          new Set(Array.isArray(group) ? group : group.exerciseIds || [])
         );
         setSupersetGroups(groups);
-        
-        // Set duration and start time
-        if (workout.startTime) {
-          const startTime = new Date(workout.startTime).getTime();
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
-          setDuration(elapsed);
-          localStorage.setItem("workoutStartTime", startTime.toString());
-        } else {
-          // Initialize start time if not set
-          const startTime = Date.now();
-          localStorage.setItem("workoutStartTime", startTime.toString());
-          setDuration(0);
-          // Save workout with start time (don't call saveWorkout here to avoid loop)
-          const supersetGroupsArray = groups.map((group) => Array.from(group));
-          workoutApi.save({
-            exercises: exercises,
-            supersetGroups: supersetGroupsArray,
-            duration: 0,
-            startTime: startTime,
-          }).catch(err => console.error("Error saving start time:", err));
-        }
-      } else {
-        // No active workout - check if workoutInProgress flag is set
-        const workoutInProgress = localStorage.getItem("workoutInProgress") === "true";
-        
-        if (workoutInProgress) {
-          // Workout was in progress but not found in API - might be timing issue
-          // Wait a bit and retry once
-          setTimeout(async () => {
-            try {
-              const retryResponse = await workoutApi.getActive();
-              if (retryResponse.data) {
-                // Found it on retry, reload the workout
-                const workout = retryResponse.data;
-                const exercises = workout.exercises.map((ex) => {
-                  const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-                  return exercise as Exercise;
-                });
-                setWorkoutExercises(exercises);
-                
-                const sets: ExerciseSets = {};
-                workout.exercises.forEach((ex) => {
-                  const exerciseId = typeof ex.exerciseId === 'object' ? ex.exerciseId._id : ex.exerciseId;
-                  if (!ex.sets || ex.sets.length === 0) {
-                    sets[exerciseId] = [{
-                      setNumber: 1,
-                      previous: "-",
-                      kg: 0,
-                      reps: 0,
-                      completed: false,
-                    }];
-                  } else {
-                    sets[exerciseId] = ex.sets;
-                  }
-                });
-                setExerciseSets(sets);
-                
-                const groups = workout.supersetGroups.map((group) => 
-                  new Set(group.exerciseIds.map((id: string | Exercise) => 
-                    typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
-                  ))
-                );
-                setSupersetGroups(groups);
-                
-                if (workout.startTime) {
-                  const startTime = new Date(workout.startTime).getTime();
-                  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                  setDuration(elapsed);
-                  localStorage.setItem("workoutStartTime", startTime.toString());
-                }
-              } else {
-                // Still not found - clear the flag and create new workout
-                localStorage.removeItem("workoutInProgress");
-                setWorkoutExercises([]);
-                setExerciseSets({});
-                setSupersetGroups([]);
-                
-                const startTime = Date.now();
-                localStorage.setItem("workoutStartTime", startTime.toString());
-                localStorage.setItem("workoutInProgress", "true");
-                setDuration(0);
-                
-                workoutApi.save({
-                  exercises: [],
-                  supersetGroups: [],
-                  duration: 0,
-                  startTime: startTime,
-                }).catch(err => console.error("Error creating empty workout:", err));
-              }
-            } catch (err) {
-              console.error("Error retrying workout load:", err);
-              // Clear flag and create new workout
-              localStorage.removeItem("workoutInProgress");
-              setWorkoutExercises([]);
-              setExerciseSets({});
-              setSupersetGroups([]);
-            }
-          }, 500);
-          return;
-        }
-        
-        // No active workout and no workout in progress - create new empty workout
-        setWorkoutExercises([]);
-        setExerciseSets({});
-        setSupersetGroups([]);
-        
-        // Initialize start time and create empty workout
+
+        // Initialize start time for new workout
         const startTime = Date.now();
         localStorage.setItem("workoutStartTime", startTime.toString());
         localStorage.setItem("workoutInProgress", "true");
         setDuration(0);
-        
-        // Create empty workout on backend with start time
-        workoutApi.save({
-          exercises: [],
-          supersetGroups: [],
+
+        // Save the workout to backend
+        const exercisesWithSets = exercises.map((exercise: Exercise) => {
+          const exerciseSets = sets[exercise._id];
+          const defaultSet = [
+            {
+              setNumber: 1,
+              previous: "-",
+              kg: 0,
+              reps: 0,
+              completed: false,
+            },
+          ];
+          return {
+            ...exercise,
+            sets:
+              exerciseSets && exerciseSets.length > 0
+                ? exerciseSets
+                : defaultSet,
+          };
+        });
+
+        const supersetGroupsArray = groups.map((group: Set<string>) =>
+          Array.from(group)
+        );
+        await workoutApi.save({
+          exercises: exercisesWithSets,
+          supersetGroups: supersetGroupsArray,
           duration: 0,
-          startTime: startTime,
-        }).catch(err => console.error("Error creating empty workout:", err));
+          startTime,
+        });
+
+        // ✅ Done with routine flow
+        return;
+      } catch (error) {
+        console.error("Error loading routine data:", error);
+        // fall through to normal load flow
       }
-    } catch (error) {
-      console.error("Error loading workout:", error);
+    }
+
+    // 2) Respect workoutInProgress flag BEFORE calling getActive
+    const workoutInProgress =
+      localStorage.getItem("workoutInProgress") === "true";
+
+    if (!workoutInProgress) {
+      // No workout in progress → create a brand-new empty workout
       setWorkoutExercises([]);
       setExerciseSets({});
       setSupersetGroups([]);
-      
-      // Even on error, start timer if not already started
-      if (!localStorage.getItem("workoutStartTime")) {
+
+      const startTime = Date.now();
+      localStorage.setItem("workoutStartTime", startTime.toString());
+      localStorage.setItem("workoutInProgress", "true");
+      setDuration(0);
+
+      await workoutApi.save({
+        exercises: [],
+        supersetGroups: [],
+        duration: 0,
+        startTime,
+      });
+
+      return;
+    }
+
+    // 3) Try to load active workout from backend
+    const response = await workoutApi.getActive();
+    if (response.data) {
+      const workout = response.data;
+
+      localStorage.setItem("workoutInProgress", "true");
+
+      // Extract exercises
+      const exercises = workout.exercises.map((ex: any) => {
+        const exercise =
+          typeof ex.exerciseId === "object"
+            ? ex.exerciseId
+            : { _id: ex.exerciseId };
+        return exercise as Exercise;
+      });
+      setWorkoutExercises(exercises);
+
+      // Extract sets
+      const sets: ExerciseSets = {};
+      workout.exercises.forEach((ex: any) => {
+        const exerciseId =
+          typeof ex.exerciseId === "object"
+            ? ex.exerciseId._id
+            : ex.exerciseId;
+        if (!ex.sets || ex.sets.length === 0) {
+          sets[exerciseId] = [
+            {
+              setNumber: 1,
+              previous: "-",
+              kg: 0,
+              reps: 0,
+              completed: false,
+            },
+          ];
+        } else {
+          sets[exerciseId] = ex.sets;
+        }
+      });
+      setExerciseSets(sets);
+
+      const groups: Set<string>[] = workout.supersetGroups.map((group: any) =>
+  new Set(
+    group.exerciseIds.map((id: string | Exercise) =>
+      typeof id === "object" && id !== null && "_id" in id
+        ? (id as any)._id
+        : (id as string)
+    )
+  )
+);
+
+      setSupersetGroups(groups);
+
+      // Set duration and start time
+      if (workout.startTime) {
+        const startTime = new Date(workout.startTime).getTime();
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setDuration(elapsed);
+        localStorage.setItem("workoutStartTime", startTime.toString());
+      } else {
         const startTime = Date.now();
         localStorage.setItem("workoutStartTime", startTime.toString());
-        localStorage.setItem("workoutInProgress", "true");
         setDuration(0);
-        
-        // Try to create empty workout on backend
-        workoutApi.save({
+        const supersetGroupsArray = groups.map((group: Set<string>) => Array.from(group)
+        );
+        workoutApi
+          .save({
+            exercises,
+            supersetGroups: supersetGroupsArray,
+            duration: 0,
+            startTime,
+          })
+          .catch((err) =>
+            console.error("Error saving start time:", err)
+          );
+      }
+    } else {
+      // 4) workoutInProgress === true but no active workout found → retry once
+      setTimeout(async () => {
+        try {
+          const retryResponse = await workoutApi.getActive();
+          if (retryResponse.data) {
+            const workout = retryResponse.data;
+            const exercises = workout.exercises.map((ex: any) => {
+              const exercise =
+                typeof ex.exerciseId === "object"
+                  ? ex.exerciseId
+                  : { _id: ex.exerciseId };
+              return exercise as Exercise;
+            });
+            setWorkoutExercises(exercises);
+
+            const sets: ExerciseSets = {};
+            workout.exercises.forEach((ex: any) => {
+              const exerciseId =
+                typeof ex.exerciseId === "object"
+                  ? ex.exerciseId._id
+                  : ex.exerciseId;
+              if (!ex.sets || ex.sets.length === 0) {
+                sets[exerciseId] = [
+                  {
+                    setNumber: 1,
+                    previous: "-",
+                    kg: 0,
+                    reps: 0,
+                    completed: false,
+                  },
+                ];
+              } else {
+                sets[exerciseId] = ex.sets;
+              }
+            });
+            setExerciseSets(sets);
+
+            const groups: Set<string>[] = workout.supersetGroups.map((group: any) =>
+  new Set(
+    group.exerciseIds.map((id: string | Exercise) =>
+      typeof id === "object" && id !== null && "_id" in id
+        ? (id as any)._id
+        : (id as string)
+    )
+  )
+);
+
+            setSupersetGroups(groups);
+
+            if (workout.startTime) {
+              const startTime = new Date(workout.startTime).getTime();
+              const elapsed = Math.floor(
+                (Date.now() - startTime) / 1000
+              );
+              setDuration(elapsed);
+              localStorage.setItem(
+                "workoutStartTime",
+                startTime.toString()
+              );
+            }
+          } else {
+            // Still not found – clear and create new workout
+            localStorage.removeItem("workoutInProgress");
+            setWorkoutExercises([]);
+            setExerciseSets({});
+            setSupersetGroups([]);
+
+            const startTime = Date.now();
+            localStorage.setItem("workoutStartTime", startTime.toString());
+            localStorage.setItem("workoutInProgress", "true");
+            setDuration(0);
+
+            workoutApi
+              .save({
+                exercises: [],
+                supersetGroups: [],
+                duration: 0,
+                startTime,
+              })
+              .catch((err) =>
+                console.error("Error creating empty workout:", err)
+              );
+          }
+        } catch (err) {
+          console.error("Error retrying workout load:", err);
+          localStorage.removeItem("workoutInProgress");
+          setWorkoutExercises([]);
+          setExerciseSets({});
+          setSupersetGroups([]);
+        }
+      }, 500);
+
+      return;
+    }
+  } catch (error) {
+    console.error("Error loading workout:", error);
+    setWorkoutExercises([]);
+    setExerciseSets({});
+    setSupersetGroups([]);
+
+    if (!localStorage.getItem("workoutStartTime")) {
+      const startTime = Date.now();
+      localStorage.setItem("workoutStartTime", startTime.toString());
+      localStorage.setItem("workoutInProgress", "true");
+      setDuration(0);
+
+      workoutApi
+        .save({
           exercises: [],
           supersetGroups: [],
           duration: 0,
-          startTime: startTime,
-        }).catch(err => console.error("Error creating empty workout:", err));
-      }
+          startTime,
+        })
+        .catch((err) =>
+          console.error("Error creating empty workout:", err)
+        );
     }
-  };
+  }
+};
+
 
   // Save workout to API
   const saveWorkout = async () => {

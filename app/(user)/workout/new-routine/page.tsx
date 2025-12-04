@@ -38,7 +38,7 @@ export default function NewRoutinePage() {
 
   const handleAddExercise = () => {
     // Navigate to add exercise page
-    router.push("/workout/quick-start/add-exercise?mode=routine");
+    router.push("/workout/new-routine/add-exercise");
   };
 
   const handleSave = async () => {
@@ -118,10 +118,10 @@ export default function NewRoutinePage() {
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Left: Edit Profile */}
-          <button 
-          onClick={() => router.back()}
-          aria-label="Go back"
-          className="text-blue-500 text-lg font-regular">Cancel</button>
+          <button
+            onClick={() => router.back()}
+            aria-label="Go back"
+            className="text-blue-500 text-lg font-regular">Cancel</button>
 
           {/* Center: Username */}
           <h1 className="text-lg font-regular">Create Routine</h1>
@@ -131,11 +131,10 @@ export default function NewRoutinePage() {
             variant="default"
             onClick={handleSave}
             disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
-            className={`text-lg font-regular ${
-              exercises.length === 0 || isSaving || !routineTitle.trim()
+            className={`text-lg font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-600 text-white"
-            }`}
+              }`}
           >
             {isSaving ? "Saving..." : "Save"}
           </Button>
@@ -199,7 +198,7 @@ export default function NewRoutinePage() {
             {exercises.map((routineExercise, index) => {
               const exercise = routineExercise.exercise;
               const sets = routineExercise.sets || [];
-              
+
               return (
                 <div
                   key={exercise._id || index}
@@ -279,38 +278,33 @@ export default function NewRoutinePage() {
                       sets.map((set, setIndex) => (
                         <div
                           key={setIndex}
-                          className={`grid grid-cols-5 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
-                            set.completed ? "bg-green-100" : ""
-                          }`}
+                          className={`grid grid-cols-5 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${set.completed ? "bg-green-100" : ""
+                            }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${
-                              set.completed ? "text-black" : "text-gray-700"
-                            }`}
+                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
+                              }`}
                           >
                             {set.setNumber}
                           </div>
                           <div
-                            className={`text-lg font-semibold text-center ${
-                              set.completed ? "text-black" : "text-gray-500"
-                            }`}
+                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-500"
+                              }`}
                           >
                             {set.previous}
                           </div>
                           <div className="flex justify-center">
                             <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${
-                                set.completed ? "bg-green-100" : ""
-                              }`}
+                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${set.completed ? "bg-green-100" : ""
+                                }`}
                             >
                               {set.kg || 0}
                             </div>
                           </div>
                           <div className="flex justify-center">
                             <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${
-                                set.completed ? "bg-green-100" : ""
-                              }`}
+                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${set.completed ? "bg-green-100" : ""
+                                }`}
                             >
                               {set.reps || 0}
                             </div>

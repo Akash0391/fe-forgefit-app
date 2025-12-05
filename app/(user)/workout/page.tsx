@@ -110,26 +110,37 @@ export default function WorkoutPage() {
   }
 
   const handleStartRoutine = (routine: Workout) => {
-    // Store routine data in sessionStorage to start as a workout
-    const workoutData = {
-      name: routine.name || "Quick Start Workout",
-      exercises: routine.exercises.map((ex) => {
-        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-        return {
-          exercise: exercise,
-          sets: ex.sets || [],
-          notes: ex.notes || "",
-        };
-      }),
-      supersetGroups: routine.supersetGroups || [],
-    };
+  // Store routine data in sessionStorage to start as a workout
+  const workoutData = {
+    name: routine.name || "Quick Start Workout",
+    exercises: routine.exercises.map((ex) => {
+      const exercise =
+        typeof ex.exerciseId === "object"
+          ? ex.exerciseId
+          : { _id: ex.exerciseId };
 
-    sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
-
-    // Set workout in progress and navigate to quick start
-    localStorage.setItem("workoutInProgress", "true");
-    router.push("/workout/quick-start");
+      return {
+        exercise,
+        sets: ex.sets || [],
+        notes: ex.notes || "",
+        // 🔹 read from routine document
+        restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
+      };
+    }),
+    supersetGroups: routine.supersetGroups || [],
   };
+
+  // (optional) debug
+  // console.log("workoutData from routine:", workoutData);
+
+  sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
+
+  // Set workout in progress and navigate to quick start
+  localStorage.setItem("workoutInProgress", "true");
+  router.push("/workout/quick-start");
+};
+
+
 
   // Format exercise name with equipment in parentheses if available
   const formatExerciseName = (exercise: Exercise) => {

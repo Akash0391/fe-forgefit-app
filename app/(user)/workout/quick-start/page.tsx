@@ -89,11 +89,17 @@ export default function QuickStartPage() {
         sessionStorage.removeItem("routineToWorkout");
 
         // Extract exercises from routine data
-        const exercises = routineData.exercises.map((ex: any) => {
-          const exercise = ex.exercise || { _id: ex.exerciseId };
-          return exercise as Exercise;
-        });
-        setWorkoutExercises(exercises);
+        // Extract exercises from routine data (including rest timer)
+const exercises = routineData.exercises.map((ex: any) => {
+  const baseExercise = ex.exercise || { _id: ex.exerciseId };
+
+  return {
+    ...(baseExercise as Exercise),
+    restTimerSeconds: ex.restTimerSeconds ?? 0,
+  } as Exercise & { restTimerSeconds?: number };
+});
+setWorkoutExercises(exercises);
+
 
         // Extract sets
         const sets: ExerciseSets = {};
@@ -200,13 +206,17 @@ export default function QuickStartPage() {
 
       // Extract exercises
       const exercises = workout.exercises.map((ex: any) => {
-        const exercise =
-          typeof ex.exerciseId === "object"
-            ? ex.exerciseId
-            : { _id: ex.exerciseId };
-        return exercise as Exercise;
-      });
-      setWorkoutExercises(exercises);
+  const baseExercise =
+    typeof ex.exerciseId === "object"
+      ? ex.exerciseId
+      : { _id: ex.exerciseId };
+
+  return {
+    ...(baseExercise as Exercise),
+    restTimerSeconds: ex.restTimerSeconds ?? 0,
+  } as Exercise & { restTimerSeconds?: number };
+});
+
 
       // Extract sets
       const sets: ExerciseSets = {};
@@ -396,20 +406,26 @@ export default function QuickStartPage() {
       
       // Prepare exercises with sets, ensuring at least 1 default set per exercise
       const exercisesWithSets = workoutExercises.map((exercise) => {
-        const sets = exerciseSets[exercise._id];
-        // Ensure at least 1 default set
-        const defaultSet = [{
-          setNumber: 1,
-          previous: "-",
-          kg: 0,
-          reps: 0,
-          completed: false,
-        }];
-        return {
-          ...exercise,
-          sets: sets && sets.length > 0 ? sets : defaultSet,
-        };
-      });
+  const setsForExercise = exerciseSets[exercise._id];
+  const defaultSet = [{
+    setNumber: 1,
+    previous: "-",
+    kg: 0,
+    reps: 0,
+    completed: false,
+  }];
+
+  return {
+    ...exercise,
+    sets: setsForExercise && setsForExercise.length > 0
+      ? setsForExercise
+      : defaultSet,
+
+    // 🔹 pass restTimerSeconds to backend
+    restTimerSeconds: (exercise as any).restTimerSeconds ?? 0,
+  };
+});
+
       
       await workoutApi.save({
         exercises: exercisesWithSets,
@@ -933,6 +949,9 @@ export default function QuickStartPage() {
                   isInSuperset={isExerciseInSuperset(exercise._id)}
                   isRemoving={isRemoving}
                   shouldSlideUp={hasRemovingBefore}
+
+                  restTimerSeconds={(exercise as any).restTimerSeconds}
+                  initialRestTimerEnabled={!!(exercise as any).restTimerSeconds}
                 />
               );
             })}
@@ -1123,6 +1142,8 @@ interface WorkoutExerciseCardProps {
   isInSuperset?: boolean;
   isRemoving?: boolean;
   shouldSlideUp?: boolean;
+  restTimerSeconds?: number;
+  initialRestTimerEnabled?: boolean;
 }
 
 function WorkoutExerciseCard({
@@ -1133,9 +1154,13 @@ function WorkoutExerciseCard({
   isInSuperset = false,
   isRemoving = false,
   shouldSlideUp = false,
+  restTimerSeconds,
+  initialRestTimerEnabled,
 }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
-  const [restTimerEnabled, setRestTimerEnabled] = useState(false);
+  const [restTimerEnabled, setRestTimerEnabled] = useState(
+    initialRestTimerEnabled ?? (restTimerSeconds ?? 0) > 0
+  );
 
   const handleAddSet = () => {
     onSetsChange([
@@ -1246,14 +1271,18 @@ function WorkoutExerciseCard({
 
       {/* Rest Timer Section */}
       <div
-        className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
-        onClick={() => setRestTimerEnabled(!restTimerEnabled)}
-      >
-        <Timer className="size-7 text-blue-600" />
-        <span className="text-lg text-blue-600 font-regular">
-          Rest Timer: OFF
-        </span>
-      </div>
+  className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+  onClick={() => setRestTimerEnabled(!restTimerEnabled)}
+>
+  <Timer className="size-7 text-blue-600" />
+  <span className="text-lg text-blue-600 font-regular">
+    Rest Timer:{" "}
+    {restTimerEnabled && restTimerSeconds
+      ? `${restTimerSeconds}s`
+      : "OFF"}
+  </span>
+</div>
+
 
       {/* Sets Table */}
       <div className="mb-4">

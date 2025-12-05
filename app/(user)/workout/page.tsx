@@ -518,7 +518,7 @@ export default function WorkoutPage() {
         onRename={() => {}}
         onDeleteFolder={() => {}}
         onAddNewRoutine={() => router.push("/workout/new-routine")}
-        onReorder={() => {}}
+        onReorder={() => router.push("/workout/reorder-folders")}
       />  
     </div>
   );

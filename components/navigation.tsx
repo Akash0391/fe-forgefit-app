@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, User, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import path from "path";
 
 const navigationItems = [
   {
@@ -25,7 +26,10 @@ const navigationItems = [
 
 export function Navigation() {
   const pathname = usePathname();
-  const hideBottomNav = pathname?.includes("/workout/quick-start") || pathname?.includes("/workout/new-routine") || pathname?.includes("/workout/quick-start/timer-settings");
+  const hideBottomNav = pathname?.includes("/workout/quick-start") || 
+  pathname?.includes("/workout/new-routine") || 
+  pathname?.includes("/workout/quick-start/timer-settings") ||
+  pathname?.includes("/workout/reorder-folders");
 
   return (
     <>

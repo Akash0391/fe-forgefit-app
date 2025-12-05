@@ -296,6 +296,12 @@ export const workoutApi = {
       success: boolean;
       data: RoutineFolder;
     }>('/api/workouts/folders', { name }),
+
+    reorderRoutineFolders: (folders: { folderId: string; order: number }[]) =>
+    apiClient.put<{
+      success: boolean;
+      data: RoutineFolder[];
+    }>("/api/workouts/folders/reorder", { folders }),
 };
 
 

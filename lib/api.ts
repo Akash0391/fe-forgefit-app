@@ -308,6 +308,13 @@ export const workoutApi = {
       success: boolean;
       message: string;
     }>(`/api/workouts/folders/${folderId}`),
+
+    renameRoutineFolder: (folderId: string, name: string) =>
+    apiClient.put<{
+      success: boolean;
+      data: RoutineFolder;
+    }>(`/api/workouts/folders/${folderId}`, { name }),
+
 };
 
 

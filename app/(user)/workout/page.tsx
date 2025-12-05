@@ -236,6 +236,30 @@ const handleRenameFolder = () => {
   setShowRenameFolderModal(true)
 };
 
+const handleRenameFolderSave = async (newName: string) => {
+  if (!selectedFolder) return;
+
+  try {
+    const res = await workoutApi.renameRoutineFolder(selectedFolder._id, newName);
+
+    const updated = res.data;
+
+    // update folders list in UI
+    setFolders((prev) =>
+      prev.map((f) => (f._id === updated._id ? updated : f))
+    );
+
+    // keep selectedFolder in sync
+    setSelectedFolder(updated);
+
+    setShowRenameFolderModal(false);
+  } catch (err) {
+    console.error("Error renaming folder:", err);
+    // optional: show toast
+  }
+};
+
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -532,8 +556,9 @@ const handleRenameFolder = () => {
 
       <RenameFolderModal
         open={showRenameFolderModal}
+        currentName={selectedFolder?.name ?? ""}
         onClose={() => setShowRenameFolderModal(false)}
-        onSave={() => {}}
+        onSave={handleRenameFolderSave}
       />
 
 

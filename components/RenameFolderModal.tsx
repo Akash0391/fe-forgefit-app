@@ -6,24 +6,25 @@ import { Input } from "@/components/ui/input";
 
 interface RenameFolderModalProps {
   open: boolean;
+  currentName: string; 
   onClose: () => void;
   onSave: (name: string) => void;
 }
 
-export function RenameFolderModal({ open, onClose, onSave }: RenameFolderModalProps) {
+export function RenameFolderModal({ open, currentName, onClose, onSave }: RenameFolderModalProps) {
   const [name, setName] = useState("");
 
   // reset name whenever modal opens
   useEffect(() => {
-    if (open) setName("");
-  }, [open]);
+    if (open) setName("");   // ✅ prefill
+  }, [open, currentName]);
 
   if (!open) return null;
 
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    onSave(trimmed);
+    onSave(trimmed);   // parent decides when to close
   };
 
   return (
@@ -38,7 +39,7 @@ export function RenameFolderModal({ open, onClose, onSave }: RenameFolderModalPr
         {/* Input */}
         <div className="mb-6">
           <Input
-            placeholder="New Folder"
+            placeholder={currentName || "Folder Name"}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="h-20 text-lg placeholder:text-gray-400 md:text-lg px-6 rounded-[8px]"

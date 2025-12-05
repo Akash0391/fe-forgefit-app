@@ -6,6 +6,7 @@ import { Exercise } from "@/lib/api";
 
 interface ExerciseOptionsModalProps {
     open: boolean;
+    folderName: string;
     onClose: () => void;
     onReorder: () => void;
     onAddNewRoutine: () => void;
@@ -15,6 +16,7 @@ interface ExerciseOptionsModalProps {
 
 export default function FolderOptionModal({
     open,
+    folderName,
     onClose,
     onReorder,
     onAddNewRoutine,
@@ -97,7 +99,7 @@ export default function FolderOptionModal({
             />
             {/* Modal Content - Bottom Sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[50vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -105,7 +107,14 @@ export default function FolderOptionModal({
                 <div className="flex justify-center pt-2">
                     <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
                 </div>
-                <div className="px-6 py-7 pb-8">
+
+                {/* ✅ Folder name under drag handle */}
+                <div className="mt-6 text-center border-b border-gray-200 px-6 pb-5">
+                    <p className="text-xl font-regular text-gray-500">
+                        {folderName}
+                    </p>
+                </div>
+                <div className="px-6 py-5 pb-8">
                     <div className="bg-white rounded-[10px] overflow-hidden">
                         {menuItems.map((item, index) => {
                             const Icon = item.icon;

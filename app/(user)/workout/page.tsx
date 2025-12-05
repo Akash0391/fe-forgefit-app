@@ -27,6 +27,7 @@ export default function WorkoutPage() {
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
 
   const [showFolderOptionModal, setShowFolderOptionModal] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState<RoutineFolder | null>(null);
 
 
 
@@ -332,6 +333,7 @@ export default function WorkoutPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();  
+                      setSelectedFolder(folder); 
                       setShowFolderOptionModal(true);
                       // later: folder options (rename/delete)
                     }}
@@ -517,10 +519,11 @@ export default function WorkoutPage() {
 
       <FolderOptionModal
         open={showFolderOptionModal}
+        folderName={selectedFolder?.name ?? ""}
         onClose={() => setShowFolderOptionModal(false)}
         onRename={() => {}}
         onDeleteFolder={() => {}}
-        onAddNewRoutine={() => {}}
+        onAddNewRoutine={() => router.push("/workout/new-routine")}
         onReorder={() => {}}
       />  
     </div>

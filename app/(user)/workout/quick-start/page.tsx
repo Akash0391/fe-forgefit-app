@@ -217,6 +217,9 @@ setWorkoutExercises(exercises);
   } as Exercise & { restTimerSeconds?: number };
 });
 
+  setWorkoutExercises(exercises);
+
+
 
       // Extract sets
       const sets: ExerciseSets = {};
@@ -798,7 +801,7 @@ setWorkoutExercises(exercises);
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.back()}
+              onClick={() => router.push("/workout")}
               className="h-10 w-10"
               aria-label="Go back"
             >

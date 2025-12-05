@@ -10,6 +10,7 @@ import RoutineOptionsModal from "@/components/RoutineOptionsModal";
 import DeleteRoutineModal from "@/components/DeleteRoutineModal";
 import { FolderModal } from "@/components/FolderModal";
 import FolderOptionModal from "@/components/FolderOptionModal";
+import { RenameFolderModal } from "@/components/RenameFolderModal";
 
 export default function WorkoutPage() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function WorkoutPage() {
 
   const [showFolderOptionModal, setShowFolderOptionModal] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<RoutineFolder | null>(null);
+
+  const [showRenameFolderModal, setShowRenameFolderModal] = useState(false); // For future use
 
 
 
@@ -229,7 +232,9 @@ export default function WorkoutPage() {
   }
 };
 
-
+const handleRenameFolder = () => {
+  setShowRenameFolderModal(true)
+};
 
   return (
     <div className="min-h-screen">
@@ -525,11 +530,19 @@ export default function WorkoutPage() {
       />
 
 
+      <RenameFolderModal
+        open={showRenameFolderModal}
+        onClose={() => setShowRenameFolderModal(false)}
+        onSave={() => {}}
+      />
+
+
+
       <FolderOptionModal
         open={showFolderOptionModal}
         folderName={selectedFolder?.name ?? ""}
         onClose={() => setShowFolderOptionModal(false)}
-        onRename={() => {}}
+        onRename= {handleRenameFolder}
         onDeleteFolder={handleDeleteFolder}
         onAddNewRoutine={() => router.push("/workout/new-routine")}
         onReorder={() => router.push("/workout/reorder-folders")}

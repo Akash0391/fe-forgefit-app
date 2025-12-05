@@ -114,17 +114,19 @@ export default function WorkoutPage() {
   const workoutData = {
     name: routine.name || "Quick Start Workout",
     exercises: routine.exercises.map((ex) => {
+
+      const restTimerSeconds = (ex as any).restTimerSeconds ?? 0;
       const exercise =
         typeof ex.exerciseId === "object"
-          ? ex.exerciseId
-          : { _id: ex.exerciseId };
+          ? { ...(ex.exerciseId as any), restTimerSeconds }  // ⬅️ attach timer
+          : { _id: ex.exerciseId, restTimerSeconds }; 
 
       return {
         exercise,
         sets: ex.sets || [],
         notes: ex.notes || "",
-        // 🔹 read from routine document
-        restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
+        // // 🔹 read from routine document
+        // restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
       };
     }),
     supersetGroups: routine.supersetGroups || [],

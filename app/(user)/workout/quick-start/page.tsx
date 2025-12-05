@@ -82,95 +82,90 @@ export default function QuickStartPage() {
   try {
     // 1) First check if we're starting a workout from a routine
     const routineDataStr = sessionStorage.getItem("routineToWorkout");
-    if (routineDataStr) {
-      try {
-        const routineData = JSON.parse(routineDataStr);
-        // Clear sessionStorage after loading
-        sessionStorage.removeItem("routineToWorkout");
+if (routineDataStr) {
+  try {
+    const routineData = JSON.parse(routineDataStr);
+    sessionStorage.removeItem("routineToWorkout");
 
-        // Extract exercises from routine data
-        // Extract exercises from routine data (including rest timer)
-const exercises = routineData.exercises.map((ex: any) => {
-  const baseExercise = ex.exercise || { _id: ex.exerciseId };
+    // ✅ exercises already have restTimerSeconds on exercise
+    const exercises = routineData.exercises.map(
+      (ex: any) =>
+        ex.exercise as Exercise & { restTimerSeconds?: number }
+    );
+    setWorkoutExercises(exercises);
 
-  return {
-    ...(baseExercise as Exercise),
-    restTimerSeconds: ex.restTimerSeconds ?? 0,
-  } as Exercise & { restTimerSeconds?: number };
-});
-setWorkoutExercises(exercises);
-
-
-        // Extract sets
-        const sets: ExerciseSets = {};
-        routineData.exercises.forEach((ex: any) => {
-          const exerciseId = ex.exercise?._id || ex.exerciseId;
-          if (!ex.sets || ex.sets.length === 0) {
-            sets[exerciseId] = [
-              {
-                setNumber: 1,
-                previous: "-",
-                kg: 0,
-                reps: 0,
-                completed: false,
-              },
-            ];
-          } else {
-            sets[exerciseId] = ex.sets;
-          }
-        });
-        setExerciseSets(sets);
-
-        // Extract superset groups
-        const groups = (routineData.supersetGroups || []).map((group: any) =>
-          new Set(Array.isArray(group) ? group : group.exerciseIds || [])
-        );
-        setSupersetGroups(groups);
-
-        // Initialize start time for new workout
-        const startTime = Date.now();
-        localStorage.setItem("workoutStartTime", startTime.toString());
-        localStorage.setItem("workoutInProgress", "true");
-        setDuration(0);
-
-        // Save the workout to backend
-        const exercisesWithSets = exercises.map((exercise: Exercise) => {
-          const exerciseSets = sets[exercise._id];
-          const defaultSet = [
-            {
-              setNumber: 1,
-              previous: "-",
-              kg: 0,
-              reps: 0,
-              completed: false,
-            },
-          ];
-          return {
-            ...exercise,
-            sets:
-              exerciseSets && exerciseSets.length > 0
-                ? exerciseSets
-                : defaultSet,
-          };
-        });
-
-        const supersetGroupsArray = groups.map((group: Set<string>) =>
-          Array.from(group)
-        );
-        await workoutApi.save({
-          exercises: exercisesWithSets,
-          supersetGroups: supersetGroupsArray,
-          duration: 0,
-          startTime,
-        });
-
-        // ✅ Done with routine flow
-        return;
-      } catch (error) {
-        console.error("Error loading routine data:", error);
-        // fall through to normal load flow
+    // ✅ sets
+    const sets: ExerciseSets = {};
+    routineData.exercises.forEach((ex: any) => {
+      const exerciseId = ex.exercise?._id || ex.exerciseId;
+      if (!ex.sets || ex.sets.length === 0) {
+        sets[exerciseId] = [
+          {
+            setNumber: 1,
+            previous: "-",
+            kg: 0,
+            reps: 0,
+            completed: false,
+          },
+        ];
+      } else {
+        sets[exerciseId] = ex.sets;
       }
-    }
+    });
+    setExerciseSets(sets);
+
+    // ✅ superset groups
+    const groups = (routineData.supersetGroups || []).map((group: any) =>
+      new Set(Array.isArray(group) ? group : group.exerciseIds || [])
+    );
+    setSupersetGroups(groups);
+
+    // ✅ start time & save to backend (keep timer)
+    const startTime = Date.now();
+    localStorage.setItem("workoutStartTime", startTime.toString());
+    localStorage.setItem("workoutInProgress", "true");
+    setDuration(0);
+
+    const exercisesWithSets = exercises.map((exercise: Exercise) => {
+      const exerciseSets = sets[exercise._id];
+      const defaultSet = [
+        {
+          setNumber: 1,
+          previous: "-",
+          kg: 0,
+          reps: 0,
+          completed: false,
+        },
+      ];
+      return {
+        ...exercise,
+        sets:
+          exerciseSets && exerciseSets.length > 0
+            ? exerciseSets
+            : defaultSet,
+        // keep timer from routine
+        restTimerSeconds: (exercise as any).restTimerSeconds ?? 0,
+      };
+    });
+
+    const supersetGroupsArray = groups.map((group: Set<string>) =>
+      Array.from(group)
+    );
+
+    await workoutApi.save({
+      exercises: exercisesWithSets,
+      supersetGroups: supersetGroupsArray,
+      duration: 0,
+      startTime,
+    });
+
+    return; // ✅ done with routine flow
+  } catch (error) {
+    console.error("Error loading routine data:", error);
+    // fall through to normal flow
+  }
+}
+
 
     // 2) Respect workoutInProgress flag BEFORE calling getActive
     const workoutInProgress =
@@ -286,14 +281,18 @@ setWorkoutExercises(exercises);
           const retryResponse = await workoutApi.getActive();
           if (retryResponse.data) {
             const workout = retryResponse.data;
-            const exercises = workout.exercises.map((ex: any) => {
-              const exercise =
-                typeof ex.exerciseId === "object"
-                  ? ex.exerciseId
-                  : { _id: ex.exerciseId };
-              return exercise as Exercise;
-            });
-            setWorkoutExercises(exercises);
+const exercises = workout.exercises.map((ex: any) => {
+  const base =
+    typeof ex.exerciseId === "object"
+      ? ex.exerciseId
+      : { _id: ex.exerciseId };
+
+  return {
+    ...(base as Exercise),
+    restTimerSeconds: ex.restTimerSeconds ?? 0,
+  } as Exercise & { restTimerSeconds?: number };
+});
+setWorkoutExercises(exercises);
 
             const sets: ExerciseSets = {};
             workout.exercises.forEach((ex: any) => {
@@ -476,6 +475,7 @@ setWorkoutExercises(exercises);
           return {
             ...exercise,
             sets: sets && sets.length > 0 ? sets : defaultSet,
+            restTimerSeconds: (exercise as any).restTimerSeconds ?? 0,
           };
         });
         

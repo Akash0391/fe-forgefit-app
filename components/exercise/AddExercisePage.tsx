@@ -322,13 +322,19 @@ export default function AddExercisePage({ source }: AddExerciseProps) {
             let startTime: number | undefined = undefined;
 
             if (workoutResponse.data) {
-                currentExercises = workoutResponse.data.exercises.map((ex) => {
-                    const exercise =
-                        typeof ex.exerciseId === "object"
-                            ? ex.exerciseId
-                            : { _id: ex.exerciseId };
-                    return exercise as Exercise;
-                });
+                currentExercises = workoutResponse.data.exercises.map((ex: any) => {
+  const base =
+    typeof ex.exerciseId === "object"
+      ? ex.exerciseId
+      : { _id: ex.exerciseId };
+
+  return {
+    ...(base as Exercise),
+    // ⬅️ keep whatever was stored (routine timer)
+    restTimerSeconds: ex.restTimerSeconds ?? 0,
+  } as Exercise & { restTimerSeconds?: number };
+});
+
 
                 currentSupersetGroups = (workoutResponse.data.supersetGroups ?? []).map(
                     (group) =>
@@ -384,7 +390,12 @@ export default function AddExercisePage({ source }: AddExerciseProps) {
 
             const exerciseMap = new Map<string, Exercise>();
             currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
-            selectedExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
+            selectedExercises.forEach((ex) =>
+  exerciseMap.set(ex._id, {
+    ...ex,
+    restTimerSeconds: 0, // ⬅️ OFF by default for new ones
+  } as Exercise & { restTimerSeconds?: number })
+);
             const allExercises = Array.from(exerciseMap.values());
 
             await workoutApi.save({

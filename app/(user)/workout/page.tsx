@@ -222,15 +222,9 @@ export default function WorkoutPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background">
         <div className="flex items-center justify-between h-16 px-4">
-          {/* Left: Pro Badge */}
-          <div className="flex items-center">
-            <span className="px-2 py-0.2 text-lg rounded-full bg-yellow-500 text-gray-600">
-              PRO
-            </span>
-          </div>
 
           {/* Middle: Workout Title */}
-          <h1 className="text-lg font-semibold capitalize">workout</h1>
+          <h1 className="text-2xl font-semibold">Workout</h1>
 
           {/* Right: Refresh Icon */}
           <div className="flex items-center">

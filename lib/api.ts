@@ -302,6 +302,12 @@ export const workoutApi = {
       success: boolean;
       data: RoutineFolder[];
     }>("/api/workouts/folders/reorder", { folders }),
+
+    deleteRoutineFolder: (folderId: string) =>
+    apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>(`/api/workouts/folders/${folderId}`),
 };
 
 

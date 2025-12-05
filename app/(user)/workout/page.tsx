@@ -217,6 +217,20 @@ export default function WorkoutPage() {
     router.push("/workout/new-routine");
   };
 
+    const handleDeleteFolder = async () => {
+  if (!selectedFolder) return;
+
+  try {
+    await workoutApi.deleteRoutineFolder(selectedFolder._id);
+    setFolders((prev) => prev.filter((f) => f._id !== selectedFolder._id));
+    setSelectedFolder(null);
+  } catch (err) {
+    console.error("Error deleting folder:", err);
+  }
+};
+
+
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -516,7 +530,7 @@ export default function WorkoutPage() {
         folderName={selectedFolder?.name ?? ""}
         onClose={() => setShowFolderOptionModal(false)}
         onRename={() => {}}
-        onDeleteFolder={() => {}}
+        onDeleteFolder={handleDeleteFolder}
         onAddNewRoutine={() => router.push("/workout/new-routine")}
         onReorder={() => router.push("/workout/reorder-folders")}
       />  

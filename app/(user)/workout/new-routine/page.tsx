@@ -7,12 +7,17 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, SetData, workoutApi } from "@/lib/api";
 import { RestTimerModal } from "@/components/RestTimerModal";
+import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 interface RoutineExercise {
   exercise: Exercise;
   sets: SetData[];
   notes: string;
 
   restTimerSeconds?: number; // ✅ NEW
+}
+
+interface ExerciseSets {
+  [exerciseId: string]: SetData[];
 }
 
 const formatRestTimerLabel = (seconds: number): string => {
@@ -33,10 +38,30 @@ export default function NewRoutinePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
+  const [selectedExerciseForMenu, setSelectedExerciseForMenu] =
+    useState<Exercise | null>(null);
 
-  const REST_TIMER_OPTIONS = [25, 30, 35]; // you can add more if you want
+    const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+      const [duration, setDuration] = useState(0); // Duration in seconds
+      const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
+      const [showDurationInHeader, setShowDurationInHeader] = useState(false);
+      const [lastScrollY, setLastScrollY] = useState(0);
+      const [showFinishConfirmationModal, setShowFinishConfirmationModal] =
+        useState(false);
+      const [finishModalMessage, setFinishModalMessage] =
+        useState("Add an exercise");
+      const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
+      const [showSupersetModal, setShowSupersetModal] = useState(false);
+      const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
+      const [removingExerciseIds, setRemovingExerciseIds] = useState<Set<string>>(new Set());
+
 
   const router = useRouter();
+
+  // Check if an exercise is in a superset
+  const isExerciseInSuperset = (exerciseId: string): boolean => {
+    return supersetGroups.some((group) => group.has(exerciseId));
+  };
 
   useEffect(() => {
     // 1) If there's an in-progress routine draft, use that
@@ -329,6 +354,7 @@ export default function NewRoutinePage() {
 
                     {/* Options Menu */}
                     <button
+                    onClick={() => setSelectedExerciseForMenu(exercise)}
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors"
                     >
                       <MoreVertical className="size-7 text-gray-600" />
@@ -468,6 +494,89 @@ export default function NewRoutinePage() {
         onSelect={handleRestTimerSelect}
         onClose={closeRestTimerSheet}
       />
+
+
+      <ExerciseOptionsModal
+              open={selectedExerciseForMenu !== null && !showSupersetModal}
+              onClose={() => setSelectedExerciseForMenu(null)}
+              exercise={selectedExerciseForMenu}
+              isInSuperset={
+                selectedExerciseForMenu
+                  ? isExerciseInSuperset(selectedExerciseForMenu._id)
+                  : false
+              }
+              onReorder={() => {
+                setSelectedExerciseForMenu(null);
+                router.push("/workout/quick-start/reorder-exercises");
+              }}
+              onReplace={() => {
+                if (selectedExerciseForMenu) {
+                  // Store the exercise ID to replace in sessionStorage
+                  sessionStorage.setItem(
+                    "replaceExerciseId",
+                    selectedExerciseForMenu._id
+                  );
+                  setSelectedExerciseForMenu(null);
+                  router.push("/workout/quick-start/add-exercise?mode=replace");
+                }
+              }}
+              onAddToSuperset={() => {
+                // Keep the selected exercise and open superset modal
+                // The ExerciseOptionsModal will close automatically due to showSupersetModal being true
+                setShowSupersetModal(true);
+              }}
+              onRemoveFromSuperset={() => {
+                if (selectedExerciseForMenu) {
+                  // Remove the entire superset group that contains this exercise
+                  // This removes badges from all exercises in that superset
+                  setSupersetGroups((prev) => {
+                    const updatedGroups = prev.filter(
+                      (group) => !group.has(selectedExerciseForMenu._id)
+                    );
+                    return updatedGroups;
+                  });
+                }
+                setSelectedExerciseForMenu(null);
+              }}
+              onRemove={() => {
+                if (selectedExerciseForMenu) {
+                  const exerciseId = selectedExerciseForMenu._id;
+                  
+                  // Start removal animation
+                  setRemovingExerciseIds((prev) => new Set(prev).add(exerciseId));
+                  
+                  // After animation completes, remove the exercise
+                  setTimeout(() => {
+                    setWorkoutExercises((prev) =>
+                      prev.filter((ex) => ex._id !== exerciseId)
+                    );
+                    setExerciseSets((prev) => {
+                      const newSets = { ...prev };
+                      delete newSets[exerciseId];
+                      return newSets;
+                    });
+                    // Remove from superset groups if present
+                    setSupersetGroups((prev) => {
+                      const newGroups = prev
+                        .map((group) => {
+                          const newGroup = new Set(group);
+                          newGroup.delete(exerciseId);
+                          return newGroup;
+                        })
+                        .filter((group) => group.size > 0);
+                      return newGroups;
+                    });
+                    // Clean up removing state
+                    setRemovingExerciseIds((prev) => {
+                      const newSet = new Set(prev);
+                      newSet.delete(exerciseId);
+                      return newSet;
+                    });
+                  }, 400); // Animation duration
+                }
+                setSelectedExerciseForMenu(null);
+              }}
+            />
 
     </div>
   );

@@ -33,6 +33,10 @@ const formatRestTimerLabel = (seconds: number): string => {
 
 
 export default function NewRoutinePage() {
+  const searchParams = useSearchParams();
+  const initialFolderId = searchParams.get("folderId"); // from URL first time
+
+  const [routineFolderId, setRoutineFolderId] = useState<string | null>(initialFolderId);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [routineTitle, setRoutineTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -150,28 +154,26 @@ export default function NewRoutinePage() {
     });
   };
 
-  const handleAddExercise = () => {
-    // Save current routine draft so AddExercisePage can extend it
+  const saveRoutineDraft = () => {
     const draft = {
       name: routineTitle,
-      exercises, // this is RoutineExercise[]
+      exercises,          // RoutineExercise[]
       routineFolderId,
     };
 
     sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
-
-    if (routineFolderId) {
-    router.push(`/workout/new-routine/add-exercise?folderId=${routineFolderId}`);
-  } else {
-    router.push("/workout/new-routine/add-exercise");
-  }
   };
 
-  const searchParams = useSearchParams();
-const initialFolderId = searchParams.get("folderId"); // from URL first time
+  const handleAddExercise = () => {
+    // Save current routine draft so AddExercisePage can extend it
+    saveRoutineDraft();
 
-const [routineFolderId, setRoutineFolderId] = useState<string | null>(initialFolderId);
-
+    if (routineFolderId) {
+      router.push(`/workout/new-routine/add-exercise?folderId=${routineFolderId}`);
+    } else {
+      router.push("/workout/new-routine/add-exercise");
+    }
+  };
 
 
   const handleSave = async () => {
@@ -189,7 +191,7 @@ const [routineFolderId, setRoutineFolderId] = useState<string | null>(initialFol
     setError(null);
 
     try {
-       // string | null
+      // string | null
       await workoutApi.saveRoutine({
         name: routineTitle.trim(),
         exercises: exercises.map(ex => ({
@@ -535,15 +537,36 @@ const [routineFolderId, setRoutineFolderId] = useState<string | null>(initialFol
         }}
         onReplace={() => {
           if (selectedExerciseForMenu) {
-            // Store the exercise ID to replace in sessionStorage
-            sessionStorage.setItem(
-              "replaceExerciseId",
-              selectedExerciseForMenu._id
+            const exerciseId = selectedExerciseForMenu._id;
+
+            // Find which index this exercise is in your routine list
+            const index = exercises.findIndex(
+              (re) => re.exercise._id === exerciseId
             );
+            if (index === -1) {
+              console.warn("Could not find exercise index for replace");
+              setSelectedExerciseForMenu(null);
+              return;
+            }
+
+            // 1) Save the full routine as a draft so AddExercisePage can edit it
+            saveRoutineDraft();
+
+            // 2) Store the exercise ID (optional, but you already use it elsewhere)
+            sessionStorage.setItem("replaceExerciseId", exerciseId);
+
+            // 3) Close the options modal
             setSelectedExerciseForMenu(null);
-            router.push("/workout/quick-start/add-exercise?mode=replace");
+
+            // 4) Go to the NEW ROUTINE add-exercise page with mode + index
+            const basePath = "/workout/new-routine/add-exercise";
+            const folderParam = routineFolderId ? `&folderId=${routineFolderId}` : "";
+            router.push(
+              `${basePath}?mode=replace&index=${index}${folderParam}`
+            );
           }
         }}
+
         onAddToSuperset={() => {
           // Keep the selected exercise and open superset modal
           // The ExerciseOptionsModal will close automatically due to showSupersetModal being true

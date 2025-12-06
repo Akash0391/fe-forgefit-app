@@ -11,90 +11,179 @@ type ActiveWorkoutExercise = {
   sets?: ApiSetData[];
   restTimerSeconds?: number;
   _id?: string;
-  // any other fields coming from backend are fine
 };
+
+type Mode = "workout" | "routine";
+
+interface RoutineDraftExercise {
+  exercise: Exercise;
+  sets: ApiSetData[];
+  notes: string;
+  restTimerSeconds?: number;
+}
+
+interface RoutineDraft {
+  name: string;
+  exercises: RoutineDraftExercise[];
+}
 
 export default function ReorderExercisesPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("workout");
   const [exercises, setExercises] = useState<ActiveWorkoutExercise[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load exercises from API
+  // ---------- LOAD DATA ----------
   useEffect(() => {
-  const loadExercises = async () => {
-    try {
-      const response = await workoutApi.getActive();
-      if (response.data) {
-        // ✅ keep the full workout exercise objects
-        setExercises(response.data.exercises as ActiveWorkoutExercise[]);
-      } else {
+    const load = async () => {
+      // 1) Try routine draft first
+      const draftStr = sessionStorage.getItem("newRoutineDraft");
+      if (draftStr) {
+        try {
+          const draft: RoutineDraft = JSON.parse(draftStr);
+
+          const routineExercises: ActiveWorkoutExercise[] =
+            (draft.exercises || []).map((ex) => ({
+              exerciseId: ex.exercise,          // we keep full Exercise object
+              sets: ex.sets || [],
+              restTimerSeconds: ex.restTimerSeconds ?? 0,
+              _id: ex.exercise._id,
+            }));
+
+          setMode("routine");
+          setExercises(routineExercises);
+          return;
+        } catch (err) {
+          console.error("Error parsing newRoutineDraft:", err);
+        }
+      }
+
+      // 2) Fallback: workout active (original behavior)
+      try {
+        const response = await workoutApi.getActive();
+        if (response.data) {
+          setMode("workout");
+          setExercises(response.data.exercises as ActiveWorkoutExercise[]);
+        } else {
+          setExercises([]);
+        }
+      } catch (error) {
+        console.error("Error loading workout exercises:", error);
         setExercises([]);
       }
+    };
+
+    load();
+  }, []);
+
+  // ---------- SAVE DATA ----------
+  const saveExercises = async (newExercises: ActiveWorkoutExercise[]) => {
+    if (mode === "workout") {
+      // ==== original Quick-Start behavior ====
+      try {
+        const response = await workoutApi.getActive();
+
+        let currentSupersetGroups: string[][] = [];
+        let currentDuration = 0;
+        let startTime: number | undefined = undefined;
+
+        if (response.data) {
+          currentSupersetGroups = response.data.supersetGroups.map((group: any) =>
+            group.exerciseIds.map((id: string | Exercise) =>
+              typeof id === "object" && id !== null && "_id" in id
+                ? (id as any)._id
+                : (id as string)
+            )
+          );
+          currentDuration = response.data.duration || 0;
+          if (response.data.startTime) {
+            startTime = new Date(response.data.startTime).getTime();
+          }
+        }
+
+        const exercisesForSave = newExercises.map((ex) => {
+          const base =
+            typeof ex.exerciseId === "object"
+              ? (ex.exerciseId as Exercise)
+              : ({ _id: ex.exerciseId } as Exercise);
+
+          return {
+            ...base,
+            sets: ex.sets || [],
+            restTimerSeconds: ex.restTimerSeconds ?? 0,
+          };
+        });
+
+        await workoutApi.save({
+          exercises: exercisesForSave,
+          supersetGroups: currentSupersetGroups,
+          duration: currentDuration,
+          startTime,
+        });
+
+        window.dispatchEvent(new Event("workoutExercisesUpdated"));
+      } catch (error) {
+        console.error("Error saving workout exercises:", error);
+      }
+      return;
+    }
+
+    // ==== ROUTINE MODE ====
+    try {
+      const draftStr = sessionStorage.getItem("newRoutineDraft");
+      if (!draftStr) return;
+
+      const draft: RoutineDraft = JSON.parse(draftStr);
+
+      const updatedExercises: RoutineDraftExercise[] = newExercises.map(
+        (ex) => {
+          const exObj =
+            typeof ex.exerciseId === "object"
+              ? (ex.exerciseId as Exercise)
+              : null;
+
+          const id = exObj?._id ?? (ex.exerciseId as string);
+
+          const original =
+            draft.exercises?.find(
+              (r) => r.exercise._id === id
+            ) || null;
+
+          // Keep notes from original, just update order / sets / restTimerSeconds
+          if (original) {
+            return {
+              ...original,
+              sets: ex.sets || original.sets || [],
+              restTimerSeconds: ex.restTimerSeconds ?? original.restTimerSeconds,
+            };
+          }
+
+          // Fallback (should rarely happen)
+          return {
+            exercise: exObj as Exercise,
+            sets: ex.sets || [],
+            notes: "",
+            restTimerSeconds: ex.restTimerSeconds ?? 0,
+          };
+        }
+      );
+
+      const updatedDraft: RoutineDraft = {
+        ...draft,
+        exercises: updatedExercises,
+      };
+
+      sessionStorage.setItem(
+        "newRoutineDraft",
+        JSON.stringify(updatedDraft)
+      );
     } catch (error) {
-      console.error("Error loading workout exercises:", error);
-      setExercises([]);
+      console.error("Error saving reordered routine exercises:", error);
     }
   };
-  loadExercises();
-}, []);
 
-
-  // Save exercises to API
-  const saveExercises = async (newExercises: ActiveWorkoutExercise[]) => {
-  try {
-    // 1) Get current meta info (supersets, duration, startTime) from backend
-    const response = await workoutApi.getActive();
-
-    let currentSupersetGroups: string[][] = [];
-    let currentDuration = 0;
-    let startTime: number | undefined = undefined;
-
-    if (response.data) {
-      currentSupersetGroups = response.data.supersetGroups.map((group: any) =>
-        group.exerciseIds.map((id: string | Exercise) =>
-          typeof id === "object" && id !== null && "_id" in id
-            ? (id as any)._id
-            : (id as string)
-        )
-      );
-      currentDuration = response.data.duration || 0;
-      if (response.data.startTime) {
-        startTime = new Date(response.data.startTime).getTime();
-      }
-    }
-
-    // 2) 🔹 Convert ActiveWorkoutExercise[] -> same shape Quick Start uses
-    const exercisesForSave = newExercises.map((ex) => {
-      const base =
-        typeof ex.exerciseId === "object"
-          ? (ex.exerciseId as Exercise)
-          : ({ _id: ex.exerciseId } as Exercise);
-
-      return {
-        ...base,
-        sets: ex.sets || [],
-        restTimerSeconds: ex.restTimerSeconds ?? 0,
-      };
-    });
-
-    // 3) Save reordered workout
-    await workoutApi.save({
-      exercises: exercisesForSave,           // ✅ correct shape now
-      supersetGroups: currentSupersetGroups,
-      duration: currentDuration,
-      startTime,
-    });
-
-    // Notify Quick Start page to reload
-    window.dispatchEvent(new Event("workoutExercisesUpdated"));
-  } catch (error) {
-    console.error("Error saving exercises:", error);
-  }
-};
-
-
-
+  // ---------- DRAG HANDLERS ----------
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
@@ -109,69 +198,47 @@ export default function ReorderExercisesPage() {
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-  e.preventDefault();
-  if (draggedIndex === null || draggedIndex === dropIndex) {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newExercises = [...exercises];
+    const draggedExercise = newExercises[draggedIndex];
+
+    newExercises.splice(draggedIndex, 1);
+    newExercises.splice(dropIndex, 0, draggedExercise);
+
+    setExercises(newExercises);
+    saveExercises(newExercises);
     setDraggedIndex(null);
     setDragOverIndex(null);
-    return;
-  }
+  };
 
-  const newExercises = [...exercises];
-  const draggedExercise = newExercises[draggedIndex];
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
-  newExercises.splice(draggedIndex, 1);
-  newExercises.splice(dropIndex, 0, draggedExercise);
+  const handleDone = () => {
+    saveExercises(exercises);
+    router.back();
+  };
 
-  setExercises(newExercises);
-  saveExercises(newExercises);
-  setDraggedIndex(null);
-  setDragOverIndex(null);
-};
+  // ---------- HELPERS ----------
+  const getBaseExercise = (ex: ActiveWorkoutExercise): Exercise | null => {
+    return typeof ex.exerciseId === "object"
+      ? (ex.exerciseId as Exercise)
+      : null;
+  };
 
-const handleDragEnd = () => { 
-  setDraggedIndex(null); 
-  setDragOverIndex(null); 
-}; 
-
-const handleDone = () => { 
-  // Ensure current order is saved 
-  saveExercises(exercises); 
-  // Navigate back 
-  router.back(); 
-};
-
-
-  // helper
-const getBaseExercise = (ex: ActiveWorkoutExercise): Exercise | null => {
-  return typeof ex.exerciseId === "object"
-    ? (ex.exerciseId as Exercise)
-    : null;
-};
-
-const formatExerciseName = (ex: ActiveWorkoutExercise) => {
-  const base = getBaseExercise(ex);
-  if (!base) return "Unknown exercise";
-
-  const name = base.name;
-  const equipment = base.equipment;
-
-  if (equipment && equipment !== "bodyweight" && equipment !== "other") {
-    const equipmentFormatted =
-      equipment.charAt(0).toUpperCase() + equipment.slice(1);
-    if (!name.toLowerCase().includes(equipment.toLowerCase())) {
-      return `${name} (${equipmentFormatted})`;
-    }
-  }
-  return name;
-};
-
-
-    return (
+  return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-center h-16 px-4">
-          {/* Center: Title */}
           <h1 className="text-lg font-regular text-center">Reorder</h1>
         </div>
       </header>
@@ -183,21 +250,17 @@ const formatExerciseName = (ex: ActiveWorkoutExercise) => {
             <Dumbbell className="size-[36px] text-gray-300 mb-6 stroke-[1.5]" />
             <h2 className="text-xl font-bold mb-2">No exercises</h2>
             <p className="text-muted-foreground text-sm text-center">
-              Add exercises to your workout first
+              {mode === "routine"
+                ? "Add exercises to your routine first"
+                : "Add exercises to your workout first"}
             </p>
           </div>
         ) : (
           <div className="space-y-2">
             {exercises.map((item, index) => {
-              // 🔹 Extract the base Exercise object for display
-              const base =
-                typeof item.exerciseId === "object"
-                  ? (item.exerciseId as Exercise)
-                  : null;
-
+              const base = getBaseExercise(item);
               const key = base?._id || item._id || index.toString();
 
-              // 🔹 Name with equipment if needed
               let displayName = base?.name || "Exercise";
               if (
                 base?.equipment &&
@@ -246,7 +309,7 @@ const formatExerciseName = (ex: ActiveWorkoutExercise) => {
                     }
                   `}
                 >
-                  {/* Remove Button */}
+                  {/* Remove Button (non-functional here, just UI) */}
                   <div className="flex-shrink-0 relative">
                     <Circle className="size-7 fill-red-500 text-red-500" />
                     <Minus className="size-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white stroke-[3]" />
@@ -267,14 +330,14 @@ const formatExerciseName = (ex: ActiveWorkoutExercise) => {
                     )}
                   </div>
 
-                  {/* Exercise Name */}
+                  {/* Name */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-regular text-black truncate">
                       {displayName}
                     </h3>
                   </div>
 
-                  {/* Drag Handle - Three Horizontal Lines */}
+                  {/* Drag handle */}
                   <div className="flex-shrink-0 text-gray-400 flex flex-col gap-1.5">
                     <div className="w-7 h-0.5 bg-gray-400"></div>
                     <div className="w-7 h-0.5 bg-gray-400"></div>
@@ -287,7 +350,7 @@ const formatExerciseName = (ex: ActiveWorkoutExercise) => {
         )}
       </div>
 
-      {/* Done Button - Fixed at Bottom */}
+      {/* Done Button */}
       <div className="sticky bottom-0 bg-background px-4 py-4">
         <Button
           variant="default"
@@ -299,5 +362,4 @@ const formatExerciseName = (ex: ActiveWorkoutExercise) => {
       </div>
     </div>
   );
-
 }

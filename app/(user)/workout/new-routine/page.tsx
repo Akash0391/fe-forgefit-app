@@ -235,6 +235,17 @@ export default function NewRoutinePage() {
     return name;
   };
 
+  const handleReorderExercises = () => {
+  const draft = {
+    name: routineTitle,
+    exercises, // RoutineExercise[]
+  };
+
+  sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
+  router.push("/workout/quick-start/reorder-exercises");
+};
+
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -506,9 +517,9 @@ export default function NewRoutinePage() {
                   : false
               }
               onReorder={() => {
-                setSelectedExerciseForMenu(null);
-                router.push("/workout/quick-start/reorder-exercises");
-              }}
+  setSelectedExerciseForMenu(null);
+  handleReorderExercises();
+}}
               onReplace={() => {
                 if (selectedExerciseForMenu) {
                   // Store the exercise ID to replace in sessionStorage

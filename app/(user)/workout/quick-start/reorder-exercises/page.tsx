@@ -4,69 +4,96 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Dumbbell, Minus, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Exercise, workoutApi } from "@/lib/api";
+import { Exercise, workoutApi, SetData as ApiSetData } from "@/lib/api";
+
+type ActiveWorkoutExercise = {
+  exerciseId: Exercise | string;
+  sets?: ApiSetData[];
+  restTimerSeconds?: number;
+  _id?: string;
+  // any other fields coming from backend are fine
+};
 
 export default function ReorderExercisesPage() {
   const router = useRouter();
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exercises, setExercises] = useState<ActiveWorkoutExercise[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Load exercises from API
   useEffect(() => {
-    const loadExercises = async () => {
-      try {
-        const response = await workoutApi.getActive();
-        if (response.data) {
-          const loadedExercises = response.data.exercises.map((ex) => {
-            const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-            return exercise as Exercise;
-          });
-          setExercises(loadedExercises);
-        } else {
-          setExercises([]);
-        }
-      } catch (error) {
-        console.error("Error loading workout exercises:", error);
-        setExercises([]);
-      }
-    };
-    loadExercises();
-  }, []);
-
-  // Save exercises to API
-  const saveExercises = async (newExercises: Exercise[]) => {
+  const loadExercises = async () => {
     try {
       const response = await workoutApi.getActive();
-      let currentSupersetGroups: string[][] = [];
-      let currentDuration = 0;
-      let startTime: number | undefined = undefined;
-
       if (response.data) {
-        currentSupersetGroups = response.data.supersetGroups.map(group => 
-          group.exerciseIds.map((id: string | Exercise) => 
-            typeof id === 'object' && id !== null && '_id' in id ? id._id : id as string
-          )
-        );
-        currentDuration = response.data.duration || 0;
-        if (response.data.startTime) {
-          startTime = new Date(response.data.startTime).getTime();
-        }
+        // ✅ keep the full workout exercise objects
+        setExercises(response.data.exercises as ActiveWorkoutExercise[]);
+      } else {
+        setExercises([]);
       }
-
-      await workoutApi.save({
-        exercises: newExercises,
-        supersetGroups: currentSupersetGroups,
-        duration: currentDuration,
-        startTime: startTime,
-      });
-      
-      // Dispatch custom event to notify other tabs/components
-      window.dispatchEvent(new Event("workoutExercisesUpdated"));
     } catch (error) {
-      console.error("Error saving exercises:", error);
+      console.error("Error loading workout exercises:", error);
+      setExercises([]);
     }
   };
+  loadExercises();
+}, []);
+
+
+  // Save exercises to API
+  const saveExercises = async (newExercises: ActiveWorkoutExercise[]) => {
+  try {
+    // 1) Get current meta info (supersets, duration, startTime) from backend
+    const response = await workoutApi.getActive();
+
+    let currentSupersetGroups: string[][] = [];
+    let currentDuration = 0;
+    let startTime: number | undefined = undefined;
+
+    if (response.data) {
+      currentSupersetGroups = response.data.supersetGroups.map((group: any) =>
+        group.exerciseIds.map((id: string | Exercise) =>
+          typeof id === "object" && id !== null && "_id" in id
+            ? (id as any)._id
+            : (id as string)
+        )
+      );
+      currentDuration = response.data.duration || 0;
+      if (response.data.startTime) {
+        startTime = new Date(response.data.startTime).getTime();
+      }
+    }
+
+    // 2) 🔹 Convert ActiveWorkoutExercise[] -> same shape Quick Start uses
+    const exercisesForSave = newExercises.map((ex) => {
+      const base =
+        typeof ex.exerciseId === "object"
+          ? (ex.exerciseId as Exercise)
+          : ({ _id: ex.exerciseId } as Exercise);
+
+      return {
+        ...base,
+        sets: ex.sets || [],
+        restTimerSeconds: ex.restTimerSeconds ?? 0,
+      };
+    });
+
+    // 3) Save reordered workout
+    await workoutApi.save({
+      exercises: exercisesForSave,           // ✅ correct shape now
+      supersetGroups: currentSupersetGroups,
+      duration: currentDuration,
+      startTime,
+    });
+
+    // Notify Quick Start page to reload
+    window.dispatchEvent(new Event("workoutExercisesUpdated"));
+  } catch (error) {
+    console.error("Error saving exercises:", error);
+  }
+};
+
+
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -82,65 +109,70 @@ export default function ReorderExercisesPage() {
   };
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const newExercises = [...exercises];
-    const draggedExercise = newExercises[draggedIndex];
-
-    // Remove the dragged item
-    newExercises.splice(draggedIndex, 1);
-
-    // Insert at new position
-    newExercises.splice(dropIndex, 0, draggedExercise);
-
-    setExercises(newExercises);
-    saveExercises(newExercises);
+  e.preventDefault();
+  if (draggedIndex === null || draggedIndex === dropIndex) {
     setDraggedIndex(null);
     setDragOverIndex(null);
-  };
+    return;
+  }
 
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
+  const newExercises = [...exercises];
+  const draggedExercise = newExercises[draggedIndex];
 
-  const handleDone = () => {
-    // Ensure current order is saved
-    saveExercises(exercises);
-    // Navigate back
-    router.back();
-  };
+  newExercises.splice(draggedIndex, 1);
+  newExercises.splice(dropIndex, 0, draggedExercise);
 
-  // Format exercise name with equipment in parentheses if available
-  const formatExerciseName = (exercise: Exercise) => {
-    const name = exercise.name;
-    const equipment = exercise.equipment;
+  setExercises(newExercises);
+  saveExercises(newExercises);
+  setDraggedIndex(null);
+  setDragOverIndex(null);
+};
 
-    if (equipment && equipment !== "bodyweight" && equipment !== "other") {
-      const equipmentFormatted =
-        equipment.charAt(0).toUpperCase() + equipment.slice(1);
-      if (!name.toLowerCase().includes(equipment.toLowerCase())) {
-        return `${name} (${equipmentFormatted})`;
-      }
+const handleDragEnd = () => { 
+  setDraggedIndex(null); 
+  setDragOverIndex(null); 
+}; 
+
+const handleDone = () => { 
+  // Ensure current order is saved 
+  saveExercises(exercises); 
+  // Navigate back 
+  router.back(); 
+};
+
+
+  // helper
+const getBaseExercise = (ex: ActiveWorkoutExercise): Exercise | null => {
+  return typeof ex.exerciseId === "object"
+    ? (ex.exerciseId as Exercise)
+    : null;
+};
+
+const formatExerciseName = (ex: ActiveWorkoutExercise) => {
+  const base = getBaseExercise(ex);
+  if (!base) return "Unknown exercise";
+
+  const name = base.name;
+  const equipment = base.equipment;
+
+  if (equipment && equipment !== "bodyweight" && equipment !== "other") {
+    const equipmentFormatted =
+      equipment.charAt(0).toUpperCase() + equipment.slice(1);
+    if (!name.toLowerCase().includes(equipment.toLowerCase())) {
+      return `${name} (${equipmentFormatted})`;
     }
-    return name;
-  };
+  }
+  return name;
+};
 
-  return (
+
+    return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-center h-16 px-4">
           {/* Center: Title */}
-          <h1 className="text-lg font-regular text-center">
-            Reorder
-          </h1>
+          <h1 className="text-lg font-regular text-center">Reorder</h1>
         </div>
       </header>
 
@@ -156,68 +188,101 @@ export default function ReorderExercisesPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {exercises.map((exercise, index) => (
-              <div
-                key={exercise._id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`
-                  flex items-center gap-4 p-4 bg-white rounded-[10px] border-2 transition-all
-                  ${
-                    draggedIndex === index
-                      ? "opacity-50 border-blue-500"
-                      : "border-transparent"
-                  }
-                  ${
-                    dragOverIndex === index && draggedIndex !== index
-                      ? "border-blue-300 bg-blue-50"
-                      : ""
-                  }
-                  ${
-                    draggedIndex !== index ? "cursor-move hover:bg-gray-50" : ""
-                  }
-                `}
-              >
-                {/* Remove Button */}
-                <div className="flex-shrink-0 relative">
-                  <Circle className="size-7 fill-red-500 text-red-500" />
-                  <Minus className="size-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white stroke-[3]" />
-                </div>
+            {exercises.map((item, index) => {
+              // 🔹 Extract the base Exercise object for display
+              const base =
+                typeof item.exerciseId === "object"
+                  ? (item.exerciseId as Exercise)
+                  : null;
 
-                {/* Exercise Icon */}
-                <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-                  {exercise.thumbnailUrl ? (
-                    <img
-                      src={exercise.thumbnailUrl}
-                      alt={exercise.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                      <Dumbbell className="size-5 text-gray-400" />
-                    </div>
-                  )}
-                </div>
+              const key = base?._id || item._id || index.toString();
 
-                {/* Exercise Name */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-regular text-black truncate">
-                    {formatExerciseName(exercise)}
-                  </h3>
-                </div>
+              // 🔹 Name with equipment if needed
+              let displayName = base?.name || "Exercise";
+              if (
+                base?.equipment &&
+                base.equipment !== "bodyweight" &&
+                base.equipment !== "other"
+              ) {
+                const equipmentFormatted =
+                  base.equipment.charAt(0).toUpperCase() +
+                  base.equipment.slice(1);
+                if (
+                  !displayName
+                    .toLowerCase()
+                    .includes(base.equipment.toLowerCase())
+                ) {
+                  displayName = `${displayName} (${equipmentFormatted})`;
+                }
+              }
 
-                {/* Drag Handle - Three Horizontal Lines */}
-                <div className="flex-shrink-0 text-gray-400 flex flex-col gap-1.5">
-                  <div className="w-7 h-0.5 bg-gray-400"></div>
-                  <div className="w-7 h-0.5 bg-gray-400"></div>     
-                  <div className="w-7 h-0.5 bg-gray-400"></div>
+              const thumbnailUrl = base?.thumbnailUrl;
+
+              return (
+                <div
+                  key={key}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`
+                    flex items-center gap-4 p-4 bg-white rounded-[10px] border-2 transition-all
+                    ${
+                      draggedIndex === index
+                        ? "opacity-50 border-blue-500"
+                        : "border-transparent"
+                    }
+                    ${
+                      dragOverIndex === index && draggedIndex !== index
+                        ? "border-blue-300 bg-blue-50"
+                        : ""
+                    }
+                    ${
+                      draggedIndex !== index
+                        ? "cursor-move hover:bg-gray-50"
+                        : ""
+                    }
+                  `}
+                >
+                  {/* Remove Button */}
+                  <div className="flex-shrink-0 relative">
+                    <Circle className="size-7 fill-red-500 text-red-500" />
+                    <Minus className="size-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white stroke-[3]" />
+                  </div>
+
+                  {/* Exercise Icon */}
+                  <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+                    {thumbnailUrl ? (
+                      <img
+                        src={thumbnailUrl}
+                        alt={displayName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                        <Dumbbell className="size-5 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Exercise Name */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-regular text-black truncate">
+                      {displayName}
+                    </h3>
+                  </div>
+
+                  {/* Drag Handle - Three Horizontal Lines */}
+                  <div className="flex-shrink-0 text-gray-400 flex flex-col gap-1.5">
+                    <div className="w-7 h-0.5 bg-gray-400"></div>
+                    <div className="w-7 h-0.5 bg-gray-400"></div>
+                    <div className="w-7 h-0.5 bg-gray-400"></div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -234,4 +299,5 @@ export default function ReorderExercisesPage() {
       </div>
     </div>
   );
+
 }

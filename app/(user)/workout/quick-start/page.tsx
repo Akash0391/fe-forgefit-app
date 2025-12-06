@@ -15,21 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { Exercise, workoutApi, SetData as ApiSetData } from "@/lib/api";
+import { Exercise, workoutApi, SetData } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 import AddToSupersetModal from "@/components/AddToSupersetModal";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
-
-interface SetData {
-  setNumber: number;
-  previous: string;
-  kg: number;
-  reps: number;
-  completed: boolean;
-}
 
 interface ExerciseSets {
   [exerciseId: string]: SetData[];

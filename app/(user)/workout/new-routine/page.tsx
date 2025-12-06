@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dumbbell, Plus, MoreVertical, Check, SquareCheck, X, Timer } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Exercise, SetData, workoutApi } from "@/lib/api";
 import { RestTimerModal } from "@/components/RestTimerModal";
@@ -41,19 +41,19 @@ export default function NewRoutinePage() {
   const [selectedExerciseForMenu, setSelectedExerciseForMenu] =
     useState<Exercise | null>(null);
 
-    const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-      const [duration, setDuration] = useState(0); // Duration in seconds
-      const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
-      const [showDurationInHeader, setShowDurationInHeader] = useState(false);
-      const [lastScrollY, setLastScrollY] = useState(0);
-      const [showFinishConfirmationModal, setShowFinishConfirmationModal] =
-        useState(false);
-      const [finishModalMessage, setFinishModalMessage] =
-        useState("Add an exercise");
-      const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
-      const [showSupersetModal, setShowSupersetModal] = useState(false);
-      const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
-      const [removingExerciseIds, setRemovingExerciseIds] = useState<Set<string>>(new Set());
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [duration, setDuration] = useState(0); // Duration in seconds
+  const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
+  const [showDurationInHeader, setShowDurationInHeader] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [showFinishConfirmationModal, setShowFinishConfirmationModal] =
+    useState(false);
+  const [finishModalMessage, setFinishModalMessage] =
+    useState("Add an exercise");
+  const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
+  const [showSupersetModal, setShowSupersetModal] = useState(false);
+  const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
+  const [removingExerciseIds, setRemovingExerciseIds] = useState<Set<string>>(new Set());
 
 
   const router = useRouter();
@@ -77,6 +77,7 @@ export default function NewRoutinePage() {
           }))
         );
 
+        setRoutineFolderId(draft.routineFolderId ?? initialFolderId ?? null);
       } catch (error) {
         console.error("Error loading routine draft:", error);
       } finally {
@@ -154,13 +155,23 @@ export default function NewRoutinePage() {
     const draft = {
       name: routineTitle,
       exercises, // this is RoutineExercise[]
+      routineFolderId,
     };
 
     sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
 
-    // Go to the routine-specific add exercise page
+    if (routineFolderId) {
+    router.push(`/workout/new-routine/add-exercise?folderId=${routineFolderId}`);
+  } else {
     router.push("/workout/new-routine/add-exercise");
+  }
   };
+
+  const searchParams = useSearchParams();
+const initialFolderId = searchParams.get("folderId"); // from URL first time
+
+const [routineFolderId, setRoutineFolderId] = useState<string | null>(initialFolderId);
+
 
 
   const handleSave = async () => {
@@ -178,6 +189,7 @@ export default function NewRoutinePage() {
     setError(null);
 
     try {
+       // string | null
       await workoutApi.saveRoutine({
         name: routineTitle.trim(),
         exercises: exercises.map(ex => ({
@@ -186,7 +198,8 @@ export default function NewRoutinePage() {
           notes: ex.notes || "",
           restTimerSeconds: ex.restTimerSeconds ?? 0,
         })),
-        supersetGroups: []
+        supersetGroups: [],
+        routineFolderId: routineFolderId ?? null,
       });
 
       // Navigate back to workout page after successful save
@@ -236,14 +249,14 @@ export default function NewRoutinePage() {
   };
 
   const handleReorderExercises = () => {
-  const draft = {
-    name: routineTitle,
-    exercises, // RoutineExercise[]
-  };
+    const draft = {
+      name: routineTitle,
+      exercises, // RoutineExercise[]
+    };
 
-  sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
-  router.push("/workout/quick-start/reorder-exercises");
-};
+    sessionStorage.setItem("newRoutineDraft", JSON.stringify(draft));
+    router.push("/workout/quick-start/reorder-exercises");
+  };
 
 
   return (
@@ -365,7 +378,7 @@ export default function NewRoutinePage() {
 
                     {/* Options Menu */}
                     <button
-                    onClick={() => setSelectedExerciseForMenu(exercise)}
+                      onClick={() => setSelectedExerciseForMenu(exercise)}
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors"
                     >
                       <MoreVertical className="size-7 text-gray-600" />
@@ -508,86 +521,86 @@ export default function NewRoutinePage() {
 
 
       <ExerciseOptionsModal
-              open={selectedExerciseForMenu !== null && !showSupersetModal}
-              onClose={() => setSelectedExerciseForMenu(null)}
-              exercise={selectedExerciseForMenu}
-              isInSuperset={
-                selectedExerciseForMenu
-                  ? isExerciseInSuperset(selectedExerciseForMenu._id)
-                  : false
-              }
-              onReorder={() => {
-  setSelectedExerciseForMenu(null);
-  handleReorderExercises();
-}}
-              onReplace={() => {
-                if (selectedExerciseForMenu) {
-                  // Store the exercise ID to replace in sessionStorage
-                  sessionStorage.setItem(
-                    "replaceExerciseId",
-                    selectedExerciseForMenu._id
-                  );
-                  setSelectedExerciseForMenu(null);
-                  router.push("/workout/quick-start/add-exercise?mode=replace");
-                }
-              }}
-              onAddToSuperset={() => {
-                // Keep the selected exercise and open superset modal
-                // The ExerciseOptionsModal will close automatically due to showSupersetModal being true
-                setShowSupersetModal(true);
-              }}
-              onRemoveFromSuperset={() => {
-                if (selectedExerciseForMenu) {
-                  // Remove the entire superset group that contains this exercise
-                  // This removes badges from all exercises in that superset
-                  setSupersetGroups((prev) => {
-                    const updatedGroups = prev.filter(
-                      (group) => !group.has(selectedExerciseForMenu._id)
-                    );
-                    return updatedGroups;
-                  });
-                }
-                setSelectedExerciseForMenu(null);
-              }}
-              onRemove={() => {
-                if (selectedExerciseForMenu) {
-                  const exerciseId = selectedExerciseForMenu._id;
-                  
-                  // Start removal animation
-                  setRemovingExerciseIds((prev) => new Set(prev).add(exerciseId));
-                  
-                  // After animation completes, remove the exercise
-                  setTimeout(() => {
-                    setWorkoutExercises((prev) =>
-                      prev.filter((ex) => ex._id !== exerciseId)
-                    );
-                    setExerciseSets((prev) => {
-                      const newSets = { ...prev };
-                      delete newSets[exerciseId];
-                      return newSets;
-                    });
-                    // Remove from superset groups if present
-                    setSupersetGroups((prev) => {
-                      const newGroups = prev
-                        .map((group) => {
-                          const newGroup = new Set(group);
-                          newGroup.delete(exerciseId);
-                          return newGroup;
-                        })
-                        .filter((group) => group.size > 0);
-                      return newGroups;
-                    });
-                    // Clean up removing state
-                    setRemovingExerciseIds((prev) => {
-                      const newSet = new Set(prev);
-                      newSet.delete(exerciseId);
-                      return newSet;
-                    });
-                  }, 400); // Animation duration
-                }
-                setSelectedExerciseForMenu(null);
-              }}
-            />
+        open={selectedExerciseForMenu !== null && !showSupersetModal}
+        onClose={() => setSelectedExerciseForMenu(null)}
+        exercise={selectedExerciseForMenu}
+        isInSuperset={
+          selectedExerciseForMenu
+            ? isExerciseInSuperset(selectedExerciseForMenu._id)
+            : false
+        }
+        onReorder={() => {
+          setSelectedExerciseForMenu(null);
+          handleReorderExercises();
+        }}
+        onReplace={() => {
+          if (selectedExerciseForMenu) {
+            // Store the exercise ID to replace in sessionStorage
+            sessionStorage.setItem(
+              "replaceExerciseId",
+              selectedExerciseForMenu._id
+            );
+            setSelectedExerciseForMenu(null);
+            router.push("/workout/quick-start/add-exercise?mode=replace");
+          }
+        }}
+        onAddToSuperset={() => {
+          // Keep the selected exercise and open superset modal
+          // The ExerciseOptionsModal will close automatically due to showSupersetModal being true
+          setShowSupersetModal(true);
+        }}
+        onRemoveFromSuperset={() => {
+          if (selectedExerciseForMenu) {
+            // Remove the entire superset group that contains this exercise
+            // This removes badges from all exercises in that superset
+            setSupersetGroups((prev) => {
+              const updatedGroups = prev.filter(
+                (group) => !group.has(selectedExerciseForMenu._id)
+              );
+              return updatedGroups;
+            });
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+        onRemove={() => {
+          if (selectedExerciseForMenu) {
+            const exerciseId = selectedExerciseForMenu._id;
+
+            // Start removal animation
+            setRemovingExerciseIds((prev) => new Set(prev).add(exerciseId));
+
+            // After animation completes, remove the exercise
+            setTimeout(() => {
+              setWorkoutExercises((prev) =>
+                prev.filter((ex) => ex._id !== exerciseId)
+              );
+              setExerciseSets((prev) => {
+                const newSets = { ...prev };
+                delete newSets[exerciseId];
+                return newSets;
+              });
+              // Remove from superset groups if present
+              setSupersetGroups((prev) => {
+                const newGroups = prev
+                  .map((group) => {
+                    const newGroup = new Set(group);
+                    newGroup.delete(exerciseId);
+                    return newGroup;
+                  })
+                  .filter((group) => group.size > 0);
+                return newGroups;
+              });
+              // Clean up removing state
+              setRemovingExerciseIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(exerciseId);
+                return newSet;
+              });
+            }, 400); // Animation duration
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+      />
 
     </div>
   );

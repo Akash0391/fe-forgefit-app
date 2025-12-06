@@ -187,6 +187,7 @@ export interface Workout {
   endTime?: string;
   status: 'in-progress' | 'completed' | 'discarded';
   isRoutine?: boolean;
+  routineFolderId?: string | null;   // 👈 add this
   createdAt: string;
   updatedAt: string;
 }
@@ -260,6 +261,7 @@ export const workoutApi = {
       restTimerSeconds?: number;
     }>;
     supersetGroups?: string[][];
+    routineFolderId?: string | null;
   }) => apiClient.post<{
     success: boolean;
     data: Workout;

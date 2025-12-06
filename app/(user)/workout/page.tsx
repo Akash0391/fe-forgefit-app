@@ -110,37 +110,37 @@ export default function WorkoutPage() {
   }
 
   const handleStartRoutine = (routine: Workout) => {
-  // Store routine data in sessionStorage to start as a workout
-  const workoutData = {
-    name: routine.name || "Quick Start Workout",
-    exercises: routine.exercises.map((ex) => {
+    // Store routine data in sessionStorage to start as a workout
+    const workoutData = {
+      name: routine.name || "Quick Start Workout",
+      exercises: routine.exercises.map((ex) => {
 
-      const restTimerSeconds = (ex as any).restTimerSeconds ?? 0;
-      const exercise =
-        typeof ex.exerciseId === "object"
-          ? { ...(ex.exerciseId as any), restTimerSeconds }  // ⬅️ attach timer
-          : { _id: ex.exerciseId, restTimerSeconds }; 
+        const restTimerSeconds = (ex as any).restTimerSeconds ?? 0;
+        const exercise =
+          typeof ex.exerciseId === "object"
+            ? { ...(ex.exerciseId as any), restTimerSeconds }  // ⬅️ attach timer
+            : { _id: ex.exerciseId, restTimerSeconds };
 
-      return {
-        exercise,
-        sets: ex.sets || [],
-        notes: ex.notes || "",
-        // // 🔹 read from routine document
-        // restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
-      };
-    }),
-    supersetGroups: routine.supersetGroups || [],
+        return {
+          exercise,
+          sets: ex.sets || [],
+          notes: ex.notes || "",
+          // // 🔹 read from routine document
+          // restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
+        };
+      }),
+      supersetGroups: routine.supersetGroups || [],
+    };
+
+    // (optional) debug
+    // console.log("workoutData from routine:", workoutData);
+
+    sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
+
+    // Set workout in progress and navigate to quick start
+    localStorage.setItem("workoutInProgress", "true");
+    router.push("/workout/quick-start");
   };
-
-  // (optional) debug
-  // console.log("workoutData from routine:", workoutData);
-
-  sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
-
-  // Set workout in progress and navigate to quick start
-  localStorage.setItem("workoutInProgress", "true");
-  router.push("/workout/quick-start");
-};
 
 
 
@@ -233,44 +233,52 @@ export default function WorkoutPage() {
     router.push("/workout/new-routine");
   };
 
-    const handleDeleteFolder = async () => {
-  if (!selectedFolder) return;
+  const handleDeleteFolder = async () => {
+    if (!selectedFolder) return;
 
-  try {
-    await workoutApi.deleteRoutineFolder(selectedFolder._id);
-    setFolders((prev) => prev.filter((f) => f._id !== selectedFolder._id));
-    setSelectedFolder(null);
-  } catch (err) {
-    console.error("Error deleting folder:", err);
-  }
-};
+    try {
+      await workoutApi.deleteRoutineFolder(selectedFolder._id);
+      setFolders((prev) => prev.filter((f) => f._id !== selectedFolder._id));
+      setSelectedFolder(null);
+    } catch (err) {
+      console.error("Error deleting folder:", err);
+    }
+  };
 
-const handleRenameFolder = () => {
-  setShowRenameFolderModal(true)
-};
+  const handleRenameFolder = () => {
+    setShowRenameFolderModal(true)
+  };
 
-const handleRenameFolderSave = async (newName: string) => {
-  if (!selectedFolder) return;
+  const handleRenameFolderSave = async (newName: string) => {
+    if (!selectedFolder) return;
 
-  try {
-    const res = await workoutApi.renameRoutineFolder(selectedFolder._id, newName);
+    try {
+      const res = await workoutApi.renameRoutineFolder(selectedFolder._id, newName);
 
-    const updated = res.data;
+      const updated = res.data;
 
-    // update folders list in UI
-    setFolders((prev) =>
-      prev.map((f) => (f._id === updated._id ? updated : f))
-    );
+      // update folders list in UI
+      setFolders((prev) =>
+        prev.map((f) => (f._id === updated._id ? updated : f))
+      );
 
-    // keep selectedFolder in sync
-    setSelectedFolder(updated);
+      // keep selectedFolder in sync
+      setSelectedFolder(updated);
 
-    setShowRenameFolderModal(false);
-  } catch (err) {
-    console.error("Error renaming folder:", err);
-    // optional: show toast
-  }
-};
+      setShowRenameFolderModal(false);
+    } catch (err) {
+      console.error("Error renaming folder:", err);
+      // optional: show toast
+    }
+  };
+
+  // Routines that are NOT in any folder → show in "My Routines"
+  const myRoutines = routines.filter((r) => !r.routineFolderId);
+
+  // Helper to get routines inside a folder
+  const getFolderRoutines = (folderId: string) =>
+    routines.filter((r) => r.routineFolderId === folderId);
+
 
 
   return (
@@ -356,6 +364,7 @@ const handleRenameFolderSave = async (newName: string) => {
         {!loadingFolders &&
           folders.map((folder) => {
             const expanded = expandedFolders[folder._id] ?? true;
+            const folderRoutines = getFolderRoutines(folder._id);
 
             return (
               <section key={folder._id} className="mt-4">
@@ -382,8 +391,8 @@ const handleRenameFolderSave = async (newName: string) => {
 
                   <button
                     onClick={(e) => {
-                      e.stopPropagation();  
-                      setSelectedFolder(folder); 
+                      e.stopPropagation();
+                      setSelectedFolder(folder);
                       setShowFolderOptionModal(true);
                       // later: folder options (rename/delete)
                     }}
@@ -395,24 +404,82 @@ const handleRenameFolderSave = async (newName: string) => {
 
                 {/* Folder content */}
                 {expanded && (
-                  <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
-                    <button
-                      onClick={() => router.push("/workout/new-routine")}
-                      className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
-                    >
-                      <Plus className="size-5" />
-                      <span>Add new routine</span>
-                    </button>
+                  <div className="space-y-4 mt-2">
+                    {/* Folder routines */}
+                    {getFolderRoutines(folder._id).map((routine) => {
+                      const firstExercise = routine.exercises[0];
+                      const exercise =
+                        typeof firstExercise?.exerciseId === "object"
+                          ? firstExercise.exerciseId
+                          : null;
+
+                      const handleCardClick = () => {
+                        router.push(`/workout/routine?id=${routine._id}`);
+                      };
+
+                      return (
+                        <div
+                          key={routine._id}
+                          className="bg-white rounded-[10px] p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={handleCardClick}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold">{routine.name}</h3>
+                              {exercise && (
+                                <p className="text-lg text-gray-500">
+                                  {formatExerciseName(exercise)}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRoutineOptionsClick(routine);
+                              }}
+                              className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
+                              aria-label="Routine options"
+                            >
+                              <MoreHorizontal className="size-7 text-black" />
+                            </button>
+                          </div>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartRoutine(routine);
+                            }}
+                            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-[10px] py-6"
+                          >
+                            Start Routine
+                          </Button>
+                        </div>
+                      );
+                    })}
+
+                    {/* ⬇️ Only show dashed Add button if folder is empty */}
+                    {folderRoutines.length === 0 && (
+                      <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
+                        <button
+                          onClick={() =>
+                            router.push(`/workout/new-routine?folderId=${folder._id}`)
+                          }
+                          className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
+                        >
+                          <Plus className="size-5" />
+                          <span>Add new routine</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
+
               </section>
             );
           })}
 
 
-
         {/* My Routines Section – only show when there is at least 1 routine */}
-        {!loadingRoutines && routines.length > 0 && (
+        {!loadingRoutines && myRoutines.length > 0 && (
           <section>
             <button
               onClick={() => setShowRoutines(!showRoutines)}
@@ -424,13 +491,13 @@ const handleRenameFolderSave = async (newName: string) => {
                 <ChevronRight className="size-6 text-gray-400" />
               )}
               <h2 className="text-lg text-gray-400 font-semibold">
-                My Routines ({routines.length})
+                My Routines ({myRoutines.length})
               </h2>
             </button>
 
             {showRoutines && (
               <div className="space-y-4">
-                {routines.map((routine) => {
+                {myRoutines.map((routine) => {
                   const firstExercise = routine.exercises[0];
                   const exercise =
                     typeof firstExercise?.exerciseId === "object"
@@ -580,11 +647,18 @@ const handleRenameFolderSave = async (newName: string) => {
         open={showFolderOptionModal}
         folderName={selectedFolder?.name ?? ""}
         onClose={() => setShowFolderOptionModal(false)}
-        onRename= {handleRenameFolder}
+        onRename={handleRenameFolder}
         onDeleteFolder={handleDeleteFolder}
-        onAddNewRoutine={() => router.push("/workout/new-routine")}
+        onAddNewRoutine={() => {
+          if (selectedFolder) {
+            router.push(`/workout/new-routine?folderId=${selectedFolder._id}`);
+          } else {
+            router.push("/workout/new-routine"); // fallback
+          }
+        }}
         onReorder={() => router.push("/workout/reorder-folders")}
-      />  
+      />
+
     </div>
   );
 }

@@ -2,11 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dumbbell, Plus, MoreVertical, X, Timer, ChevronDown, Check } from "lucide-react";
+import {
+  Dumbbell,
+  Plus,
+  MoreVertical,
+  X,
+  Timer,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Exercise, SetData, workoutApi, Workout } from "@/lib/api";
 import { RestTimerModal } from "@/components/RestTimerModal";
+import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
+import AddToSupersetModal from "@/components/AddToSupersetModal";
 
 interface RoutineExercise {
   exercise: Exercise;
@@ -26,7 +36,6 @@ const formatRestTimerLabel = (seconds?: number): string => {
   return `${minutes}m ${remain}s`;
 };
 
-
 export default function EditRoutinePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,14 +46,26 @@ export default function EditRoutinePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-  const [showExerciseModal, setShowExerciseModal] = useState(false);
+
+  // 🔹 Superset state
+  const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]);
+  const [selectedExerciseForMenu, setSelectedExerciseForMenu] =
+    useState<Exercise | null>(null);
+  const [showSupersetModal, setShowSupersetModal] = useState(false);
+
   const [showRepetitionModal, setShowRepetitionModal] = useState(false);
-  const [isRepetitionModalVisible, setIsRepetitionModalVisible] = useState(false);
-  const [shouldRenderRepetitionModal, setShouldRenderRepetitionModal] = useState(false);
+  const [isRepetitionModalVisible, setIsRepetitionModalVisible] =
+    useState(false);
+  const [shouldRenderRepetitionModal, setShouldRenderRepetitionModal] =
+    useState(false);
   const repetitionModalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [repetitionMode, setRepetitionMode] = useState<"reps" | "range">("reps");
-  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
+  const [repetitionMode, setRepetitionMode] = useState<"reps" | "range">(
+    "reps"
+  );
+  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<
+    number | null
+  >(null);
+
   useEffect(() => {
     if (routineId) {
       loadRoutine();
@@ -55,18 +76,29 @@ export default function EditRoutinePage() {
   }, [routineId]);
 
   useEffect(() => {
-    // Check for exercises added from add-exercise page
+    // Check for exercises (and supersets) added from add-exercise page
     const checkForNewExercises = () => {
       const routineDataStr = sessionStorage.getItem("routineExercisesToAdd");
       if (routineDataStr) {
         try {
           const data = JSON.parse(routineDataStr);
           if (data.routineId === routineId) {
-            // Replace exercises with the updated list from sessionStorage
-            // This ensures we have the latest state including newly added exercises
             const updatedExercises = data.exercises || [];
             setExercises(updatedExercises);
-            // Clear sessionStorage after loading
+
+            // restore superset groups if present
+            if (data.supersetGroups) {
+              const groups: Set<string>[] = (data.supersetGroups || []).map(
+                (g: string[] | { exerciseIds?: string[] }) =>
+                  new Set(
+                    Array.isArray(g)
+                      ? g
+                      : (g.exerciseIds as string[] | undefined) || []
+                  )
+              );
+              setSupersetGroups(groups);
+            }
+
             sessionStorage.removeItem("routineExercisesToAdd");
           }
         } catch (error) {
@@ -79,25 +111,23 @@ export default function EditRoutinePage() {
     checkForNewExercises();
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         checkForNewExercises();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Listen for focus event (when user navigates back to this tab/page)
-    window.addEventListener('focus', checkForNewExercises);
+    window.addEventListener("focus", checkForNewExercises);
 
-    // Listen for custom event dispatched when exercises are added in routine mode
     const handleExercisesAdded = () => {
       checkForNewExercises();
     };
-    window.addEventListener('routineExercisesAdded', handleExercisesAdded);
+    window.addEventListener("routineExercisesAdded", handleExercisesAdded);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', checkForNewExercises);
-      window.removeEventListener('routineExercisesAdded', handleExercisesAdded);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", checkForNewExercises);
+      window.removeEventListener("routineExercisesAdded", handleExercisesAdded);
     };
   }, [routineId]);
 
@@ -108,7 +138,6 @@ export default function EditRoutinePage() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch all routines and find the one we need
       const response = await workoutApi.getRoutines();
       const routine = response.data.find((r: Workout) => r._id === routineId);
 
@@ -120,22 +149,37 @@ export default function EditRoutinePage() {
 
       setRoutineTitle(routine.name || "");
 
-      // Convert routine exercises to RoutineExercise format
-      const routineExercises: RoutineExercise[] = routine.exercises.map((ex: any) => {
-        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-        return {
-          exercise: exercise as Exercise,
-          sets: (ex.sets || []).map((set: any) => ({
-            ...set,
-            minReps: set.minReps,
-            maxReps: set.maxReps
-          })),
-          notes: ex.notes || "",
-          restTimerSeconds: ex.restTimerSeconds ?? 0,
-        };
-      });
+      const routineExercises: RoutineExercise[] = routine.exercises.map(
+        (ex: any) => {
+          const exercise =
+            typeof ex.exerciseId === "object"
+              ? ex.exerciseId
+              : { _id: ex.exerciseId };
+          return {
+            exercise: exercise as Exercise,
+            sets: (ex.sets || []).map((set: any) => ({
+              ...set,
+              minReps: set.minReps,
+              maxReps: set.maxReps,
+            })),
+            notes: ex.notes || "",
+            restTimerSeconds: ex.restTimerSeconds ?? 0,
+          };
+        }
+      );
 
       setExercises(routineExercises);
+
+      // 🔹 load superset groups from routine
+      const groups: Set<string>[] = (routine.supersetGroups || []).map(
+        (group: any) =>
+          new Set(
+            Array.isArray(group)
+              ? group
+              : (group.exerciseIds as string[] | undefined) || []
+          )
+      );
+      setSupersetGroups(groups);
     } catch (err: any) {
       console.error("Error loading routine:", err);
       setError(err.message || "Failed to load routine. Please try again.");
@@ -153,7 +197,7 @@ export default function EditRoutinePage() {
   };
 
   const handleRestTimerSelect = (seconds: number) => {
-    setExercises(prev => {
+    setExercises((prev) => {
       if (restTimerExerciseIndex === null) return prev;
       const updated = [...prev];
       const ex = { ...updated[restTimerExerciseIndex] };
@@ -164,12 +208,15 @@ export default function EditRoutinePage() {
   };
 
   const handleAddExercise = () => {
-    // Store current routine state in sessionStorage before navigating
-    sessionStorage.setItem("routineExercisesToAdd", JSON.stringify({
-      routineId: routineId,
-      exercises: exercises
-    }));
-    // Navigate to add exercise page
+    // Store current routine state (including superset groups) before navigating
+    sessionStorage.setItem(
+      "routineExercisesToAdd",
+      JSON.stringify({
+        routineId: routineId,
+        exercises: exercises,
+        supersetGroups: supersetGroups.map((g) => Array.from(g)),
+      })
+    );
     router.push("/workout/quick-start/add-exercise?mode=routine");
   };
 
@@ -196,24 +243,24 @@ export default function EditRoutinePage() {
       await workoutApi.updateRoutine({
         routineId: routineId,
         name: routineTitle.trim(),
-        exercises: exercises.map(ex => ({
+        exercises: exercises.map((ex) => ({
           exercise: ex.exercise,
-          sets: (ex.sets || []).map(set => ({
+          sets: (ex.sets || []).map((set) => ({
             setNumber: set.setNumber,
             previous: set.previous,
             kg: set.kg,
             reps: set.reps,
             completed: set.completed,
             minReps: (set as any).minReps,
-            maxReps: (set as any).maxReps
+            maxReps: (set as any).maxReps,
           })),
           notes: ex.notes || "",
           restTimerSeconds: ex.restTimerSeconds ?? 0,
         })),
-        supersetGroups: []
+        // 🔹 persist superset groups
+        supersetGroups: supersetGroups.map((g) => Array.from(g)),
       });
 
-      // Navigate back to workout page after successful save
       router.push("/workout");
     } catch (err: any) {
       console.error("Error updating routine:", err);
@@ -257,8 +304,27 @@ export default function EditRoutinePage() {
   };
 
   const handleRemoveExercise = (index: number) => {
+    const removedExerciseId = exercises[index].exercise._id;
+
     const updatedExercises = exercises.filter((_, i) => i !== index);
     setExercises(updatedExercises);
+
+    // 🔹 remove from superset groups
+    setSupersetGroups((prev) =>
+      prev
+        .map((group) => {
+          const g = new Set(group);
+          g.delete(removedExerciseId);
+          return g;
+        })
+        // keep groups that still have at least 2 exercises
+        .filter((g) => g.size > 1)
+    );
+  };
+
+  // check if an exercise is in any superset group
+  const isExerciseInSuperset = (exerciseId: string): boolean => {
+    return supersetGroups.some((group) => group.has(exerciseId));
   };
 
   // Format exercise name with equipment in parentheses if available
@@ -266,7 +332,6 @@ export default function EditRoutinePage() {
     const name = exercise.name;
     const equipment = exercise.equipment;
 
-    // If equipment is not "bodyweight" and not already in the name, add it
     if (equipment && equipment !== "bodyweight" && equipment !== "other") {
       const equipmentFormatted =
         equipment.charAt(0).toUpperCase() + equipment.slice(1);
@@ -278,28 +343,25 @@ export default function EditRoutinePage() {
   };
 
   const handleRoutineOptionsClick = (exercise: Exercise) => {
-    setSelectedExercise(exercise);
-    setShowExerciseModal(true);
+    setSelectedExerciseForMenu(exercise);
   };
 
   const handleRepetitionModeSelect = (mode: "reps" | "range") => {
     setRepetitionMode(mode);
 
-    // When switching to "range" mode, prefill minReps with existing reps values
     if (mode === "range") {
-      const updatedExercises = exercises.map(exercise => ({
+      const updatedExercises = exercises.map((exercise) => ({
         ...exercise,
-        sets: exercise.sets.map(set => {
-          // If minReps is not already set and reps has a value, use reps as minReps only
+        sets: exercise.sets.map((set) => {
           if (!(set as any).minReps && set.reps && set.reps > 0) {
             return {
               ...set,
               minReps: set.reps,
-              maxReps: (set as any).maxReps || undefined
+              maxReps: (set as any).maxReps || undefined,
             };
           }
           return set;
-        })
+        }),
       }));
       setExercises(updatedExercises);
     }
@@ -308,27 +370,21 @@ export default function EditRoutinePage() {
   // Handle repetition modal visibility with transitions
   useEffect(() => {
     if (showRepetitionModal) {
-      // Clear any existing timeout
       if (repetitionModalTimeoutRef.current) {
         clearTimeout(repetitionModalTimeoutRef.current);
         repetitionModalTimeoutRef.current = null;
       }
-      // Mount the component first
       setShouldRenderRepetitionModal(true);
-      // Small delay to ensure DOM is ready before starting transition
       setTimeout(() => {
         setIsRepetitionModalVisible(true);
       }, 10);
     } else {
-      // Start closing transition immediately
       setIsRepetitionModalVisible(false);
-      // Delay unmounting to allow transition to complete
       repetitionModalTimeoutRef.current = setTimeout(() => {
         setShouldRenderRepetitionModal(false);
-      }, 300); // Match the transition duration
+      }, 300);
     }
 
-    // Cleanup timeout on unmount
     return () => {
       if (repetitionModalTimeoutRef.current) {
         clearTimeout(repetitionModalTimeoutRef.current);
@@ -360,7 +416,6 @@ export default function EditRoutinePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
-          {/* Left: Cancel */}
           <button
             onClick={() => router.back()}
             aria-label="Go back"
@@ -369,18 +424,19 @@ export default function EditRoutinePage() {
             Cancel
           </button>
 
-          {/* Center: Title */}
           <h1 className="text-lg font-regular">Edit Routine</h1>
 
-          {/* Right: Save Button */}
           <Button
             variant="default"
             onClick={handleSave}
-            disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
-            className={`text-lg font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
+            disabled={
+              exercises.length === 0 || isSaving || !routineTitle.trim()
+            }
+            className={`text-lg font-regular ${
+              exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-600 text-white rounded-[8px] py-6"
-              }`}
+            }`}
           >
             {isSaving ? "Updating..." : "Update"}
           </Button>
@@ -410,13 +466,11 @@ export default function EditRoutinePage() {
           )}
         </div>
         {error && (
-          <div className="mt-2 text-red-500 text-sm px-4">
-            {error}
-          </div>
+          <div className="mt-2 text-red-500 text-sm px-4">{error}</div>
         )}
       </div>
 
-      {/* Main Content Area - Get Started or Exercise List */}
+      {/* Main Content Area */}
       {exercises.length === 0 ? (
         <>
           <div className="flex flex flex-col items-center justify-center px-4 pt-20 pb-2">
@@ -426,7 +480,6 @@ export default function EditRoutinePage() {
             </p>
           </div>
 
-          {/* Primary Button */}
           <div className="px-4 py-6">
             <Button
               variant="default"
@@ -446,13 +499,9 @@ export default function EditRoutinePage() {
               const sets = routineExercise.sets || [];
 
               return (
-                <div
-                  key={exercise._id || index}
-                  className="p-2 overflow-hidden"
-                >
+                <div key={exercise._id || index} className="p-2 overflow-hidden">
                   {/* Exercise Header */}
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    {/* Exercise Image/Icon */}
                     <div className="flex items-center gap-4">
                       <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
                         {exercise.thumbnailUrl ? (
@@ -468,24 +517,33 @@ export default function EditRoutinePage() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-2">
                         <h3 className="text-lg font-semibold text-blue-600 truncate">
                           {formatExerciseName(exercise)}
                         </h3>
+
+                        {/* Superset badge */}
+                        {isExerciseInSuperset(exercise._id) && (
+                          <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
+                            Superset
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Options Menu */}
                     <button
-                      onClick={() => handleRoutineOptionsClick(routineExercise.exercise)}
+                      onClick={() =>
+                        handleRoutineOptionsClick(routineExercise.exercise)
+                      }
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
-                      aria-label="Remove exercise"
+                      aria-label="Exercise options"
                     >
                       <MoreVertical className="size-7 text-gray-600" />
                     </button>
                   </div>
 
-                  {/* Notes Section */}
+                  {/* Notes */}
                   <div className="mb-4">
                     <Input
                       placeholder="Add routine note here"
@@ -495,21 +553,20 @@ export default function EditRoutinePage() {
                     />
                   </div>
 
-                  {/* Rest Timer Section */}
+                  {/* Rest Timer */}
                   <div
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
                     onClick={() => openRestTimerSheet(index)}
                   >
                     <Timer className="size-7 text-blue-600" />
                     <span className="text-lg text-blue-600 font-regular">
-                      Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
+                      Rest Timer:{" "}
+                      {formatRestTimerLabel(routineExercise.restTimerSeconds)}
                     </span>
                   </div>
 
-
                   {/* Sets Table */}
                   <div className="mb-4">
-                    {/* Table Header */}
                     <div className="grid grid-cols-3 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
                       <div className="flex items-center justify-center gap-1">
@@ -517,7 +574,9 @@ export default function EditRoutinePage() {
                         KG
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <span>{repetitionMode === "reps" ? "REPS" : "REP RANGE"}</span>
+                        <span>
+                          {repetitionMode === "reps" ? "REPS" : "REP RANGE"}
+                        </span>
                         <button
                           type="button"
                           onClick={() => setShowRepetitionModal(true)}
@@ -529,17 +588,18 @@ export default function EditRoutinePage() {
                       </div>
                     </div>
 
-                    {/* Sets Rows */}
                     {sets.length > 0 ? (
                       sets.map((set, setIndex) => (
                         <div
                           key={setIndex}
-                          className={`grid grid-cols-3 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${set.completed ? "bg-green-100" : ""
-                            }`}
+                          className={`grid grid-cols-3 gap-20 items-center py-2 border-b border-gray-100 last:border-b-0 rounded transition-colors ${
+                            set.completed ? "bg-green-100" : ""
+                          }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
-                              }`}
+                            className={`text-lg font-semibold text-center ${
+                              set.completed ? "text-black" : "text-gray-700"
+                            }`}
                           >
                             {set.setNumber}
                           </div>
@@ -555,8 +615,9 @@ export default function EditRoutinePage() {
                                   parseInt(e.target.value) || 0
                                 )
                               }
-                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
-                                }`}
+                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                set.completed ? "bg-green-100" : ""
+                              }`}
                               placeholder="0"
                             />
                           </div>
@@ -573,8 +634,9 @@ export default function EditRoutinePage() {
                                     parseInt(e.target.value) || 0
                                   )
                                 }
-                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
-                                  }`}
+                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                  set.completed ? "bg-green-100" : ""
+                                }`}
                                 placeholder="0"
                               />
                             ) : (
@@ -590,11 +652,14 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
-                                    }`}
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                    set.completed ? "bg-green-100" : ""
+                                  }`}
                                   placeholder="-"
                                 />
-                                <span className="text-gray-500 text-sm">to</span>
+                                <span className="text-gray-500 text-sm">
+                                  to
+                                </span>
                                 <Input
                                   type="number"
                                   value={(set as any).maxReps || ""}
@@ -606,8 +671,9 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
-                                    }`}
+                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                    set.completed ? "bg-green-100" : ""
+                                  }`}
                                   placeholder="-"
                                 />
                               </div>
@@ -636,9 +702,8 @@ export default function EditRoutinePage() {
             })}
           </div>
 
-          {/* Bottom Action Buttons - Show below exercise cards */}
+          {/* Bottom Add Exercise */}
           <div className="p-2 space-y-5 pb-6">
-            {/* Primary Button */}
             <Button
               variant="default"
               onClick={handleAddExercise}
@@ -654,25 +719,27 @@ export default function EditRoutinePage() {
       {/* Repetition Options Modal */}
       {shouldRenderRepetitionModal && (
         <>
-          {/* Overlay */}
           <div
-            className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${isRepetitionModalVisible ? "opacity-100" : "opacity-0"
-              }`}
+            className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ease-in-out ${
+              isRepetitionModalVisible ? "opacity-100" : "opacity-0"
+            }`}
             onClick={() => setShowRepetitionModal(false)}
-            style={{ pointerEvents: isRepetitionModalVisible ? "auto" : "none" }}
+            style={{
+              pointerEvents: isRepetitionModalVisible ? "auto" : "none",
+            }}
           />
-          {/* Modal Content - Bottom Sheet */}
           <div
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isRepetitionModalVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-              }`}
+            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
+              isRepetitionModalVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-full opacity-0"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drag Handle */}
             <div className="flex justify-center pt-2">
               <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
             </div>
 
-            {/* Header with Title */}
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-regular text-center">
                 Repetition options
@@ -690,16 +757,27 @@ export default function EditRoutinePage() {
                   return (
                     <button
                       key={option.id}
-                      onClick={() => handleRepetitionModeSelect(option.id as "reps" | "range")}
-                      className={`w-full flex items-center justify-between gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
-                        } hover:bg-gray-50 active:bg-gray-100`}
+                      onClick={() =>
+                        handleRepetitionModeSelect(
+                          option.id as "reps" | "range"
+                        )
+                      }
+                      className={`w-full flex items-center justify-between gap-5 px-6 py-6 transition-colors text-left ${
+                        !isLast ? "border-b border-gray-100" : ""
+                      } hover:bg-gray-50 active:bg-gray-100`}
                     >
-                      <span className={`text-lg font-regular ${isSelected ? "text-blue-600" : "text-gray-900"
-                        }`}>
+                      <span
+                        className={`text-lg font-regular ${
+                          isSelected ? "text-blue-600" : "text-gray-900"
+                        }`}
+                      >
                         {option.label}
                       </span>
-                      <div className={`size-7 flex items-center justify-center flex-shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"
-                        }`}>
+                      <div
+                        className={`size-7 flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? "text-blue-600" : "text-gray-400"
+                        }`}
+                      >
                         {isSelected && <Check className="size-7" />}
                       </div>
                     </button>
@@ -711,22 +789,115 @@ export default function EditRoutinePage() {
         </>
       )}
 
+      {/* Rest Timer Modal */}
       <RestTimerModal
-              open={restTimerExerciseIndex !== null}
-              exerciseName={
-                restTimerExerciseIndex !== null
-                  ? formatExerciseName(exercises[restTimerExerciseIndex].exercise)
-                  : ""
-              }
-              currentSeconds={
-                restTimerExerciseIndex !== null
-                  ? exercises[restTimerExerciseIndex].restTimerSeconds ?? 35
-                  : 35
-              }
-              onSelect={handleRestTimerSelect}
-              onClose={closeRestTimerSheet}
-            />
+        open={restTimerExerciseIndex !== null}
+        exerciseName={
+          restTimerExerciseIndex !== null
+            ? formatExerciseName(exercises[restTimerExerciseIndex].exercise)
+            : ""
+        }
+        currentSeconds={
+          restTimerExerciseIndex !== null
+            ? exercises[restTimerExerciseIndex].restTimerSeconds ?? 35
+            : 35
+        }
+        onSelect={handleRestTimerSelect}
+        onClose={closeRestTimerSheet}
+      />
+
+      {/* 🔹 Exercise Options Modal (includes Add / Remove Superset) */}
+      <ExerciseOptionsModal
+        open={selectedExerciseForMenu !== null && !showSupersetModal}
+        onClose={() => setSelectedExerciseForMenu(null)}
+        exercise={selectedExerciseForMenu}
+        isInSuperset={
+          selectedExerciseForMenu
+            ? isExerciseInSuperset(selectedExerciseForMenu._id)
+            : false
+        }
+        onReorder={() => {
+          console.log("Reorder from EditRoutinePage – implement if needed");
+          setSelectedExerciseForMenu(null);
+        }}
+        onReplace={() => {
+          console.log("Replace from EditRoutinePage – implement if needed");
+          setSelectedExerciseForMenu(null);
+        }}
+        onAddToSuperset={() => {
+          // open Superset modal; keep selected exercise
+          setShowSupersetModal(true);
+        }}
+        onRemoveFromSuperset={() => {
+          if (selectedExerciseForMenu) {
+            const id = selectedExerciseForMenu._id;
+            setSupersetGroups((prev) =>
+              prev
+                .map((group) => {
+                  const g = new Set(group);
+                  g.delete(id);
+                  return g;
+                })
+                .filter((g) => g.size > 1)
+            );
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+        onRemove={() => {
+          if (selectedExerciseForMenu) {
+            const id = selectedExerciseForMenu._id;
+            setExercises((prev) =>
+              prev.filter((re) => re.exercise._id !== id)
+            );
+            setSupersetGroups((prev) =>
+              prev
+                .map((group) => {
+                  const g = new Set(group);
+                  g.delete(id);
+                  return g;
+                })
+                .filter((g) => g.size > 1)
+            );
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+      />
+
+      {/* 🔹 Add To Superset Modal */}
+      <AddToSupersetModal
+        open={showSupersetModal}
+        onClose={() => {
+          setShowSupersetModal(false);
+          setSelectedExerciseForMenu(null);
+        }}
+        exercises={exercises.map((re) => re.exercise)}
+        currentExercise={selectedExerciseForMenu}
+        onConfirm={(selectedExerciseIds) => {
+          const newGroup = new Set(selectedExerciseIds);
+
+          setSupersetGroups((prev) => {
+            // remove selected ids from existing groups
+            const cleaned: Set<string>[] = prev
+              .map((group) => {
+                const g = new Set(group);
+                selectedExerciseIds.forEach((id) => g.delete(id));
+                return g;
+              })
+              .filter((g) => g.size > 1);
+
+            // only add if at least 2 exercises
+            if (newGroup.size > 1) {
+              cleaned.push(newGroup);
+            }
+
+            return cleaned;
+          });
+
+          // close both modals
+          setShowSupersetModal(false);
+          setSelectedExerciseForMenu(null);
+        }}
+      />
     </div>
   );
 }
-

@@ -606,15 +606,27 @@ export default function FinishWorkoutPage() {
         }}
 
         onReplace={() => {
-          if (selectedExerciseForMenu) {
-            sessionStorage.setItem(
-              "replaceExerciseId",
-              selectedExerciseForMenu.exerciseId
+          if (!selectedExerciseForMenu) return;
+
+          const id = selectedExerciseForMenu.exerciseId;
+
+          // store which exercise we want to replace
+          sessionStorage.setItem("replaceExerciseId", id);
+
+          // if we’re editing a historic workout, also store the latest snapshot
+          if (isEditMode && workout) {
+            sessionStorage.setItem("workoutToEdit", JSON.stringify(workout));
+            router.push(
+              "/workout/quick-start/add-exercise?mode=replace&from=edit"
             );
-            setSelectedExerciseForMenu(null);
+          } else {
+            // normal quick-start / routine flow
             router.push("/workout/quick-start/add-exercise?mode=replace");
           }
+
+          setSelectedExerciseForMenu(null);
         }}
+
         onAddToSuperset={() => {
           setShowSupersetModal(true);
         }}

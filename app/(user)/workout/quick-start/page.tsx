@@ -1558,7 +1558,7 @@ export function WorkoutExerciseCard({
       <Button
         variant="ghost"
         onClick={handleAddSet}
-        className="w-full  text-gray-700 bg-gray-100 py-2 h-auto"
+        className="w-full rounded-[10px]  text-gray-700 bg-gray-100 py-2 h-auto"
       >
         <Plus className="size-6 mr-2" />
         <span className="text-lg font-regular">Add Set</span>

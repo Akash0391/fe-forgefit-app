@@ -170,9 +170,10 @@ export interface WorkoutExercise {
   restTimerSeconds?: number;
 }
 
-export interface SupersetGroup {
-  exerciseIds: string[];
-}
+export type SupersetGroup =
+  | { exerciseIds: (string | Exercise)[] }  // what backend returns
+  | string[];                               // what we send (string[][])
+
 
 export interface Workout {
   _id: string;
@@ -243,6 +244,7 @@ export const workoutApi = {
     description?: string;
     visibility?: 'Everyone' | 'Private';
     exercises?: WorkoutExercise[];
+    supersetGroups?: string[][];
   }) => apiClient.put<{
     success: boolean;
     data: Workout;

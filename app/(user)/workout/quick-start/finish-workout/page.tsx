@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ChevronRight, ImagePlus } from "lucide-react";
+import { ArrowLeft, ChevronRight, ImagePlus, Plus } from "lucide-react";
 import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
 import MediaSelectionModal from "@/components/MediaSelectionModal";
 import VisibilityModal from "@/components/VisibilityModal";
@@ -12,38 +12,65 @@ import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import { WorkoutExerciseCard } from "../page";
 import { RestTimerModal } from "@/components/RestTimerModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
+import AddToSupersetModal from "@/components/AddToSupersetModal";
 
 export default function FinishWorkoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEditMode = searchParams.get("mode") === "edit";
+
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [workoutTitle, setWorkoutTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<"Everyone" | "Private">("Everyone");
+  const [visibility, setVisibility] = useState<"Everyone" | "Private">(
+    "Everyone"
+  );
   const [showHeartRate, setShowHeartRate] = useState(true);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  // which exercise’s rest timer are we editing?
-  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
+
+  // superset + menu + remove animation (mirror of QuickStart)
+  const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]);
+  const [selectedExerciseForMenu, setSelectedExerciseForMenu] =
+    useState<{
+      exerciseId: string;
+      exerciseDoc: Exercise | null;
+    } | null>(null);
+  const [showSupersetModal, setShowSupersetModal] = useState(false);
+  const [removingExerciseIds, setRemovingExerciseIds] =
+    useState<Set<string>>(new Set());
+
+  // rest timer edit per exercise
+  const [restTimerModalExercise, setRestTimerModalExercise] =
+    useState<{
+      exerciseId: string;
+      exerciseName: string;
+    } | null>(null);
   const [restTimerModalSeconds, setRestTimerModalSeconds] = useState(0);
-
-  // which exercise has the ... menu open
-  const [optionsExerciseIndex, setOptionsExerciseIndex] = useState<number | null>(null);
-
 
   useEffect(() => {
     if (isEditMode) {
       // editing an existing workout – load from sessionStorage
       const stored = sessionStorage.getItem("workoutToEdit");
       if (stored) {
-        const parsed: Workout = JSON.parse(stored);
-        setWorkout(parsed);
-        setWorkoutTitle(parsed.name || "");
-        setDescription(parsed.description || "");
-        setVisibility(parsed.visibility || "Everyone");
+        const loadedWorkout: Workout = JSON.parse(stored);
+
+        setWorkout(loadedWorkout);
+        setWorkoutTitle(loadedWorkout.name || "");
+        setDescription(loadedWorkout.description || "");
+        setVisibility(loadedWorkout.visibility || "Everyone");
+
+        // ✅ init supersetGroups from stored workout
+        const groups: Set<string>[] = (loadedWorkout.supersetGroups || []).map(
+          (group: any) =>
+            new Set(
+              Array.isArray(group) ? group : group.exerciseIds || []
+            )
+        );
+        setSupersetGroups(groups);
+
         setLoading(false);
         return;
       }
@@ -53,7 +80,6 @@ export default function FinishWorkoutPage() {
     loadWorkout();
   }, [isEditMode]);
 
-
   const loadWorkout = async () => {
     try {
       // First try to get the most recent completed workout from history
@@ -61,14 +87,29 @@ export default function FinishWorkoutPage() {
       if (historyResponse.data && historyResponse.data.length > 0) {
         const latestWorkout = historyResponse.data[0];
         // Check if this workout was completed very recently (within last minute)
-        const endTime = latestWorkout.endTime ? new Date(latestWorkout.endTime).getTime() : 0;
+        const endTime = latestWorkout.endTime
+          ? new Date(latestWorkout.endTime).getTime()
+          : 0;
         const now = Date.now();
-        if (endTime > 0 && (now - endTime) < 60000) {
+        if (endTime > 0 && now - endTime < 60000) {
           // This is likely the workout we just finished
-          setWorkout(latestWorkout);
-          setWorkoutTitle(latestWorkout.name || "");
-          setDescription(latestWorkout.description || "");
-          setVisibility(latestWorkout.visibility || "Everyone");
+          const loadedWorkout: Workout = latestWorkout;
+
+          setWorkout(loadedWorkout);
+          setWorkoutTitle(loadedWorkout.name || "");
+          setDescription(loadedWorkout.description || "");
+          setVisibility(loadedWorkout.visibility || "Everyone");
+
+          // ✅ init supersetGroups for latest workout
+          const groups: Set<string>[] = (
+            loadedWorkout.supersetGroups || []
+          ).map((group: any) =>
+            new Set(
+              Array.isArray(group) ? group : group.exerciseIds || []
+            )
+          );
+          setSupersetGroups(groups);
+
           setLoading(false);
           return;
         }
@@ -77,18 +118,42 @@ export default function FinishWorkoutPage() {
       // Fallback: Try to get active workout (in case finish hasn't completed yet)
       const activeResponse = await workoutApi.getActive();
       if (activeResponse.data) {
-        setWorkout(activeResponse.data);
-        setWorkoutTitle(activeResponse.data.name || "");
-        setDescription(activeResponse.data.description || "");
-        setVisibility(activeResponse.data.visibility || "Everyone");
+        const loadedWorkout: Workout = activeResponse.data;
+
+        setWorkout(loadedWorkout);
+        setWorkoutTitle(loadedWorkout.name || "");
+        setDescription(loadedWorkout.description || "");
+        setVisibility(loadedWorkout.visibility || "Everyone");
+
+        // ✅ init supersetGroups from active workout
+        const groups: Set<string>[] = (
+          loadedWorkout.supersetGroups || []
+        ).map((group: any) =>
+          new Set(
+            Array.isArray(group) ? group : group.exerciseIds || []
+          )
+        );
+        setSupersetGroups(groups);
       } else if (historyResponse.data && historyResponse.data.length > 0) {
         // Use the most recent workout even if it's older
-        const latestWorkout = historyResponse.data[0];
-        setWorkout(latestWorkout);
-        setWorkoutTitle(latestWorkout.name || "");
-        setDescription(latestWorkout.description || "");
-        setVisibility(latestWorkout.visibility || "Everyone");
+        const loadedWorkout: Workout = historyResponse.data[0];
+
+        setWorkout(loadedWorkout);
+        setWorkoutTitle(loadedWorkout.name || "");
+        setDescription(loadedWorkout.description || "");
+        setVisibility(loadedWorkout.visibility || "Everyone");
+
+        // ✅ init supersetGroups from history workout
+        const groups: Set<string>[] = (
+          loadedWorkout.supersetGroups || []
+        ).map((group: any) =>
+          new Set(
+            Array.isArray(group) ? group : group.exerciseIds || []
+          )
+        );
+        setSupersetGroups(groups);
       }
+
       setLoading(false);
     } catch (error) {
       console.error("Error loading workout:", error);
@@ -132,9 +197,26 @@ export default function FinishWorkoutPage() {
 
   const formatDateTime = (): string => {
     if (!workout) return "";
-    const date = workout.endTime ? new Date(workout.endTime) : (workout.startTime ? new Date(workout.startTime) : new Date());
+    const date = workout.endTime
+      ? new Date(workout.endTime)
+      : workout.startTime
+      ? new Date(workout.startTime)
+      : new Date();
     const day = date.getDate();
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
     let hours = date.getHours();
@@ -155,33 +237,28 @@ export default function FinishWorkoutPage() {
   };
 
   const handleSave = async () => {
-    if (!workout) {
-      console.error("No workout data available");
-      return;
-    }
+    if (!workout) return;
 
     try {
       await workoutApi.updateDetails(workout._id, {
         name: workoutTitle || workout.name,
-        description: description,
-        visibility: visibility,
+        description,
+        visibility,
         exercises: workout.exercises,
+        supersetGroups: supersetGroups.map((g) => Array.from(g)), // 🔹 send to backend
       });
 
-      if (!isEditMode) {
-        // normal "finish workout" flow
-        localStorage.removeItem("workoutInProgress");
-        router.push("/workout/quick-start/finish-workout/success");
-      } else {
-        // edit flow: go back to Home and refresh list
+      if (isEditMode) {
         sessionStorage.removeItem("workoutToEdit");
         router.push("/home");
+      } else {
+        localStorage.removeItem("workoutInProgress");
+        router.push("/workout/quick-start/finish-workout/success");
       }
-    } catch (error) {
-      console.error("Error saving workout details:", error);
+    } catch (err) {
+      console.error("Error saving workout details:", err);
     }
   };
-
 
   const handleDiscard = () => {
     setShowDiscardDialog(true);
@@ -196,12 +273,10 @@ export default function FinishWorkoutPage() {
   };
 
   const handleTakePhoto = () => {
-    // TODO: Implement take photo functionality
     console.log("Take photo clicked");
   };
 
   const handleSelectFromLibrary = () => {
-    // TODO: Implement select from library functionality
     console.log("Select from library clicked");
   };
 
@@ -245,7 +320,6 @@ export default function FinishWorkoutPage() {
           <h1 className="text-lg font-regular">
             {isEditMode ? "Edit Workout" : "Save Workout"}
           </h1>
-
 
           {/* Right: Save Button */}
           <Button
@@ -301,12 +375,16 @@ export default function FinishWorkoutPage() {
           <div className="border-2 border-dashed border-gray-200 rounded-[10px] p-10 flex items-center justify-center min-w-[100px] min-h-[100px]">
             <ImagePlus className="size-8 text-black" />
           </div>
-          <p className="text-black text-lg font-regular">Add a photo / video</p>
+          <p className="text-black text-lg font-regular">
+            Add a photo / video
+          </p>
         </button>
 
         {/* Description */}
         <div>
-          <label className="text-sm text-gray-500 mb-2 block">Description</label>
+          <label className="text-sm text-gray-500 mb-2 block">
+            Description
+          </label>
           <Input
             placeholder="How did your workout go? Leave some notes here..."
             value={description}
@@ -316,8 +394,10 @@ export default function FinishWorkoutPage() {
         </div>
 
         {/* Visibility */}
-        <div className="flex items-center justify-between">
-          <label className="text-lg font-regular text-black">Visibility</label>
+        <div className="flex itemscenter justify-between">
+          <label className="text-lg font-regular text-black">
+            Visibility
+          </label>
           <button
             onClick={() => setShowVisibilityModal(true)}
             className="flex items-center gap-2 text-lg font-regular text-gray-500"
@@ -327,7 +407,7 @@ export default function FinishWorkoutPage() {
           </button>
         </div>
 
-        {/* Exercises – same card & logic as log workout */}
+        {/* Exercises – mirror of quick-start cards */}
         <div>
           <p className="text-sm text-gray-500 mb-2">Exercises</p>
           <div className="space-y-4">
@@ -335,23 +415,45 @@ export default function FinishWorkoutPage() {
               const baseExercise: Exercise =
                 typeof we.exerciseId === "object"
                   ? (we.exerciseId as Exercise)
-                  : ({
-                    _id: we.exerciseId,
-                    name: "Exercise",
-                  } as Exercise);
+                  : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+
+              const exerciseId =
+                typeof we.exerciseId === "object"
+                  ? (we.exerciseId as any)._id
+                  : (we.exerciseId as string);
 
               const sets = (we.sets || []) as SetData[];
               const restTimerSeconds = we.restTimerSeconds ?? 0;
 
+              const isInSuperset = supersetGroups.some((g) =>
+                g.has(exerciseId)
+              );
+              const isRemoving = removingExerciseIds.has(exerciseId);
+              const hasRemovingBefore = workout.exercises
+                .slice(0, index)
+                .some((ex) => {
+                  const id =
+                    typeof ex.exerciseId === "object"
+                      ? (ex.exerciseId as any)._id
+                      : (ex.exerciseId as string);
+                  return removingExerciseIds.has(id);
+                });
+
+              const defaultSet: SetData[] = [
+                {
+                  setNumber: 1,
+                  previous: "-",
+                  kg: 0,
+                  reps: 0,
+                  completed: false,
+                },
+              ];
+
               return (
                 <WorkoutExerciseCard
-                  key={
-                    typeof we.exerciseId === "object"
-                      ? (we.exerciseId as any)._id
-                      : we.exerciseId || index
-                  }
+                  key={exerciseId}
                   exercise={baseExercise}
-                  sets={sets}
+                  sets={sets.length ? sets : defaultSet}
                   onSetsChange={(newSets) => {
                     setWorkout((prev) => {
                       if (!prev) return prev;
@@ -364,30 +466,43 @@ export default function FinishWorkoutPage() {
                       return updated;
                     });
                   }}
-                  onMenuClick={() => setOptionsExerciseIndex(index)}  // 🔹 MoreVertical
-                  isInSuperset={false}
-                  isRemoving={false}
-                  shouldSlideUp={false}
+                  onMenuClick={() =>
+                    setSelectedExerciseForMenu({
+                      exerciseId,
+                      exerciseDoc: baseExercise,
+                    })
+                  }
+                  isInSuperset={isInSuperset}
+                  isRemoving={isRemoving}
+                  shouldSlideUp={hasRemovingBefore}
                   restTimerSeconds={restTimerSeconds}
                   onRestTimerClick={() => {
-                    setRestTimerExerciseIndex(index);                 // 🔹 Rest Timer modal
+                    setRestTimerModalExercise({
+                      exerciseId,
+                      exerciseName: baseExercise.name,
+                    });
                     setRestTimerModalSeconds(restTimerSeconds);
                   }}
-                  onSetCompleted={undefined} // no auto rest timer on edit page
+                  onSetCompleted={undefined} // no live rest countdown on edit page
                 />
               );
             })}
           </div>
         </div>
 
-
-
-
-        {/* Discard Workout */}
+        {/* Discard / Add Exercise */}
         <div className="pb-6 text-center">
+          <Button
+            variant="default"
+            onClick={() => {}}
+            className="w-full bg-blue-500 px-2 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+          >
+            <Plus className="size-[20px] mr-2" />
+            Add Exercise
+          </Button>
           <button
             onClick={handleDiscard}
-            className="text-red-500 text-lg font-regular"
+            className="mt-4 text-red-500 text-lg font-regular"
           >
             Discard Workout
           </button>
@@ -419,75 +534,151 @@ export default function FinishWorkoutPage() {
         onConfirm={handleDiscardConfirm}
       />
 
-      {/* Rest Timer modal for editing per exercise */}
-      {restTimerExerciseIndex !== null && workout.exercises[restTimerExerciseIndex] && (
+      {restTimerModalExercise && (
         <RestTimerModal
           open={true}
-          exerciseName={
-            typeof workout.exercises[restTimerExerciseIndex].exerciseId === "object"
-              ? (workout.exercises[restTimerExerciseIndex].exerciseId as any).name
-              : "Exercise"
-          }
+          exerciseName={restTimerModalExercise.exerciseName}
           currentSeconds={restTimerModalSeconds}
           onSelect={(seconds) => {
             setRestTimerModalSeconds(seconds);
+
+            // update restTimerSeconds on workout.exercises
             setWorkout((prev) => {
               if (!prev) return prev;
               const updated = { ...prev };
-              updated.exercises = [...updated.exercises];
+              updated.exercises = updated.exercises.map((we) => {
+                const id =
+                  typeof we.exerciseId === "object"
+                    ? (we.exerciseId as any)._id
+                    : (we.exerciseId as string);
 
-              updated.exercises[restTimerExerciseIndex] = {
-                ...updated.exercises[restTimerExerciseIndex],
-                restTimerSeconds: seconds,
-              };
-
+                if (id !== restTimerModalExercise.exerciseId) return we;
+                return { ...we, restTimerSeconds: seconds };
+              });
               return updated;
             });
           }}
-          onClose={() => setRestTimerExerciseIndex(null)}
+          onClose={() => setRestTimerModalExercise(null)}
         />
       )}
 
-      {/* Exercise options (MoreVertical) */}
-      {optionsExerciseIndex !== null && workout.exercises[optionsExerciseIndex] && (
-        <ExerciseOptionsModal
-          open={true}
-          onClose={() => setOptionsExerciseIndex(null)}
-          exercise={
-            typeof workout.exercises[optionsExerciseIndex].exerciseId === "object"
-              ? (workout.exercises[optionsExerciseIndex].exerciseId as any)
-              : null
+      {/* Exercise Options Modal – mirror QuickStart */}
+      <ExerciseOptionsModal
+        open={selectedExerciseForMenu !== null && !showSupersetModal}
+        onClose={() => setSelectedExerciseForMenu(null)}
+        exercise={selectedExerciseForMenu?.exerciseDoc || null}
+        isInSuperset={
+          selectedExerciseForMenu
+            ? supersetGroups.some((g) =>
+                g.has(selectedExerciseForMenu.exerciseId)
+              )
+            : false
+        }
+        onReorder={() => {
+          setSelectedExerciseForMenu(null);
+          router.push("/workout/quick-start/reorder-exercises");
+        }}
+        onReplace={() => {
+          if (selectedExerciseForMenu) {
+            sessionStorage.setItem(
+              "replaceExerciseId",
+              selectedExerciseForMenu.exerciseId
+            );
+            setSelectedExerciseForMenu(null);
+            router.push("/workout/quick-start/add-exercise?mode=replace");
           }
-          isInSuperset={false}
-          onReorder={() => {
-            // Reordering exercises of a finished workout is optional.
-            // Implement later if you want – for now, no-op.
-          }}
-          onReplace={() => {
-            // You could navigate to an "edit exercises" flow; for now, no-op.
-          }}
-          onAddToSuperset={() => {
-            // Supersets probably not needed on finished workout; no-op.
-          }}
-          onRemoveFromSuperset={() => {
-            // no supersets on this page
-          }}
-          onRemove={() => {
-            setWorkout((prev) => {
-              if (!prev) return prev;
-              const updated = { ...prev };
-              updated.exercises = updated.exercises.filter(
-                (_ex, i) => i !== optionsExerciseIndex
+        }}
+        onAddToSuperset={() => {
+          setShowSupersetModal(true);
+        }}
+        onRemoveFromSuperset={() => {
+          if (selectedExerciseForMenu) {
+            setSupersetGroups((prev) =>
+              prev.filter((g) => !g.has(selectedExerciseForMenu.exerciseId))
+            );
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+        onRemove={() => {
+          if (selectedExerciseForMenu) {
+            const id = selectedExerciseForMenu.exerciseId;
+
+            // start removal animation
+            setRemovingExerciseIds((prev) => new Set(prev).add(id));
+
+            setTimeout(() => {
+              // remove from workout.exercises
+              setWorkout((prev) => {
+                if (!prev) return prev;
+                const updated = { ...prev };
+                updated.exercises = updated.exercises.filter((we) => {
+                  const weId =
+                    typeof we.exerciseId === "object"
+                      ? (we.exerciseId as any)._id
+                      : (we.exerciseId as string);
+                  return weId !== id;
+                });
+                return updated;
+              });
+
+              // remove from supersetGroups
+              setSupersetGroups((prev) =>
+                prev
+                  .map((g) => {
+                    const ng = new Set(g);
+                    ng.delete(id);
+                    return ng;
+                  })
+                  .filter((g) => g.size > 0)
               );
-              return updated;
-            });
-            setOptionsExerciseIndex(null);
-          }}
-        />
-      )}
 
+              // clear removing flag
+              setRemovingExerciseIds((prev) => {
+                const ns = new Set(prev);
+                ns.delete(id);
+                return ns;
+              });
+            }, 400);
+          }
+          setSelectedExerciseForMenu(null);
+        }}
+      />
 
+      {/* Add To Superset Modal – mirror QuickStart */}
+      <AddToSupersetModal
+        open={showSupersetModal}
+        onClose={() => {
+          setShowSupersetModal(false);
+          setSelectedExerciseForMenu(null);
+        }}
+        exercises={workout.exercises.map((we) =>
+          typeof we.exerciseId === "object"
+            ? (we.exerciseId as Exercise)
+            : ({ _id: we.exerciseId, name: "Exercise" } as Exercise)
+        )}
+        currentExercise={selectedExerciseForMenu?.exerciseDoc || null}
+        onConfirm={(selectedExerciseIds) => {
+          const newGroup = new Set(selectedExerciseIds);
+
+          setSupersetGroups((prev) => {
+            // remove selected ids from existing groups
+            const updatedGroups = prev
+              .map((g) => {
+                const ng = new Set(g);
+                selectedExerciseIds.forEach((id) => ng.delete(id));
+                return ng;
+              })
+              .filter((g) => g.size > 0);
+
+            // add new group only if it has more than one exercise
+            if (newGroup.size > 1) {
+              updatedGroups.push(newGroup);
+            }
+
+            return updatedGroups;
+          });
+        }}
+      />
     </div>
   );
 }
-

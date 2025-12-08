@@ -1,17 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, ChevronRight, ImagePlus } from "lucide-react";
-import { workoutApi, Workout, SetData } from "@/lib/api";
+import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
 import MediaSelectionModal from "@/components/MediaSelectionModal";
 import VisibilityModal from "@/components/VisibilityModal";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
+import { WorkoutExerciseCard } from "../page";
+import { RestTimerModal } from "@/components/RestTimerModal";
+import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 
 export default function FinishWorkoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEditMode = searchParams.get("mode") === "edit";
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [loading, setLoading] = useState(true);
   const [workoutTitle, setWorkoutTitle] = useState("");
@@ -21,10 +26,33 @@ export default function FinishWorkoutPage() {
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  // which exercise’s rest timer are we editing?
+  const [restTimerExerciseIndex, setRestTimerExerciseIndex] = useState<number | null>(null);
+  const [restTimerModalSeconds, setRestTimerModalSeconds] = useState(0);
+
+  // which exercise has the ... menu open
+  const [optionsExerciseIndex, setOptionsExerciseIndex] = useState<number | null>(null);
+
 
   useEffect(() => {
+    if (isEditMode) {
+      // editing an existing workout – load from sessionStorage
+      const stored = sessionStorage.getItem("workoutToEdit");
+      if (stored) {
+        const parsed: Workout = JSON.parse(stored);
+        setWorkout(parsed);
+        setWorkoutTitle(parsed.name || "");
+        setDescription(parsed.description || "");
+        setVisibility(parsed.visibility || "Everyone");
+        setLoading(false);
+        return;
+      }
+    }
+
+    // normal "Save Workout" flow
     loadWorkout();
-  }, []);
+  }, [isEditMode]);
+
 
   const loadWorkout = async () => {
     try {
@@ -45,7 +73,7 @@ export default function FinishWorkoutPage() {
           return;
         }
       }
-      
+
       // Fallback: Try to get active workout (in case finish hasn't completed yet)
       const activeResponse = await workoutApi.getActive();
       if (activeResponse.data) {
@@ -119,7 +147,11 @@ export default function FinishWorkoutPage() {
   };
 
   const handleBack = () => {
-    router.back();
+    if (isEditMode) {
+      router.push("/home");
+    } else {
+      router.back();
+    }
   };
 
   const handleSave = async () => {
@@ -129,30 +161,38 @@ export default function FinishWorkoutPage() {
     }
 
     try {
-      // Save workout details (name, description, visibility)
       await workoutApi.updateDetails(workout._id, {
         name: workoutTitle || workout.name,
         description: description,
         visibility: visibility,
+        exercises: workout.exercises,
       });
 
-      // Clear workout in progress flag
-      localStorage.removeItem("workoutInProgress");
-
-      // Navigate to success page
-      router.push("/workout/quick-start/finish-workout/success");
+      if (!isEditMode) {
+        // normal "finish workout" flow
+        localStorage.removeItem("workoutInProgress");
+        router.push("/workout/quick-start/finish-workout/success");
+      } else {
+        // edit flow: go back to Home and refresh list
+        sessionStorage.removeItem("workoutToEdit");
+        router.push("/home");
+      }
     } catch (error) {
       console.error("Error saving workout details:", error);
-      // You might want to show an error message to the user here
     }
   };
+
 
   const handleDiscard = () => {
     setShowDiscardDialog(true);
   };
 
   const handleDiscardConfirm = () => {
-    router.push("/workout");
+    if (isEditMode) {
+      router.push("/home");
+    } else {
+      router.push("/workout");
+    }
   };
 
   const handleTakePhoto = () => {
@@ -202,7 +242,10 @@ export default function FinishWorkoutPage() {
           </Button>
 
           {/* Center: Title */}
-          <h1 className="text-lg font-regular">Save Workout</h1>
+          <h1 className="text-lg font-regular">
+            {isEditMode ? "Edit Workout" : "Save Workout"}
+          </h1>
+
 
           {/* Right: Save Button */}
           <Button
@@ -284,6 +327,62 @@ export default function FinishWorkoutPage() {
           </button>
         </div>
 
+        {/* Exercises – same card & logic as log workout */}
+        <div>
+          <p className="text-sm text-gray-500 mb-2">Exercises</p>
+          <div className="space-y-4">
+            {workout.exercises.map((we, index) => {
+              const baseExercise: Exercise =
+                typeof we.exerciseId === "object"
+                  ? (we.exerciseId as Exercise)
+                  : ({
+                    _id: we.exerciseId,
+                    name: "Exercise",
+                  } as Exercise);
+
+              const sets = (we.sets || []) as SetData[];
+              const restTimerSeconds = we.restTimerSeconds ?? 0;
+
+              return (
+                <WorkoutExerciseCard
+                  key={
+                    typeof we.exerciseId === "object"
+                      ? (we.exerciseId as any)._id
+                      : we.exerciseId || index
+                  }
+                  exercise={baseExercise}
+                  sets={sets}
+                  onSetsChange={(newSets) => {
+                    setWorkout((prev) => {
+                      if (!prev) return prev;
+                      const updated = { ...prev };
+                      updated.exercises = [...updated.exercises];
+                      updated.exercises[index] = {
+                        ...updated.exercises[index],
+                        sets: newSets,
+                      };
+                      return updated;
+                    });
+                  }}
+                  onMenuClick={() => setOptionsExerciseIndex(index)}  // 🔹 MoreVertical
+                  isInSuperset={false}
+                  isRemoving={false}
+                  shouldSlideUp={false}
+                  restTimerSeconds={restTimerSeconds}
+                  onRestTimerClick={() => {
+                    setRestTimerExerciseIndex(index);                 // 🔹 Rest Timer modal
+                    setRestTimerModalSeconds(restTimerSeconds);
+                  }}
+                  onSetCompleted={undefined} // no auto rest timer on edit page
+                />
+              );
+            })}
+          </div>
+        </div>
+
+
+
+
         {/* Discard Workout */}
         <div className="pb-6 text-center">
           <button
@@ -319,6 +418,75 @@ export default function FinishWorkoutPage() {
         onClose={() => setShowDiscardDialog(false)}
         onConfirm={handleDiscardConfirm}
       />
+
+      {/* Rest Timer modal for editing per exercise */}
+      {restTimerExerciseIndex !== null && workout.exercises[restTimerExerciseIndex] && (
+        <RestTimerModal
+          open={true}
+          exerciseName={
+            typeof workout.exercises[restTimerExerciseIndex].exerciseId === "object"
+              ? (workout.exercises[restTimerExerciseIndex].exerciseId as any).name
+              : "Exercise"
+          }
+          currentSeconds={restTimerModalSeconds}
+          onSelect={(seconds) => {
+            setRestTimerModalSeconds(seconds);
+            setWorkout((prev) => {
+              if (!prev) return prev;
+              const updated = { ...prev };
+              updated.exercises = [...updated.exercises];
+
+              updated.exercises[restTimerExerciseIndex] = {
+                ...updated.exercises[restTimerExerciseIndex],
+                restTimerSeconds: seconds,
+              };
+
+              return updated;
+            });
+          }}
+          onClose={() => setRestTimerExerciseIndex(null)}
+        />
+      )}
+
+      {/* Exercise options (MoreVertical) */}
+      {optionsExerciseIndex !== null && workout.exercises[optionsExerciseIndex] && (
+        <ExerciseOptionsModal
+          open={true}
+          onClose={() => setOptionsExerciseIndex(null)}
+          exercise={
+            typeof workout.exercises[optionsExerciseIndex].exerciseId === "object"
+              ? (workout.exercises[optionsExerciseIndex].exerciseId as any)
+              : null
+          }
+          isInSuperset={false}
+          onReorder={() => {
+            // Reordering exercises of a finished workout is optional.
+            // Implement later if you want – for now, no-op.
+          }}
+          onReplace={() => {
+            // You could navigate to an "edit exercises" flow; for now, no-op.
+          }}
+          onAddToSuperset={() => {
+            // Supersets probably not needed on finished workout; no-op.
+          }}
+          onRemoveFromSuperset={() => {
+            // no supersets on this page
+          }}
+          onRemove={() => {
+            setWorkout((prev) => {
+              if (!prev) return prev;
+              const updated = { ...prev };
+              updated.exercises = updated.exercises.filter(
+                (_ex, i) => i !== optionsExerciseIndex
+              );
+              return updated;
+            });
+            setOptionsExerciseIndex(null);
+          }}
+        />
+      )}
+
+
     </div>
   );
 }

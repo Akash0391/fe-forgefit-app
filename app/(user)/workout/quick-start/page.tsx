@@ -103,34 +103,34 @@ export default function QuickStartPage() {
   };
 
   const adjustRestTime = (delta: number) => {
-  setActiveRest((prev) => {
-    if (!prev) return prev;
+    setActiveRest((prev) => {
+      if (!prev) return prev;
 
-    // new total duration for this rest (can’t be negative)
-    const newTotal = Math.max(0, prev.total + delta);
+      // new total duration for this rest (can’t be negative)
+      const newTotal = Math.max(0, prev.total + delta);
 
-    // new remaining time (can’t be negative, and shouldn’t exceed newTotal)
-    let newRemaining = Math.max(0, prev.remaining + delta);
-    if (newTotal > 0) {
-      newRemaining = Math.min(newRemaining, newTotal);
-    }
-
-    // if everything goes to 0, stop timer
-    if (newTotal === 0 || newRemaining === 0) {
-      if (restIntervalRef.current) {
-        clearInterval(restIntervalRef.current);
-        restIntervalRef.current = null;
+      // new remaining time (can’t be negative, and shouldn’t exceed newTotal)
+      let newRemaining = Math.max(0, prev.remaining + delta);
+      if (newTotal > 0) {
+        newRemaining = Math.min(newRemaining, newTotal);
       }
-      return null;
-    }
 
-    return {
-      ...prev,
-      total: newTotal,
-      remaining: newRemaining,
-    };
-  });
-};
+      // if everything goes to 0, stop timer
+      if (newTotal === 0 || newRemaining === 0) {
+        if (restIntervalRef.current) {
+          clearInterval(restIntervalRef.current);
+          restIntervalRef.current = null;
+        }
+        return null;
+      }
+
+      return {
+        ...prev,
+        total: newTotal,
+        remaining: newRemaining,
+      };
+    });
+  };
 
 
   const stopRestTimer = () => {
@@ -1268,18 +1268,17 @@ export default function QuickStartPage() {
           {/* ✅ TOP PROGRESS BAR — FULL WIDTH */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200">
             <div
-  className="h-full bg-blue-500 transition-all duration-300 ease-out"
-  style={{
-    width: `${
-      activeRest.total > 0
-        ? Math.min(
-            100,
-            Math.max(0, (activeRest.remaining / activeRest.total) * 100)
-          )
-        : 0
-    }%`,
-  }}
-/>
+              className="h-full bg-blue-500 transition-all duration-300 ease-out"
+              style={{
+                width: `${activeRest.total > 0
+                    ? Math.min(
+                      100,
+                      Math.max(0, (activeRest.remaining / activeRest.total) * 100)
+                    )
+                    : 0
+                  }%`,
+              }}
+            />
 
           </div>
           <Button
@@ -1334,7 +1333,7 @@ interface WorkoutExerciseCardProps {
 }
 
 
-function WorkoutExerciseCard({
+export function WorkoutExerciseCard({
   exercise,
   sets,
   onSetsChange,

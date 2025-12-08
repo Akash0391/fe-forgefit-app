@@ -85,7 +85,7 @@ export default function WorkoutOptionsModal({
     },
     {
       icon: Pencil,
-      label: "Edit Workout Name",
+      label: "Edit Workout",
       onClick: onEdit,
       textColor: "text-gray-900",
     },

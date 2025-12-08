@@ -242,6 +242,7 @@ export const workoutApi = {
     name?: string;
     description?: string;
     visibility?: 'Everyone' | 'Private';
+    exercises?: WorkoutExercise[];
   }) => apiClient.put<{
     success: boolean;
     data: Workout;

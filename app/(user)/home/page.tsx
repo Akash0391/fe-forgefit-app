@@ -192,9 +192,21 @@ export default function HomePage() {
   };
 
   const handleEditWorkout = () => {
-    // TODO: Implement edit workout functionality
-    console.log("Edit workout:", selectedWorkout?._id);
-  };
+  if (!selectedWorkout) return;
+
+  // store full workout to edit
+  sessionStorage.setItem(
+    "workoutToEdit",
+    JSON.stringify(selectedWorkout)
+  );
+
+  // close modal
+  setShowWorkoutModal(false);
+
+  // go to finish-workout page in edit mode
+  router.push("/workout/quick-start/finish-workout?mode=edit");
+};
+
 
   const handleDeleteWorkoutClick = () => {
     // Close workout options modal and open delete confirmation modal

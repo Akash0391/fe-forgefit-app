@@ -52,6 +52,104 @@ export default function QuickStartPage() {
   const [restTimerModalExercise, setRestTimerModalExercise] =
     useState<Exercise | null>(null);
   const [restTimerModalSeconds, setRestTimerModalSeconds] = useState(0);
+  const restIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [activeRest, setActiveRest] = useState<{
+    exerciseId: string;
+    exerciseName: string;
+    remaining: number; // seconds
+    total: number;     // seconds
+  } | null>(null);
+
+
+  const formatRestTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    const mm = m.toString().padStart(2, "0");
+    const ss = s.toString().padStart(2, "0");
+    return `${mm}:${ss}`;
+  };
+
+
+  const startRestTimer = (exerciseId: string, exerciseName: string, seconds: number) => {
+    if (seconds <= 0) return;
+
+    // clear previous timer if any
+    if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
+    }
+
+    setActiveRest({
+      exerciseId,
+      exerciseName,
+      remaining: seconds,
+      total: seconds,
+    });
+
+    restIntervalRef.current = setInterval(() => {
+      setActiveRest((prev) => {
+        if (!prev) return prev;
+        if (prev.remaining <= 1) {
+          // finished
+          if (restIntervalRef.current) {
+            clearInterval(restIntervalRef.current);
+            restIntervalRef.current = null;
+          }
+          return null;
+        }
+        return { ...prev, remaining: prev.remaining - 1 };
+      });
+    }, 1000);
+  };
+
+  const adjustRestTime = (delta: number) => {
+  setActiveRest((prev) => {
+    if (!prev) return prev;
+
+    // new total duration for this rest (can’t be negative)
+    const newTotal = Math.max(0, prev.total + delta);
+
+    // new remaining time (can’t be negative, and shouldn’t exceed newTotal)
+    let newRemaining = Math.max(0, prev.remaining + delta);
+    if (newTotal > 0) {
+      newRemaining = Math.min(newRemaining, newTotal);
+    }
+
+    // if everything goes to 0, stop timer
+    if (newTotal === 0 || newRemaining === 0) {
+      if (restIntervalRef.current) {
+        clearInterval(restIntervalRef.current);
+        restIntervalRef.current = null;
+      }
+      return null;
+    }
+
+    return {
+      ...prev,
+      total: newTotal,
+      remaining: newRemaining,
+    };
+  });
+};
+
+
+  const stopRestTimer = () => {
+    if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
+      restIntervalRef.current = null;
+    }
+    setActiveRest(null);
+  };
+
+
+  useEffect(() => {
+    return () => {
+      if (restIntervalRef.current) {
+        clearInterval(restIntervalRef.current);
+      }
+    };
+  }, []);
+
 
 
   // Format duration to display (e.g., "1m 23s", "45s", "1h 5m")
@@ -957,13 +1055,19 @@ export default function QuickStartPage() {
                     setRestTimerModalExercise(exercise);
                     setRestTimerModalSeconds(currentSeconds);
                   }}
+                  onSetCompleted={() => {
+                    const seconds = (exercise as any).restTimerSeconds ?? 0;
+                    if (seconds > 0) {
+                      startRestTimer(exercise._id, exercise.name, seconds);
+                    }
+                  }}
                 />
               );
             })}
           </div>
 
           {/* Bottom Action Buttons - Show below exercise cards */}
-          <div className="p-4 space-y-5 pb-6">
+          <div className="p-2 pt-4 space-y-5 pb-6">
             {/* Primary Button */}
             <Button
               variant="default"
@@ -1158,6 +1262,59 @@ export default function QuickStartPage() {
         />
       )}
 
+      {activeRest && (
+
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-5">
+          {/* ✅ TOP PROGRESS BAR — FULL WIDTH */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200">
+            <div
+  className="h-full bg-blue-500 transition-all duration-300 ease-out"
+  style={{
+    width: `${
+      activeRest.total > 0
+        ? Math.min(
+            100,
+            Math.max(0, (activeRest.remaining / activeRest.total) * 100)
+          )
+        : 0
+    }%`,
+  }}
+/>
+
+          </div>
+          <Button
+            variant="ghost"
+            className="h-12 px-5 bg-gray-200 text-lg rounded-xl"
+            onClick={() => adjustRestTime(-15)}
+          >
+            -15
+          </Button>
+
+          <div className="flex-1 flex flex-col items-center">
+            <span className="text-3xl font-regular">
+              {formatRestTime(activeRest.remaining)}
+            </span>
+          </div>
+
+          <Button
+            variant="ghost"
+            className="h-12 px-5 bg-gray-200 text-lg rounded-xl"
+            onClick={() => adjustRestTime(15)}
+          >
+            +15
+          </Button>
+
+          <Button
+            variant="default"
+            className="h-12 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-lg text-white"
+            onClick={stopRestTimer}
+          >
+            Skip
+          </Button>
+        </div>
+      )}
+
+
     </div>
   );
 }
@@ -1173,6 +1330,7 @@ interface WorkoutExerciseCardProps {
   shouldSlideUp?: boolean;
   restTimerSeconds?: number;
   onRestTimerClick: () => void;
+  onSetCompleted?: () => void;
 }
 
 
@@ -1186,6 +1344,7 @@ function WorkoutExerciseCard({
   shouldSlideUp = false,
   restTimerSeconds = 0,
   onRestTimerClick,
+  onSetCompleted,
 }: WorkoutExerciseCardProps) {
   const [notes, setNotes] = useState("");
   // remove restTimerEnabled state, we derive from restTimerSeconds
@@ -1300,15 +1459,15 @@ function WorkoutExerciseCard({
 
       {/* Rest Timer Section */}
       <div
-  className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
-  onClick={onRestTimerClick}
->
-  <Timer className="size-7 text-blue-600" />
-  <span className="text-lg text-blue-600 font-regular">
-    Rest Timer:{" "}
-    {isRestTimerOn ? `${restTimerSeconds}s` : "OFF"}
-  </span>
-</div>
+        className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
+        onClick={onRestTimerClick}
+      >
+        <Timer className="size-7 text-blue-600" />
+        <span className="text-lg text-blue-600 font-regular">
+          Rest Timer:{" "}
+          {isRestTimerOn ? `${restTimerSeconds}s` : "OFF"}
+        </span>
+      </div>
 
 
 
@@ -1373,9 +1532,15 @@ function WorkoutExerciseCard({
             </div>
             <div className="flex justify-center">
               <button
-                onClick={() =>
-                  handleSetChange(index, "completed", !set.completed)
-                }
+                onClick={() => {
+                  const newCompleted = !set.completed;
+                  handleSetChange(index, "completed", newCompleted);
+
+                  // only fire when changing from NOT completed -> completed
+                  if (!set.completed && newCompleted && onSetCompleted) {
+                    onSetCompleted();
+                  }
+                }}
                 className="cursor-pointer"
               >
                 {set.completed ? (
@@ -1384,6 +1549,7 @@ function WorkoutExerciseCard({
                   <SquareCheck className="size-6 text-gray-300" />
                 )}
               </button>
+
             </div>
           </div>
         ))}

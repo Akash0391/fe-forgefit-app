@@ -405,7 +405,7 @@ export default function HomePage() {
 
                   {/* Workout Title */}
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                    {workout.name || "Quick Start Workout"} 💪
+                    {workout.name || "Quick Start Workout"}
                   </h3>
 
                   {/* Workout Stats: Time and Volume */}

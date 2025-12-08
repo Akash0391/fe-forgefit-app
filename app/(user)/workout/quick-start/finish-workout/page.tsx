@@ -281,14 +281,14 @@ export default function FinishWorkoutPage() {
   };
 
   const handleAddExercise = () => {
-  if (!workout) return;
+    if (!workout) return;
 
-  // make sure the latest state is in sessionStorage
-  sessionStorage.setItem("workoutToEdit", JSON.stringify(workout));
+    // make sure the latest state is in sessionStorage
+    sessionStorage.setItem("workoutToEdit", JSON.stringify(workout));
 
-  // go to Add Exercise in a special mode
-  router.push("/workout/quick-start/add-exercise?from=edit");
-};
+    // go to Add Exercise in a special mode
+    router.push("/workout/quick-start/add-exercise?from=edit");
+  };
 
 
 
@@ -592,8 +592,19 @@ export default function FinishWorkoutPage() {
         }
         onReorder={() => {
           setSelectedExerciseForMenu(null);
-          router.push("/workout/quick-start/reorder-exercises");
+
+          if (isEditMode && workout) {
+            // keep latest workout in sessionStorage
+            sessionStorage.setItem("workoutToEdit", JSON.stringify(workout));
+
+            // go to reorder in edit mode
+            router.push("/workout/quick-start/reorder-exercises?from=edit");
+          } else {
+            // normal quick-start flow
+            router.push("/workout/quick-start/reorder-exercises");
+          }
         }}
+
         onReplace={() => {
           if (selectedExerciseForMenu) {
             sessionStorage.setItem(

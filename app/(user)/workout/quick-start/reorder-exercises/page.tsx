@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Dumbbell, Minus, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Exercise, workoutApi, SetData as ApiSetData } from "@/lib/api";
+import { Exercise, workoutApi, SetData as ApiSetData, Workout } from "@/lib/api";
 
 type ActiveWorkoutExercise = {
   exerciseId: Exercise | string;
@@ -13,7 +13,7 @@ type ActiveWorkoutExercise = {
   _id?: string;
 };
 
-type Mode = "workout" | "routine";
+type Mode = "workout" | "routine" | "editWorkout";
 
 interface RoutineDraftExercise {
   exercise: Exercise;
@@ -29,15 +29,53 @@ interface RoutineDraft {
 
 export default function ReorderExercisesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from"); // "edit" | null
   const [mode, setMode] = useState<Mode>("workout");
   const [exercises, setExercises] = useState<ActiveWorkoutExercise[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // ---------- LOAD DATA ----------
-  useEffect(() => {
+    useEffect(() => {
     const load = async () => {
-      // 1) Try routine draft first
+      // 🔹 0) Edit finished workout → use workoutToEdit
+      if (from === "edit") {
+        const stored = sessionStorage.getItem("workoutToEdit");
+        if (stored) {
+          try {
+            const workout: Workout = JSON.parse(stored);
+
+            const workoutExercises: ActiveWorkoutExercise[] =
+              (workout.exercises || []).map((we: any) => {
+                const ex: Exercise =
+                  typeof we.exerciseId === "object"
+                    ? (we.exerciseId as Exercise)
+                    : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+
+                const id =
+                  typeof we.exerciseId === "object"
+                    ? (we.exerciseId as any)._id
+                    : (we.exerciseId as string);
+
+                return {
+                  exerciseId: ex,                 // keep full Exercise object
+                  sets: we.sets || [],
+                  restTimerSeconds: we.restTimerSeconds ?? 0,
+                  _id: id,
+                };
+              });
+
+            setMode("editWorkout");
+            setExercises(workoutExercises);
+            return;
+          } catch (err) {
+            console.error("Error parsing workoutToEdit:", err);
+          }
+        }
+      }
+
+      // 🔹 1) Try routine draft first (existing behaviour)
       const draftStr = sessionStorage.getItem("newRoutineDraft");
       if (draftStr) {
         try {
@@ -45,7 +83,7 @@ export default function ReorderExercisesPage() {
 
           const routineExercises: ActiveWorkoutExercise[] =
             (draft.exercises || []).map((ex) => ({
-              exerciseId: ex.exercise,          // we keep full Exercise object
+              exerciseId: ex.exercise, // full Exercise
               sets: ex.sets || [],
               restTimerSeconds: ex.restTimerSeconds ?? 0,
               _id: ex.exercise._id,
@@ -59,7 +97,7 @@ export default function ReorderExercisesPage() {
         }
       }
 
-      // 2) Fallback: workout active (original behavior)
+      // 🔹 2) Fallback: active workout from backend (Quick-start)
       try {
         const response = await workoutApi.getActive();
         if (response.data) {
@@ -75,10 +113,50 @@ export default function ReorderExercisesPage() {
     };
 
     load();
-  }, []);
+  }, [from]);
+
 
   // ---------- SAVE DATA ----------
   const saveExercises = async (newExercises: ActiveWorkoutExercise[]) => {
+    if (mode === "editWorkout") {
+      try {
+        const stored = sessionStorage.getItem("workoutToEdit");
+        if (!stored) return;
+
+        const workout: Workout = JSON.parse(stored);
+
+        // order from drag list
+        const idOrder = newExercises.map((ex) =>
+          typeof ex.exerciseId === "object"
+            ? (ex.exerciseId as Exercise)._id
+            : (ex.exerciseId as string)
+        );
+
+        const reordered = [...(workout.exercises || [])].sort((a: any, b: any) => {
+          const idA =
+            typeof a.exerciseId === "object"
+              ? (a.exerciseId as any)._id
+              : (a.exerciseId as string);
+          const idB =
+            typeof b.exerciseId === "object"
+              ? (b.exerciseId as any)._id
+              : (b.exerciseId as string);
+
+          return idOrder.indexOf(idA) - idOrder.indexOf(idB);
+        });
+
+        const updatedWorkout: Workout = {
+          ...workout,
+          exercises: reordered,
+        };
+
+        sessionStorage.setItem("workoutToEdit", JSON.stringify(updatedWorkout));
+      } catch (error) {
+        console.error("Error saving reordered editWorkout exercises:", error);
+      }
+      return;
+    }
+    
     if (mode === "workout") {
       // ==== original Quick-Start behavior ====
       try {

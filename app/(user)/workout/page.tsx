@@ -209,29 +209,39 @@ export default function WorkoutPage() {
   };
 
   const handleRoutineDuplicate = () => {
-    if (!selectedRoutine) return;
+  if (!selectedRoutine) return;
 
-    // Prepare routine data in the format expected by new-routine page
-    const routineData = {
-      name: `${selectedRoutine.name} (copy)`,
-      exercises: selectedRoutine.exercises.map((ex) => {
-        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-        return {
-          exercise: exercise,
-          sets: ex.sets || [],
-          notes: ex.notes || "",
-        };
-      }),
-      supersetGroups: selectedRoutine.supersetGroups || [],
-    };
+  const routineData = {
+    name: `${selectedRoutine.name} (copy)`,
+    // preserve folder if you want the copy to stay in same folder
+    routineFolderId: selectedRoutine.routineFolderId ?? null,
 
-    // Store in sessionStorage for new-routine page to load
-    sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
+    exercises: selectedRoutine.exercises.map((ex) => {
+      const baseExercise =
+        typeof ex.exerciseId === "object"
+          ? ex.exerciseId
+          : { _id: ex.exerciseId };
 
-    // Close modal and navigate
-    handleRoutineModalClose();
-    router.push("/workout/new-routine");
+      return {
+        exercise: {
+          ...baseExercise,
+          // ⬇ carry timer from routine into builder
+          restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
+        },
+        sets: ex.sets || [],
+        notes: ex.notes || "",
+      };
+    }),
+
+    // ⬇ carry supersets into builder
+    supersetGroups: selectedRoutine.supersetGroups || [],
   };
+
+  sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
+  handleRoutineModalClose();
+  router.push("/workout/new-routine");
+};
+
 
   const handleDeleteFolder = async () => {
     if (!selectedFolder) return;

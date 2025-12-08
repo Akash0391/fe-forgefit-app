@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { Exercise, SetData, workoutApi } from "@/lib/api";
 import { RestTimerModal } from "@/components/RestTimerModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
+import AddToSupersetModal from "@/components/AddToSupersetModal";
+
 interface RoutineExercise {
   exercise: Exercise;
   sets: SetData[];
@@ -55,18 +57,22 @@ export default function NewRoutinePage() {
   const [finishModalMessage, setFinishModalMessage] =
     useState("Add an exercise");
   const [exerciseSets, setExerciseSets] = useState<ExerciseSets>({});
+  // Superset groups for the routine (array of exerciseId arrays)
+  const [supersetGroups, setSupersetGroups] = useState<string[][]>([]);
+
+  // Control AddToSupersetModal for routines
   const [showSupersetModal, setShowSupersetModal] = useState(false);
-  const [supersetGroups, setSupersetGroups] = useState<Set<string>[]>([]); // Array of sets, each set contains exercise IDs in a superset
+  const [supersetCurrentExercise, setSupersetCurrentExercise] =
+    useState<Exercise | null>(null);
   const [removingExerciseIds, setRemovingExerciseIds] = useState<Set<string>>(new Set());
 
 
   const router = useRouter();
 
-  // Check if an exercise is in a superset
+  // helper: is an exercise already in a superset group?
   const isExerciseInSuperset = (exerciseId: string): boolean => {
-    return supersetGroups.some((group) => group.has(exerciseId));
+    return supersetGroups.some((group) => group.includes(exerciseId));
   };
-
   useEffect(() => {
     // 1) If there's an in-progress routine draft, use that
     const draftStr = sessionStorage.getItem("newRoutineDraft");
@@ -103,6 +109,8 @@ export default function NewRoutinePage() {
             restTimerSeconds: ex.restTimerSeconds ?? 35,
           }))
         );
+
+        setSupersetGroups(workoutData.supersetGroups || []);
 
         sessionStorage.removeItem("workoutToRoutine");
       } catch (error) {
@@ -200,7 +208,7 @@ export default function NewRoutinePage() {
           notes: ex.notes || "",
           restTimerSeconds: ex.restTimerSeconds ?? 0,
         })),
-        supersetGroups: [],
+        supersetGroups,
         routineFolderId: routineFolderId ?? null,
       });
 
@@ -387,6 +395,13 @@ export default function NewRoutinePage() {
                     </button>
                   </div>
 
+                  {/* Superset badge (same style as QuickStart) */}
+                  {isExerciseInSuperset(exercise._id) && (
+                    <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block mb-3">
+                      Superset
+                    </div>
+                  )}
+
                   {/* Notes Section */}
                   <div className="mb-4">
                     <Input
@@ -567,22 +582,24 @@ export default function NewRoutinePage() {
           }
         }}
 
+        // ➕ Add To Superset → open AddToSupersetModal
         onAddToSuperset={() => {
-          // Keep the selected exercise and open superset modal
-          // The ExerciseOptionsModal will close automatically due to showSupersetModal being true
-          setShowSupersetModal(true);
+          if (!selectedExerciseForMenu) return;
+          setSupersetCurrentExercise(selectedExerciseForMenu);
+          setShowSupersetModal(true);          // this hides the options sheet
         }}
+
+        // ❌ Remove From Superset
         onRemoveFromSuperset={() => {
-          if (selectedExerciseForMenu) {
-            // Remove the entire superset group that contains this exercise
-            // This removes badges from all exercises in that superset
-            setSupersetGroups((prev) => {
-              const updatedGroups = prev.filter(
-                (group) => !group.has(selectedExerciseForMenu._id)
-              );
-              return updatedGroups;
-            });
-          }
+          if (!selectedExerciseForMenu) return;
+          const exerciseId = selectedExerciseForMenu._id;
+
+          setSupersetGroups((prev) =>
+            prev
+              .map((group) => group.filter((x) => x !== exerciseId)) // remove id from groups
+              .filter((group) => group.length > 1)           // keep only 2+ sized groups
+          );
+
           setSelectedExerciseForMenu(null);
         }}
         onRemove={() => {
@@ -603,16 +620,11 @@ export default function NewRoutinePage() {
                 return newSets;
               });
               // Remove from superset groups if present
-              setSupersetGroups((prev) => {
-                const newGroups = prev
-                  .map((group) => {
-                    const newGroup = new Set(group);
-                    newGroup.delete(exerciseId);
-                    return newGroup;
-                  })
-                  .filter((group) => group.size > 0);
-                return newGroups;
-              });
+              setSupersetGroups((prev) =>
+                prev
+                  .map((group) => group.filter((x) => x !== exerciseId))
+                  .filter((group) => group.length > 1)
+              );
               // Clean up removing state
               setRemovingExerciseIds((prev) => {
                 const newSet = new Set(prev);
@@ -624,6 +636,40 @@ export default function NewRoutinePage() {
           setSelectedExerciseForMenu(null);
         }}
       />
+
+      <AddToSupersetModal
+        open={showSupersetModal}
+        onClose={() => {
+          setShowSupersetModal(false);
+          setSupersetCurrentExercise(null);
+        }}
+        // we pass only the Exercise objects to the modal
+        exercises={exercises.map((re) => re.exercise)}   // RoutineExercise[] → Exercise[]
+        currentExercise={supersetCurrentExercise}
+        onConfirm={(selectedExerciseIds) => {
+          // selectedExerciseIds already includes the base exercise id
+
+          setSupersetGroups((prev) => {
+            // remove any old groups that contain any of these ids
+            const toGroup = new Set(selectedExerciseIds);
+
+            const remaining = prev.filter(
+              (group) => !group.some((id) => toGroup.has(id))
+            );
+
+            // only keep as a superset if 2+ exercises
+            if (selectedExerciseIds.length > 1) {
+              remaining.push(selectedExerciseIds);
+            }
+
+            return remaining;
+          });
+
+          setShowSupersetModal(false);
+          setSupersetCurrentExercise(null);
+        }}
+      />
+
 
     </div>
   );

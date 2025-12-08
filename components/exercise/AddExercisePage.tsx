@@ -453,7 +453,7 @@ export default function AddExercisePage() {
             const newWorkoutExercises: Workout["exercises"] = selectedExercises
                 .filter((ex) => !existingIds.has(ex._id))
                 .map((ex, idx) => ({
-                    exerciseId: ex._id,
+                    exerciseId: ex,
                     sets: [
                         {
                             setNumber: 1,

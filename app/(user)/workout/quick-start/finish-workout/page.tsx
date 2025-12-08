@@ -200,8 +200,8 @@ export default function FinishWorkoutPage() {
     const date = workout.endTime
       ? new Date(workout.endTime)
       : workout.startTime
-      ? new Date(workout.startTime)
-      : new Date();
+        ? new Date(workout.startTime)
+        : new Date();
     const day = date.getDate();
     const monthNames = [
       "Jan",
@@ -408,98 +408,103 @@ export default function FinishWorkoutPage() {
         </div>
 
         {/* Exercises – mirror of quick-start cards */}
-        <div>
-          <p className="text-sm text-gray-500 mb-2">Exercises</p>
-          <div className="space-y-4">
-            {workout.exercises.map((we, index) => {
-              const baseExercise: Exercise =
-                typeof we.exerciseId === "object"
-                  ? (we.exerciseId as Exercise)
-                  : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+        {isEditMode && (
+          <>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Exercises</p>
+              <div className="space-y-4">
+                {workout.exercises.map((we, index) => {
+                  const baseExercise: Exercise =
+                    typeof we.exerciseId === "object"
+                      ? (we.exerciseId as Exercise)
+                      : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
 
-              const exerciseId =
-                typeof we.exerciseId === "object"
-                  ? (we.exerciseId as any)._id
-                  : (we.exerciseId as string);
+                  const exerciseId =
+                    typeof we.exerciseId === "object"
+                      ? (we.exerciseId as any)._id
+                      : (we.exerciseId as string);
 
-              const sets = (we.sets || []) as SetData[];
-              const restTimerSeconds = we.restTimerSeconds ?? 0;
+                  const sets = (we.sets || []) as SetData[];
+                  const restTimerSeconds = we.restTimerSeconds ?? 0;
 
-              const isInSuperset = supersetGroups.some((g) =>
-                g.has(exerciseId)
-              );
-              const isRemoving = removingExerciseIds.has(exerciseId);
-              const hasRemovingBefore = workout.exercises
-                .slice(0, index)
-                .some((ex) => {
-                  const id =
-                    typeof ex.exerciseId === "object"
-                      ? (ex.exerciseId as any)._id
-                      : (ex.exerciseId as string);
-                  return removingExerciseIds.has(id);
-                });
-
-              const defaultSet: SetData[] = [
-                {
-                  setNumber: 1,
-                  previous: "-",
-                  kg: 0,
-                  reps: 0,
-                  completed: false,
-                },
-              ];
-
-              return (
-                <WorkoutExerciseCard
-                  key={exerciseId}
-                  exercise={baseExercise}
-                  sets={sets.length ? sets : defaultSet}
-                  onSetsChange={(newSets) => {
-                    setWorkout((prev) => {
-                      if (!prev) return prev;
-                      const updated = { ...prev };
-                      updated.exercises = [...updated.exercises];
-                      updated.exercises[index] = {
-                        ...updated.exercises[index],
-                        sets: newSets,
-                      };
-                      return updated;
+                  const isInSuperset = supersetGroups.some((g) =>
+                    g.has(exerciseId)
+                  );
+                  const isRemoving = removingExerciseIds.has(exerciseId);
+                  const hasRemovingBefore = workout.exercises
+                    .slice(0, index)
+                    .some((ex) => {
+                      const id =
+                        typeof ex.exerciseId === "object"
+                          ? (ex.exerciseId as any)._id
+                          : (ex.exerciseId as string);
+                      return removingExerciseIds.has(id);
                     });
-                  }}
-                  onMenuClick={() =>
-                    setSelectedExerciseForMenu({
-                      exerciseId,
-                      exerciseDoc: baseExercise,
-                    })
-                  }
-                  isInSuperset={isInSuperset}
-                  isRemoving={isRemoving}
-                  shouldSlideUp={hasRemovingBefore}
-                  restTimerSeconds={restTimerSeconds}
-                  onRestTimerClick={() => {
-                    setRestTimerModalExercise({
-                      exerciseId,
-                      exerciseName: baseExercise.name,
-                    });
-                    setRestTimerModalSeconds(restTimerSeconds);
-                  }}
-                  onSetCompleted={undefined} // no live rest countdown on edit page
-                />
-              );
-            })}
-          </div>
-        </div>
 
+                  const defaultSet: SetData[] = [
+                    {
+                      setNumber: 1,
+                      previous: "-",
+                      kg: 0,
+                      reps: 0,
+                      completed: false,
+                    },
+                  ];
+
+                  return (
+                    <WorkoutExerciseCard
+                      key={exerciseId}
+                      exercise={baseExercise}
+                      sets={sets.length ? sets : defaultSet}
+                      onSetsChange={(newSets) => {
+                        setWorkout((prev) => {
+                          if (!prev) return prev;
+                          const updated = { ...prev };
+                          updated.exercises = [...updated.exercises];
+                          updated.exercises[index] = {
+                            ...updated.exercises[index],
+                            sets: newSets,
+                          };
+                          return updated;
+                        });
+                      }}
+                      onMenuClick={() =>
+                        setSelectedExerciseForMenu({
+                          exerciseId,
+                          exerciseDoc: baseExercise,
+                        })
+                      }
+                      isInSuperset={isInSuperset}
+                      isRemoving={isRemoving}
+                      shouldSlideUp={hasRemovingBefore}
+                      restTimerSeconds={restTimerSeconds}
+                      onRestTimerClick={() => {
+                        setRestTimerModalExercise({
+                          exerciseId,
+                          exerciseName: baseExercise.name,
+                        });
+                        setRestTimerModalSeconds(restTimerSeconds);
+                      }}
+                      onSetCompleted={undefined} // no live rest countdown on edit page
+                    />
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <Button
+                variant="default"
+                onClick={() => { }}
+                className="w-full bg-blue-500 px-2 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              >
+                <Plus className="size-[20px] mr-2" />
+                Add Exercise
+              </Button>
+            </div>
+          </>
+        )}
         {/* Discard / Add Exercise */}
         <div className="pb-6 text-center">
-          <Button
-            variant="default"
-            onClick={() => {}}
-            className="w-full bg-blue-500 px-2 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
-          >
-            <Plus className="size-[20px] mr-2" />
-            Add Exercise
-          </Button>
           <button
             onClick={handleDiscard}
             className="mt-4 text-red-500 text-lg font-regular"
@@ -570,8 +575,8 @@ export default function FinishWorkoutPage() {
         isInSuperset={
           selectedExerciseForMenu
             ? supersetGroups.some((g) =>
-                g.has(selectedExerciseForMenu.exerciseId)
-              )
+              g.has(selectedExerciseForMenu.exerciseId)
+            )
             : false
         }
         onReorder={() => {

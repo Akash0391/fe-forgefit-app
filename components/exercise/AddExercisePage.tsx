@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { exerciseApi, Exercise, workoutApi } from "@/lib/api";
+import { exerciseApi, Exercise, workoutApi, Workout } from "@/lib/api";
 import { ExerciseCard } from "@/components/exercise/ExerciseCard";
 import { ExerciseVideoModal } from "@/components/exercise/ExerciseVideoModal";
 import EquipmentModal from "@/components/EquipmentsModal";
@@ -21,6 +21,8 @@ const API_BASE =
 export default function AddExercisePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const from = searchParams.get("from"); // null | "edit"
+
     const pathname = usePathname();
 
     const isReplaceMode = searchParams.get("mode") === "replace";
@@ -352,6 +354,12 @@ export default function AddExercisePage() {
 
     // 🔹 Cancel depends on source
     const handleCancel = () => {
+        // Coming from FinishWorkoutPage edit mode
+        if (from === "edit") {
+            router.push("/workout/quick-start/finish-workout?mode=edit");
+            return;
+        }
+
         if (isRoutineSource) {
             router.push("/workout/new-routine");
         } else {
@@ -359,135 +367,192 @@ export default function AddExercisePage() {
         }
     };
 
-    // 🔹 Add exercises (non-replace) – routine vs quick-start
-    const handleAddExercises = async () => {
-        const selectedExercises = [...exercises, ...customExercises].filter(
-            (exercise) => selectedExerciseIds.has(exercise._id)
-        );
 
-        if (selectedExercises.length === 0) return;
+    // 🔹 Add exercises (non-replace) – routine vs quick-start vs edit-finish
+const handleAddExercises = async () => {
+  const selectedExercises = [...exercises, ...customExercises].filter(
+    (exercise) => selectedExerciseIds.has(exercise._id)
+  );
 
-        // 👉 CASE 1: Adding exercises for a ROUTINE
-        if (isRoutineSource) {
-            try {
-                const draftStr = sessionStorage.getItem("newRoutineDraft");
-                let draft: { name?: string; exercises?: any[] } = {};
+  if (selectedExercises.length === 0) return;
 
-                if (draftStr) {
-                    draft = JSON.parse(draftStr);
-                }
+  // 👉 CASE 0: Coming from FinishWorkoutPage (Edit Workout)
+  if (from === "edit") {
+    const stored = sessionStorage.getItem("workoutToEdit");
+    if (!stored) {
+      console.error("No workoutToEdit found in sessionStorage");
+      router.push("/home");
+      return;
+    }
 
-                const existingExercises: any[] = draft.exercises || [];
-                const existingIds = new Set(
-                    existingExercises.map((re) => re.exercise?._id)
-                );
+    let workout: Workout;
+    try {
+      workout = JSON.parse(stored) as Workout;
+    } catch (e) {
+      console.error("Error parsing workoutToEdit:", e);
+      router.push("/home");
+      return;
+    }
 
-                const newRoutineExercises = selectedExercises
-                    .filter((ex) => !existingIds.has(ex._id))
-                    .map((ex) => ({
-                        exercise: ex,
-                        sets: [],
-                        notes: "",
-                    }));
+     // existing exercise ids in this historical workout
+  const existingIds = new Set(
+    (workout.exercises || []).map((we: any) => {
+      if (typeof we.exerciseId === "object" && we.exerciseId !== null) {
+        return (we.exerciseId as any)._id as string;
+      }
+      return we.exerciseId as string;
+    })
+  );
 
-                const updatedDraft = {
-                    ...draft,
-                    exercises: [...existingExercises, ...newRoutineExercises],
-                };
+  const baseLength = (workout.exercises || []).length;
 
-                sessionStorage.setItem(
-                    "newRoutineDraft",
-                    JSON.stringify(updatedDraft)
-                );
-            } catch (error) {
-                console.error("Error updating routine draft:", error);
+    // build new exercise entries (avoid duplicates)
+   const newWorkoutExercises: Workout["exercises"] = selectedExercises
+    .filter((ex) => !existingIds.has(ex._id))
+    .map((ex, idx) => ({
+      exerciseId: ex._id,
+      sets: [
+        {
+          setNumber: 1,
+          previous: "-",
+          kg: 0,
+          reps: 0,
+          completed: false,
+        },
+      ],
+      restTimerSeconds: 0,
+      notes: "",                      // ✅ required by WorkoutExercise
+      order: baseLength + idx,        // ✅ required by WorkoutExercise
+    })) as Workout["exercises"];
+
+    const updatedWorkout: Workout = {
+    ...workout,
+    exercises: [
+      ...(workout.exercises || []),
+      ...newWorkoutExercises,
+    ] as Workout["exercises"],
+  };
+
+    sessionStorage.setItem("workoutToEdit", JSON.stringify(updatedWorkout));
+
+    // go back to Finish Workout in edit mode
+    router.push("/workout/quick-start/finish-workout?mode=edit");
+    return;
+  }
+
+  // 👉 CASE 1: Adding exercises for a ROUTINE
+  if (isRoutineSource) {
+    try {
+      const draftStr = sessionStorage.getItem("newRoutineDraft");
+      let draft: { name?: string; exercises?: any[] } = {};
+
+      if (draftStr) {
+        draft = JSON.parse(draftStr);
+      }
+
+      const existingExercises: any[] = draft.exercises || [];
+      const existingIds = new Set(
+        existingExercises.map((re) => re.exercise?._id)
+      );
+
+      const newRoutineExercises = selectedExercises
+        .filter((ex) => !existingIds.has(ex._id))
+        .map((ex) => ({
+          exercise: ex,
+          sets: [],
+          notes: "",
+        }));
+
+      const updatedDraft = {
+        ...draft,
+        exercises: [...existingExercises, ...newRoutineExercises],
+      };
+
+      sessionStorage.setItem("newRoutineDraft", JSON.stringify(updatedDraft));
+    } catch (error) {
+      console.error("Error updating routine draft:", error);
+    }
+
+    router.push("/workout/new-routine");
+    return;
+  }
+
+  // 👉 CASE 2: Quick-start flow (existing behaviour)
+  try {
+    const workoutResponse = await workoutApi.getActive();
+    let currentExercises: Exercise[] = [];
+    let currentSupersetGroups: string[][] = [];
+    let currentDuration = 0;
+    let startTime: number | undefined = undefined;
+
+    if (workoutResponse.data) {
+      currentExercises = workoutResponse.data.exercises.map((ex: any) => {
+        const base =
+          typeof ex.exerciseId === "object"
+            ? ex.exerciseId
+            : { _id: ex.exerciseId };
+
+        return {
+          ...(base as Exercise),
+          restTimerSeconds: ex.restTimerSeconds ?? 0,
+        } as Exercise & { restTimerSeconds?: number };
+      });
+
+      currentSupersetGroups =
+        (workoutResponse.data.supersetGroups ?? []).map((group: any) => {
+          const rawIds = Array.isArray(group)
+            ? group
+            : group.exerciseIds ?? [];
+
+          return rawIds.map((id: unknown) => {
+            if (typeof id === "object" && id !== null && "_id" in id) {
+              return (id as { _id?: string })._id ?? "";
             }
+            return String(id);
+          });
+        });
 
-            router.push("/workout/new-routine");
-            return;
+      currentDuration = workoutResponse.data.duration || 0;
+
+      if (workoutResponse.data.startTime) {
+        startTime = new Date(workoutResponse.data.startTime).getTime();
+      }
+    } else {
+      const storedStartTime = localStorage.getItem("workoutStartTime");
+      if (storedStartTime) {
+        startTime = parseInt(storedStartTime, 10);
+      } else {
+        startTime = Date.now();
+        localStorage.setItem("workoutStartTime", startTime.toString());
+      }
+    }
+
+    const exerciseMap = new Map<string, Exercise>();
+    currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
+    selectedExercises.forEach((ex) =>
+      exerciseMap.set(
+        ex._id,
+        { ...ex, restTimerSeconds: 0 } as Exercise & {
+          restTimerSeconds?: number;
         }
+      )
+    );
+    const allExercises = Array.from(exerciseMap.values());
 
-        // 👉 CASE 2: Quick-start flow
-        try {
-            const workoutResponse = await workoutApi.getActive();
-            let currentExercises: Exercise[] = [];
-            let currentSupersetGroups: string[][] = [];
-            let currentDuration = 0;
-            let startTime: number | undefined = undefined;
+    await workoutApi.save({
+      exercises: allExercises,
+      supersetGroups: currentSupersetGroups,
+      duration: currentDuration,
+      startTime,
+    });
 
-            if (workoutResponse.data) {
-                currentExercises = workoutResponse.data.exercises.map((ex: any) => {
-                    const base =
-                        typeof ex.exerciseId === "object"
-                            ? ex.exerciseId
-                            : { _id: ex.exerciseId };
+    window.dispatchEvent(new Event("workoutExercisesUpdated"));
+    router.push("/workout/quick-start");
+  } catch (error) {
+    console.error("Error adding exercises to workout:", error);
+  }
+};
 
-                    return {
-                        ...(base as Exercise),
-                        restTimerSeconds: ex.restTimerSeconds ?? 0,
-                    } as Exercise & { restTimerSeconds?: number };
-                });
-
-                const currentSupersetGroups: string[][] =
-                    (workoutResponse.data.supersetGroups ?? []).map((group) => {
-                        // 👇 Get the *array of ids / exercises* from either shape
-                        const rawIds = Array.isArray(group)
-                            ? group                       // already string[] (client format)
-                            : group.exerciseIds ?? [];    // server format { exerciseIds: [...] }
-
-                        // 👇 Make sure each element is a plain string id
-                        return rawIds.map((id: unknown) => {
-                            if (typeof id === "object" && id !== null && "_id" in id) {
-                                return (id as { _id?: string })._id ?? "";
-                            }
-                            return String(id);
-                        });
-                    });
-
-
-                currentDuration = workoutResponse.data.duration || 0;
-
-                if (workoutResponse.data.startTime) {
-                    startTime = new Date(
-                        workoutResponse.data.startTime
-                    ).getTime();
-                }
-            } else {
-                const storedStartTime = localStorage.getItem("workoutStartTime");
-                if (storedStartTime) {
-                    startTime = parseInt(storedStartTime, 10);
-                } else {
-                    startTime = Date.now();
-                    localStorage.setItem(
-                        "workoutStartTime",
-                        startTime.toString()
-                    );
-                }
-            }
-
-            const exerciseMap = new Map<string, Exercise>();
-            currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
-            selectedExercises.forEach((ex) =>
-                exerciseMap.set(ex._id, {
-                    ...ex,
-                    restTimerSeconds: 0,
-                } as Exercise & { restTimerSeconds?: number })
-            );
-            const allExercises = Array.from(exerciseMap.values());
-
-            await workoutApi.save({
-                exercises: allExercises,
-                supersetGroups: currentSupersetGroups,
-                duration: currentDuration,
-                startTime,
-            });
-
-            window.dispatchEvent(new Event("workoutExercisesUpdated"));
-            router.push("/workout/quick-start");
-        } catch (error) {
-            console.error("Error adding exercises to workout:", error);
-        }
-    };
 
     const filteredPopular = exercises.filter((exercise) =>
         exercise.name.toLowerCase().includes(searchQuery.toLowerCase())

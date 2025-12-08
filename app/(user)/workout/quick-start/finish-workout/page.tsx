@@ -280,6 +280,18 @@ export default function FinishWorkoutPage() {
     console.log("Select from library clicked");
   };
 
+  const handleAddExercise = () => {
+  if (!workout) return;
+
+  // make sure the latest state is in sessionStorage
+  sessionStorage.setItem("workoutToEdit", JSON.stringify(workout));
+
+  // go to Add Exercise in a special mode
+  router.push("/workout/quick-start/add-exercise?from=edit");
+};
+
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -411,7 +423,6 @@ export default function FinishWorkoutPage() {
         {isEditMode && (
           <>
             <div>
-              <p className="text-sm text-gray-500 mb-2">Exercises</p>
               <div className="space-y-4">
                 {workout.exercises.map((we, index) => {
                   const baseExercise: Exercise =
@@ -494,7 +505,7 @@ export default function FinishWorkoutPage() {
             <div>
               <Button
                 variant="default"
-                onClick={() => { }}
+                onClick={handleAddExercise}
                 className="w-full bg-blue-500 px-2 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
               >
                 <Plus className="size-[20px] mr-2" />

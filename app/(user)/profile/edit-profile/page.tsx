@@ -9,16 +9,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileMediaSelectionModal from "@/components/ProfileMediaSelectionModal";
+import SexModal from "@/components/SexModal";
 
 export default function EditProfilePage() {
     const router = useRouter();
 
     const { user, loading, isAuthenticated } = useAuth();
     const [showProfileMediaModal, setShowProfileMediaModal] = useState(false);
+    const [showSexModal, setShowSexModal] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
     const [link, setLink] = useState("");
-    const [sex, setSex] = useState("");
+    const [sex, setSex] = useState<"male" | "female" | "other" | "">("male");
     const [birthday, setBirthday] = useState("");
 
     // redirect if not logged in
@@ -74,16 +77,16 @@ export default function EditProfilePage() {
     }
 
     const handleTakePhoto = () => {
-    console.log("Take photo clicked");
-  };
+        console.log("Take photo clicked");
+    };
 
-  const handleSelectFromLibrary = () => {
-    console.log("Select from library clicked");
-  };
+    const handleSelectFromLibrary = () => {
+        console.log("Select from library clicked");
+    };
 
-  const handleDeletePicture = () => {
-    console.log("Delete picture clicked");
-  }
+    const handleDeletePicture = () => {
+        console.log("Delete picture clicked");
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-white">
@@ -117,7 +120,7 @@ export default function EditProfilePage() {
                     </Avatar>
 
                     <Button
-                    onClick={() => setShowProfileMediaModal(true)}
+                        onClick={() => setShowProfileMediaModal(true)}
                         variant="ghost"
                         className="text-blue-500 text-lg font-semibold"
                     >
@@ -170,7 +173,7 @@ export default function EditProfilePage() {
                                 Private Data
                             </p>
                             <button
-                                onClick={() => { }}
+                                onClick={() => setShowInfoModal(true)}
                                 className="flex items-center justify-center rounded-full bg-gray-200 p-1 hover:bg-gray-300 transition-colors"
                             >
                                 <Image src="/icons/punctuation-marks.png" alt="Info" width={12} height={12} />
@@ -181,7 +184,7 @@ export default function EditProfilePage() {
                     {/* Sex */}
                     <div className="border-b border-gray-100 py-3 pb-6 flex items-center justify-between">
                         <p className="text-lg text-black font-regular">Sex</p>
-                        <button className="text-blue-500 text-lg">{sex ? sex[0].toUpperCase() + sex.slice(1) : "Not set"}</button>
+                        <button onClick={() => setShowSexModal(true)} className="text-blue-500 text-lg">{sex ? sex[0].toUpperCase() + sex.slice(1) : "Not set"}</button>
                     </div>
 
                     {/* Birthday */}
@@ -199,6 +202,50 @@ export default function EditProfilePage() {
                 onDeletePicture={handleDeletePicture}
                 onSelectFromLibrary={handleSelectFromLibrary}
             />
+
+            <SexModal
+                open={showSexModal}
+                onClose={() => setShowSexModal(false)}
+                selectedSex={sex}
+                onMale={() => setSex("male")}
+                onFemale={() => setSex("female")}
+                onOther={() => setSex("other")}
+            />
+
+            {/* Info Modal */}
+            {showInfoModal && (
+                <>
+                    {/* Overlay */}
+                    <div
+                        className="fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ease-in-out"
+                        onClick={() => setShowInfoModal(false)}
+                    />
+                    {/* Modal Content - Center */}
+                    <div
+                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] bg-white rounded-[12px] shadow-lg transition-all duration-300 ease-in-out w-[90%] max-w-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+
+                        <div className=" text-center px-6">
+                            <h2 className="text-xl font-bold text-black mt-8">Private Data</h2>
+                        </div>
+                        <div className="px-6 pb-6 pt-0">
+                            <p className="text-lg font-regular text-gray-700 mb-8 mt-2 text-center">
+                                Your private data will not be displaayed on your public profile.
+                                ForgeFit will use this data to tailor features to your specific demograpghic.
+                                We'll also be adding more features for comparing exercises and progress between accounts.
+                                Having age and sex will allow you to compare yourself to atheletes in your specific demograpghic.
+                            </p>
+                            <button
+                                onClick={() => setShowInfoModal(false)}
+                                className="w-full py-3 px-4 bg-blue-500 text-white rounded-[10px] font-regular text-lg hover:bg-blue-600 transition-colors"
+                            >
+                                Ok
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

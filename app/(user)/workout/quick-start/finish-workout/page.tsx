@@ -502,11 +502,11 @@ export default function FinishWorkoutPage() {
                 })}
               </div>
             </div>
-            <div>
+            <div className="px-2">
               <Button
                 variant="default"
                 onClick={handleAddExercise}
-                className="w-full bg-blue-500 px-2 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
               >
                 <Plus className="size-[20px] mr-2" />
                 Add Exercise
@@ -514,15 +514,17 @@ export default function FinishWorkoutPage() {
             </div>
           </>
         )}
-        {/* Discard / Add Exercise */}
-        <div className="pb-6 text-center">
-          <button
-            onClick={handleDiscard}
-            className="mt-4 text-red-500 text-lg font-regular"
-          >
-            Discard Workout
-          </button>
-        </div>
+        {/* Discard Workout – only for NEW (non-edit) flow */}
+        {!isEditMode && (
+          <div className="pb-6 text-center">
+            <button
+              onClick={handleDiscard}
+              className="mt-4 text-red-500 text-lg font-regular"
+            >
+              Discard Workout
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Media Selection Modal */}

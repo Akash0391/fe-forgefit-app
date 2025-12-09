@@ -162,7 +162,7 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4">
           {/* Profile Picture */}
           <Avatar className="size-28">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
             <AvatarFallback>
               {user.name ? getInitials(user.name) : "U"}
             </AvatarFallback>

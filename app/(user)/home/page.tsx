@@ -425,7 +425,7 @@ export default function HomePage() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="size-15">
-                        <AvatarImage src={user?.avatar} alt={getUsername()} />
+                        <AvatarImage src={user?.avatar ?? undefined} alt={getUsername()} />
                         <AvatarFallback className="bg-orange-200 text-orange-700 text-sm font-semibold">
                           {getUsername().charAt(0).toUpperCase()}
                         </AvatarFallback>

@@ -3,15 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient, workoutApi } from "@/lib/api";
+import type { User } from "@/lib/api";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +13,7 @@ interface AuthContextType {
   login: (redirectTo?: string, isSignup?: boolean) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -138,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     refreshUser,
+    setUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

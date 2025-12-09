@@ -22,7 +22,7 @@ type BirthdayValue = {
 export default function EditProfilePage() {
   const router = useRouter();
 
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, setUser } = useAuth();
   const [showProfileMediaModal, setShowProfileMediaModal] = useState(false);
   const [showSexModal, setShowSexModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -132,7 +132,10 @@ export default function EditProfilePage() {
 
   try {
     setIsSaving(true);
-    await authApi.updateProfile(payload);
+    const res = await authApi.updateProfile(payload);
+    if (res.success && res.data) {
+    setUser(res.data); // ✅ INSTANTLY UPDATES PROFILE PAGE WITHOUT REFRESH
+}
     // optionally: refresh auth context if you expose a reload function
     router.back();
   } catch (err) {

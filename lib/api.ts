@@ -322,6 +322,41 @@ export const workoutApi = {
 
 };
 
+// ---------- User / Auth types & API ----------
+
+export interface User {
+  _id: string;
+  email?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string | null;
+  bio?: string;
+  link?: string;
+  sex?: "male" | "female" | "other" | "";
+  birthday?: string | null; // ISO string in DB
+  role?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const authApi = {
+  // you probably already use this somewhere
+  getMe: () =>
+    apiClient.get<{
+      success: boolean;
+      data: User | null;
+    }>("/api/auth/me", true),
+
+  updateProfile: (data: Partial<Pick<User, "name" | "avatar" | "bio" | "link" | "sex" | "birthday">>) =>
+    apiClient.put<{
+      success: boolean;
+      data: User;
+    }>("/api/auth/profile", data),
+};
+
+
 
 
 

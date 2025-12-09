@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileMediaSelectionModal from "@/components/ProfileMediaSelectionModal";
 import SexModal from "@/components/SexModal";
+import BirthdayModal from "@/components/BirthdayModal";
+
+
+type BirthdayValue = {
+    day: number;
+    month: number; // 1-12
+    year: number;
+};
 
 export default function EditProfilePage() {
     const router = useRouter();
@@ -22,7 +30,12 @@ export default function EditProfilePage() {
     const [bio, setBio] = useState("");
     const [link, setLink] = useState("");
     const [sex, setSex] = useState<"male" | "female" | "other" | "">("male");
-    const [birthday, setBirthday] = useState("");
+    const [showBirthdayModal, setShowBirthdayModal] = useState(false);
+    const [birthday, setBirthday] = useState<{
+        day: number;
+        month: number;
+        year: number;
+    } | null>(null);
 
     // redirect if not logged in
     useEffect(() => {
@@ -31,15 +44,16 @@ export default function EditProfilePage() {
         }
     }, [loading, isAuthenticated, router]);
 
-    const formatBirthday = (raw: string | Date) => {
-        const d = raw instanceof Date ? raw : new Date(raw);
-        if (Number.isNaN(d.getTime())) return "";
+    const getBirthdayLabel = (val: BirthdayValue | null) => {
+        if (!val) return "Add birthday";
+        const d = new Date(val.year, val.month - 1, val.day);
         return d.toLocaleDateString("en-US", {
             month: "short",
             day: "2-digit",
             year: "numeric",
         });
     };
+
 
     // preload values from user when available
     useEffect(() => {
@@ -49,7 +63,18 @@ export default function EditProfilePage() {
             setBio(u.bio || "");          // if you later store bio
             setLink(u.link || "");        // if you later store link
             setSex(u.sex || "");
-            setBirthday(u.birthday ? formatBirthday(u.birthday) : "");
+            if (u.birthday) {
+                const d = new Date(u.birthday);
+                if (!Number.isNaN(d.getTime())) {
+                    setBirthday({
+                        day: d.getDate(),
+                        month: d.getMonth() + 1,
+                        year: d.getFullYear(),
+                    });
+                }
+            } else {
+                setBirthday(null);
+            }
         }
     }, [user]);
 
@@ -188,10 +213,17 @@ export default function EditProfilePage() {
                     </div>
 
                     {/* Birthday */}
-                    <div className="border-b border-gray-100 py-3 mt-3 pb-6 flex items-center justify-between">
+                    <div className="border-b border-gray-100 py-3 pt-6 pb-6 flex items-center justify-between">
                         <p className="text-lg text-black font-regular">Birthday</p>
-                        <button className="text-blue-500 text-lg">{birthday || "Add birthday"}</button>
+                        <button
+                            className="text-blue-500 text-lg"
+                            onClick={() => setShowBirthdayModal(true)}
+                        >
+                            {getBirthdayLabel(birthday)}
+                        </button>
                     </div>
+
+
                 </section>
             </div>
 
@@ -210,6 +242,13 @@ export default function EditProfilePage() {
                 onMale={() => setSex("male")}
                 onFemale={() => setSex("female")}
                 onOther={() => setSex("other")}
+            />
+
+            <BirthdayModal
+                open={showBirthdayModal}
+                onClose={() => setShowBirthdayModal(false)}
+                value={birthday}
+                onChange={(val) => setBirthday(val)}
             />
 
             {/* Info Modal */}

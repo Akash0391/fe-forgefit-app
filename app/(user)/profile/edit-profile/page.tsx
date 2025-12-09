@@ -94,10 +94,10 @@ export default function EditProfilePage() {
 
   const payload: any = {};
 
-  // avatar
-  if ((avatar || null) !== (u.avatar || null)) {
-    payload.avatar = avatar;
-  }
+//   // avatar
+//   if ((avatar || null) !== (u.avatar || null)) {
+//     payload.avatar = avatar;
+//   }
 
   // name, bio, link, sex
   if (name !== (u.name || "")) payload.name = name;

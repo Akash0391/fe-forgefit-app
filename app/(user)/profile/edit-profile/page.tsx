@@ -8,15 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileMediaSelectionModal from "@/components/ProfileMediaSelectionModal";
 
 export default function EditProfilePage() {
     const router = useRouter();
 
     const { user, loading, isAuthenticated } = useAuth();
-
+    const [showProfileMediaModal, setShowProfileMediaModal] = useState(false);
     const [name, setName] = useState("");
     const [bio, setBio] = useState("");
     const [link, setLink] = useState("");
+    const [sex, setSex] = useState("");
+    const [birthday, setBirthday] = useState("");
 
     // redirect if not logged in
     useEffect(() => {
@@ -25,13 +28,25 @@ export default function EditProfilePage() {
         }
     }, [loading, isAuthenticated, router]);
 
+    const formatBirthday = (raw: string | Date) => {
+        const d = raw instanceof Date ? raw : new Date(raw);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+        });
+    };
+
     // preload values from user when available
     useEffect(() => {
         if (user) {
-            setName(user.name || "");
-            // adjust these keys if your user model uses different field names
-            setBio((user as any).bio || "");
-            setLink((user as any).link || "");
+            const u: any = user;
+            setName(u.name || "");
+            setBio(u.bio || "");          // if you later store bio
+            setLink(u.link || "");        // if you later store link
+            setSex(u.sex || "");
+            setBirthday(u.birthday ? formatBirthday(u.birthday) : "");
         }
     }, [user]);
 
@@ -58,6 +73,17 @@ export default function EditProfilePage() {
         );
     }
 
+    const handleTakePhoto = () => {
+    console.log("Take photo clicked");
+  };
+
+  const handleSelectFromLibrary = () => {
+    console.log("Select from library clicked");
+  };
+
+  const handleDeletePicture = () => {
+    console.log("Delete picture clicked");
+  }
 
     return (
         <div className="min-h-screen flex flex-col bg-white">
@@ -91,6 +117,7 @@ export default function EditProfilePage() {
                     </Avatar>
 
                     <Button
+                    onClick={() => setShowProfileMediaModal(true)}
                         variant="ghost"
                         className="text-blue-500 text-lg font-semibold"
                     >
@@ -139,8 +166,8 @@ export default function EditProfilePage() {
                 <section>
                     <div className="mb-6 mt-12 ">
                         <div className="flex items-center gap-2">
-                            <p className="text-lg font-regular text-gray-500">
-                                Public Data
+                            <p className="text-lg font-regular text-gray-400">
+                                Private Data
                             </p>
                             <button
                                 onClick={() => { }}
@@ -154,18 +181,24 @@ export default function EditProfilePage() {
                     {/* Sex */}
                     <div className="border-b border-gray-100 py-3 pb-6 flex items-center justify-between">
                         <p className="text-lg text-black font-regular">Sex</p>
-                        <button className="text-blue-500 text-lg">Male</button>
+                        <button className="text-blue-500 text-lg">{sex ? sex[0].toUpperCase() + sex.slice(1) : "Not set"}</button>
                     </div>
 
                     {/* Birthday */}
                     <div className="border-b border-gray-100 py-3 mt-3 pb-6 flex items-center justify-between">
                         <p className="text-lg text-black font-regular">Birthday</p>
-                        <button className="text-blue-500 text-lg">Nov 11, 2007</button>
+                        <button className="text-blue-500 text-lg">{birthday || "Add birthday"}</button>
                     </div>
                 </section>
             </div>
 
-            {/* Bottom nav is already on your main layout, so no need to repeat here */}
+            <ProfileMediaSelectionModal
+                open={showProfileMediaModal}
+                onClose={() => setShowProfileMediaModal(false)}
+                onTakePhoto={handleTakePhoto}
+                onDeletePicture={handleDeletePicture}
+                onSelectFromLibrary={handleSelectFromLibrary}
+            />
         </div>
     );
 }

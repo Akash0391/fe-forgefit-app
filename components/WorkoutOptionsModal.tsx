@@ -11,6 +11,7 @@ interface WorkoutOptionsModalProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onShare?: () => void;
+  onCopy?: () => void;
   onToggleVisibility?: () => void;
   onSaveAsRoutine?: () => void; // New prop to handle save as routine
   onDeleteClick?: () => void; // New prop to handle delete button click without closing modal
@@ -23,6 +24,7 @@ export default function WorkoutOptionsModal({
   onEdit,
   onDelete,
   onShare,
+  onCopy,
   onToggleVisibility,
   onSaveAsRoutine,
   onDeleteClick,
@@ -80,7 +82,7 @@ export default function WorkoutOptionsModal({
     {
       icon: Copy,
       label: "Copy Workout",
-      onClick: onShare,
+      onClick: onCopy,
       textColor: "text-gray-900",
     },
     {

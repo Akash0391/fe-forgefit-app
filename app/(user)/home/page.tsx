@@ -241,6 +241,44 @@ export default function HomePage() {
     }
   };
 
+  const handleCopyWorkout = () => {
+  if (!selectedWorkout) return;
+
+  const workout = selectedWorkout;
+
+  const payload = {
+    exercises: (workout.exercises || []).map((we: any) => {
+      const exercise: Exercise =
+        typeof we.exerciseId === "object"
+          ? (we.exerciseId as Exercise)
+          : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+
+      return {
+        exercise,                        // full Exercise object
+        sets: we.sets || [],
+        restTimerSeconds: we.restTimerSeconds ?? 0,
+      };
+    }),
+
+    // keep supersets so UI matches the original workout
+    supersetGroups: (workout.supersetGroups || []).map((group: any) =>
+      Array.isArray(group) ? group : group.exerciseIds || []
+    ),
+  };
+
+  sessionStorage.setItem(
+    "copyWorkoutToQuickStart",
+    JSON.stringify(payload)
+  );
+
+  // we’re starting a brand-new workout from this copy
+  localStorage.removeItem("workoutStartTime");
+  localStorage.removeItem("workoutInProgress");
+
+  setShowWorkoutModal(false);
+  router.push("/workout/quick-start");
+};
+
   const handleShareWorkout = () => {
     // TODO: Implement share workout functionality
     console.log("Share workout:", selectedWorkout?._id);
@@ -485,6 +523,7 @@ export default function HomePage() {
         onEdit={handleEditWorkout}
         onDelete={handleConfirmDelete}
         onShare={handleShareWorkout}
+        onCopy={handleCopyWorkout}
         onToggleVisibility={handleToggleVisibility}
         onSaveAsRoutine={handleSaveAsRoutine}
         onDeleteClick={handleDeleteWorkoutClick}

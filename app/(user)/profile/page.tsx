@@ -11,6 +11,7 @@ import {
   PersonStanding,
   CalendarDays,
   LogOut,
+  Pencil,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -128,21 +129,24 @@ export default function ProfilePage() {
     return null;
   }
 
+  const handleEditProfile = () => {
+    router.push("/profile/edit-profile");
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
-          {/* Left: Edit Profile */}
-          <button className="text-blue-500 text-sm font-medium">
-            Edit Profile
-          </button>
 
           {/* Center: Username */}
           <h1 className="text-lg font-regular">{getUsername()}</h1>
 
           {/* Right: Share and Settings */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
+            <button onClick={handleEditProfile} className="text-muted-foreground">
+              <Pencil className="size-7" />
+            </button>
             <button className="text-muted-foreground">
               <ShareIcon className="size-7" />
             </button>

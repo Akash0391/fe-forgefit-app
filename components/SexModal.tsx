@@ -110,10 +110,6 @@ export default function SexModal({
                                     key={index}
                                     onClick={() => {
                                         item.onClick();
-                                        // Only close if it's not "Cancel" - that modal will handle closing
-                                        if (item.label !== "Cancel") {
-                                            onClose();
-                                        }
                                     }}
                                     className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
                                         } hover:bg-gray-50 active:bg-gray-100`}

@@ -199,7 +199,7 @@ export default function ProfilePage() {
         callbacks: {
           label: (ctx: any) => {
             const v = ctx.raw ?? 0;
-            if (metric === "duration") return `${v} min`;
+            if (metric === "duration") return `${v} h`;
             if (metric === "volume") return `${v} kg`;
             return `${v} reps`;
           },
@@ -685,7 +685,7 @@ export default function ProfilePage() {
                 <span className="text-xs">Complete a workout to see stats</span>
               </div>
             ) : (
-              <div className="h-44 w-full">
+              <div className="h-44 w-full ml-[-10]">
                 <Bar data={dataForChart} options={options} />
               </div>
             )}

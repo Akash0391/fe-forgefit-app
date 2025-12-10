@@ -152,7 +152,7 @@ export default function ProfilePage() {
               : "Reps",
         data: chartData.map((d) =>
           metric === "duration"
-            ? d.durationMinutes
+            ? d.durationMinutes / 60
             : metric === "volume"
               ? d.totalVolumeKg
               : d.totalReps

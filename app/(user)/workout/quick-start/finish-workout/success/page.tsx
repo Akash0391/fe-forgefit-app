@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Workout, SetData } from "@/lib/api";
+import { Workout, SetData, workoutApi } from "@/lib/api";
 import WorkoutShareCard from "@/components/WorkoutShareCard";
 
 
@@ -12,22 +12,49 @@ export default function WorkoutSuccessPage() {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [activeCard, setActiveCard] = useState(0);
   const cards: (0 | 1 | 2 | 3)[] = [0, 1, 2];
+  const [workoutCount, setWorkoutCount] = useState<number | null>(null);
+
+  const getOrdinal = (n: number): string => {
+  const rem10 = n % 10;
+  const rem100 = n % 100;
+
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  if (rem10 === 1) return `${n}st`;
+  if (rem10 === 2) return `${n}nd`;
+  if (rem10 === 3) return `${n}rd`;
+  return `${n}th`;
+};
 
 
   useEffect(() => {
+  const load = async () => {
     const dataStr = sessionStorage.getItem("lastFinishedWorkout");
     if (!dataStr) {
-      // fallback: no data, go home or fetch from API
       router.push("/home");
       return;
     }
+
     try {
-      setWorkout(JSON.parse(dataStr));
+      const parsed: Workout = JSON.parse(dataStr);
+      setWorkout(parsed);
+
+      // fetch total finished workouts (excluding routines, like on HomePage)
+      const res = await workoutApi.getHistory();
+      if (res.success) {
+        const workoutsWithoutRoutines = res.data.filter(
+          (w: Workout) => !w.isRoutine
+        );
+        setWorkoutCount(workoutsWithoutRoutines.length);
+      }
     } catch (e) {
       console.error("Error parsing lastFinishedWorkout:", e);
       router.push("/home");
     }
-  }, [router]);
+  };
+
+  load();
+}, [router]);
+
 
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return "0min";
@@ -75,6 +102,22 @@ export default function WorkoutSuccessPage() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-white overflow-hidden">
+
+      {/* HEADER */}
+      <div className="pt-6 pb-4 px-4 text-center relative">
+        <h1 className="text-3xl font-bold text-black mb-1">Nice Work!</h1>
+        <p className="text-gray-500 text-base">
+        {workoutCount
+          ? `This is your ${getOrdinal(workoutCount)} workout`
+          : "Workout summary"}
+      </p>
+
+        {/* optional celebration icon on right */}
+        <div className="absolute right-4 top-6">
+          🎉
+        </div>
+      </div>
+
       {/* CARD AREA – horizontal scroll */}
       <div className="flex-1 overflow-hidden">
         <div className="w-full h-full flex items-start">

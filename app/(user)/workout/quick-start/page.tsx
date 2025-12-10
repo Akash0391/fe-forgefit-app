@@ -61,6 +61,24 @@ export default function QuickStartPage() {
     total: number;     // seconds
   } | null>(null);
 
+  // ✅ LIVE TOTALS BASED ON COMPLETED SETS
+const totalSets = workoutExercises.reduce((sum, exercise) => {
+  const sets = exerciseSets[exercise._id] || [];
+  return sum + sets.filter((s) => s.completed).length;
+}, 0);
+
+const totalVolume = workoutExercises.reduce((sum, exercise) => {
+  const sets = exerciseSets[exercise._id] || [];
+  return (
+    sum +
+    sets.reduce((setSum, s) => {
+      if (!s.completed) return setSum;
+      return setSum + (s.kg || 0) * (s.reps || 0);
+    }, 0)
+  );
+}, 0);
+
+
 
   const formatRestTime = (seconds: number): string => {
     const m = Math.floor(seconds / 60);
@@ -950,14 +968,14 @@ const loadWorkout = async () => {
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Volume</p>
-          <p className="text-xl font-regular">0 kg</p>
+          <p className="text-xl font-regular">{totalVolume} kg</p>
         </button>
         <button
           onClick={handleSetsClick}
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Sets</p>
-          <p className="text-xl font-regular">0</p>
+          <p className="text-xl font-regular">{totalSets}</p>
         </button>
       </div>
 

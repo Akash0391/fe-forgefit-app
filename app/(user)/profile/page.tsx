@@ -13,6 +13,9 @@ import {
   LogOut,
   Pencil,
   Ellipsis,
+  ThumbsUp,
+  MessageCircle,
+  Share,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -626,6 +629,18 @@ export default function ProfilePage() {
                         </div>
                       );
                     })}
+                  </div>
+                  {/* Action Buttons: Like, Comment, Share */}
+                  <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100">
+                    <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                      <ThumbsUp className="size-7" />
+                    </button>
+                    <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <MessageCircle className="size-7" />
+                    </button>
+                    <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                      <Share className="size-7" />
+                    </button>
                   </div>
                 </div>
               );

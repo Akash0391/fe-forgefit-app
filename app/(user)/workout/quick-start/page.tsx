@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { Exercise, workoutApi, SetData } from "@/lib/api";
+import { Exercise, workoutApi, SetData, authApi } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import TimerModal from "@/components/TimerModal";
 import FinishWorkoutConfirmationModal from "@/components/FinishWorkoutConfirmationModal";
@@ -792,31 +792,55 @@ const loadWorkout = async () => {
   try {
     isFinishingRef.current = true;
 
-    // 👇 get response with workout
-    const response = await workoutApi.finish();
-    const finishedWorkout = response.data; // adjust to your API shape
+    // 1) finish workout ONCE
+    const res = await workoutApi.finish(); // { success, data: Workout }
+    const rawWorkout = res.data;
 
-    // 👇 store once for the success page
+    // 2) get current user for username
+    let username = "user";
+    try {
+      const me = await authApi.getMe();     // { success, data: User | null }
+      const u = me.data;
+      username =
+        u?.name ||
+        u?.firstName ||
+        u?.email?.split("@")[0] ||
+        "user";
+    } catch (err) {
+      console.warn("Could not fetch me(), using default username");
+    }
+
+    // 3) attach username for success page
+    const workoutWithUser = {
+      ...rawWorkout,
+      user: { username },
+    };
+
     sessionStorage.setItem(
       "lastFinishedWorkout",
-      JSON.stringify(finishedWorkout)
+      JSON.stringify(workoutWithUser)
     );
 
-    // clear locals ...
+    // 4) clear timers + local state
     setDuration(0);
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     localStorage.removeItem("workoutStartTime");
     localStorage.removeItem("workoutInProgress");
     setWorkoutExercises([]);
     setExerciseSets({});
     setSupersetGroups([]);
 
+    // 5) go to success page
     router.push("/workout/quick-start/finish-workout");
   } catch (error) {
     console.error("Error finishing workout:", error);
     isFinishingRef.current = false;
   }
 };
+
 
 
   const handleCancelFinish = () => {

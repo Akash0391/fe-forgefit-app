@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Workout, SetData, workoutApi } from "@/lib/api";
+import { Workout, SetData, workoutApi, authApi } from "@/lib/api";
 import WorkoutShareCard from "@/components/WorkoutShareCard";
 
 
@@ -13,6 +13,7 @@ export default function WorkoutSuccessPage() {
   const [activeCard, setActiveCard] = useState(0);
   const cards: (0 | 1 | 2 | 3)[] = [0, 1, 2];
   const [workoutCount, setWorkoutCount] = useState<number | null>(null);
+  const [username, setUsername] = useState<string>("user");
 
   const getOrdinal = (n: number): string => {
   const rem10 = n % 10;
@@ -35,8 +36,23 @@ export default function WorkoutSuccessPage() {
     }
 
     try {
-      const parsed: Workout = JSON.parse(dataStr);
-      setWorkout(parsed);
+        const parsed: Workout = JSON.parse(dataStr);
+        setWorkout(parsed);
+
+        // get username from /me
+        try {
+          const me = await authApi.getMe();
+          const u = (me as any).data?.user ?? me.data; // handle both shapes
+          const name =
+            u?.name ||
+            u?.firstName ||
+            u?.email?.split("@")[0] ||
+            "user";
+
+          setUsername(name);
+        } catch (err) {
+          console.warn("Could not fetch /me on success page, using default username");
+        }
 
       // fetch total finished workouts (excluding routines, like on HomePage)
       const res = await workoutApi.getHistory();
@@ -106,7 +122,7 @@ export default function WorkoutSuccessPage() {
       {/* HEADER */}
       <div className="pt-6 pb-4 px-4 text-center relative">
         <h1 className="text-3xl font-bold text-black mb-1">Nice Work!</h1>
-        <p className="text-gray-500 text-base">
+        <p className="text-gray-500 text-xm">
         {workoutCount
           ? `This is your ${getOrdinal(workoutCount)} workout`
           : "Workout summary"}
@@ -134,6 +150,7 @@ export default function WorkoutSuccessPage() {
                     volumeText={volumeText}
                     setsText={setsText}
                     variant={v}
+                    username={username}
                   />
                 </div>
               ))}

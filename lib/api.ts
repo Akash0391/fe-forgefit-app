@@ -184,6 +184,10 @@ export interface Workout {
   exercises: WorkoutExercise[];
   supersetGroups: SupersetGroup[];
   duration: number;
+  user?: {
+    username: string;
+    // add other fields if you have them (id, avatar, etc.)
+  };
   startTime?: string;
   endTime?: string;
   status: 'in-progress' | 'completed' | 'discarded';

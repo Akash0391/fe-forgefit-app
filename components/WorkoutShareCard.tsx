@@ -6,6 +6,8 @@ type WorkoutShareCardProps = {
     volumeText: string;
     setsText: string;
     variant: 0 | 1 | 2 | 3;
+    username: string;
+
 };
 
 export default function WorkoutShareCard({
@@ -14,6 +16,7 @@ export default function WorkoutShareCard({
     volumeText,
     setsText,
     variant,
+    username
 }: WorkoutShareCardProps) {
     const firstExercise = workout.exercises[0];
     const exerciseName =
@@ -59,7 +62,7 @@ export default function WorkoutShareCard({
 
                 <div className="mt-6 text-2xl text-black flex justify-between">
                     <span className="font-bold">Forgefit</span>
-                    <span>@yourHandle</span>
+                    <span>@{username}</span>
                 </div>
             </div>
         );
@@ -95,7 +98,7 @@ export default function WorkoutShareCard({
                 </div>
                 <div className="mt-6 text-2xl text-black flex justify-between">
                     <span className="font-bold">Forgefit</span>
-                    <span>@yourHandle</span>
+                    <span>@{username}</span>
                 </div>
             </div>
         );
@@ -120,7 +123,7 @@ export default function WorkoutShareCard({
                 </div>
                 <div className="mt-6 text-center text-black flex flex-col justify-between">
                     <span className="text-2xl font-bold">Forgefit</span>
-                    <span className="text-xm">@yourHandle</span>
+                    <span className="text-xm">@{username}</span>
                 </div>
             </div>
 

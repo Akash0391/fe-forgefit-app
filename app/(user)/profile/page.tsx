@@ -379,6 +379,22 @@ export default function ProfilePage() {
     router.push("/profile/edit-profile");
   }
 
+  const handleStatistics = () => {
+    console.log("statistics clicked")
+  }
+
+  const handleExercises = () => {
+    console.log("exercises clicked")
+  }
+
+  const handleCalendar = () => {
+    console.log("calendar clicked")
+  }
+
+  const handleMeasures = () => {
+    console.log("meadures clicked")
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
@@ -482,25 +498,25 @@ export default function ProfilePage() {
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {/* Statistics */}
-          <button className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
+          <button onClick={handleStatistics} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <TrendingUp className="size-6 text-gray-600" />
             <span className="text-lg font-regular">Statistics</span>
           </button>
 
           {/* Exercises */}
-          <button className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
+          <button onClick={handleExercises} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <Dumbbell className="size-6 text-gray-600" />
             <span className="text-lg font-regular">Exercises</span>
           </button>
 
           {/* Measures */}
-          <button className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
+          <button onClick={handleMeasures} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <PersonStanding className="size-6 text-gray-600" />
             <span className="text-lg font-regular">Measures</span>
           </button>
 
           {/* Calendar */}
-          <button className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
+          <button onClick={handleCalendar} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <CalendarDays className="size-6 text-gray-600" />
             <span className="text-lg font-regular">Calendar</span>
           </button>

@@ -55,7 +55,7 @@ export default function WorkoutShareCard({
                     </div>
 
                     <div className=" text-base">
-                        <span className="text-blue-500 font-semibold text-2xl">{setsCount}x </span>
+                        <span className="text-blue-500 font-semibold text-2xl">{exerciseCount}x </span>
                         <span className="text-xl">{exerciseName}</span>
                     </div>
                 </div>

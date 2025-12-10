@@ -15,8 +15,31 @@ import MuscleModal from "@/components/MuscleModal";
 const stripEquipmentFromName = (name: string) =>
     name.replace(/\s*\([^)]*\)\s*$/, "");
 
-const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+// 🔹 Helper to fetch last-used sets for an exercise from backend
+// Adjust URL prefix if your backend is mounted as /api/workouts
+async function fetchLastSetsForExercise(exerciseId: string) {
+    try {
+        const res = await fetch(
+            `${API_BASE}/api/workouts/last-sets/${exerciseId}`,
+            { credentials: "include" }
+        );
+        const json = await res.json();
+        if (res.ok && json.success) {
+            return json.data as {
+                setNumber: number;
+                kg: number;
+                reps: number;
+                previous: string;
+            }[];
+        }
+    } catch (e) {
+        console.error("Error fetching last sets:", e);
+    }
+    return [];
+}
+
 
 export default function AddExercisePage() {
     const router = useRouter();
@@ -523,7 +546,7 @@ export default function AddExercisePage() {
         // 👉 CASE 2: Quick-start flow (existing behaviour)
         try {
             const workoutResponse = await workoutApi.getActive();
-            let currentExercises: Exercise[] = [];
+            let currentExercises: any[] = [];
             let currentSupersetGroups: string[][] = [];
             let currentDuration = 0;
             let startTime: number | undefined = undefined;
@@ -538,7 +561,9 @@ export default function AddExercisePage() {
                     return {
                         ...(base as Exercise),
                         restTimerSeconds: ex.restTimerSeconds ?? 0,
-                    } as Exercise & { restTimerSeconds?: number };
+                        sets: ex.sets || [],
+                        notes: ex.notes || "",
+                    };
                 });
 
                 currentSupersetGroups =
@@ -570,17 +595,42 @@ export default function AddExercisePage() {
                 }
             }
 
-            const exerciseMap = new Map<string, Exercise>();
-            currentExercises.forEach((ex) => exerciseMap.set(ex._id, ex));
-            selectedExercises.forEach((ex) =>
-                exerciseMap.set(
-                    ex._id,
-                    { ...ex, restTimerSeconds: 0 } as Exercise & {
-                        restTimerSeconds?: number;
-                    }
-                )
-            );
-            const allExercises = Array.from(exerciseMap.values());
+            // 🔹 Build list of new exercises with pre-filled sets from last workout
+            const newExercisesWithSets: any[] = [];
+            for (const ex of selectedExercises) {
+                // skip if already present
+                if (currentExercises.some((e) => e._id === ex._id)) continue;
+
+                const lastSets = await fetchLastSetsForExercise(ex._id);
+
+                const sets =
+                    lastSets.length > 0
+                        ? lastSets.map((s, idx) => ({
+                            setNumber: idx + 1,
+                            previous: s.previous,     // "10kg x 12"
+                            kg: s.kg,
+                            reps: s.reps,
+                            completed: false,         // new workout → unchecked
+                        }))
+                        : [
+                            {
+                                setNumber: 1,
+                                previous: "-",
+                                kg: 0,
+                                reps: 0,
+                                completed: false,
+                            },
+                        ];
+
+                newExercisesWithSets.push({
+                    ...ex,
+                    restTimerSeconds: 0,
+                    sets,
+                    notes: "",
+                });
+            }
+
+            const allExercises = [...currentExercises, ...newExercisesWithSets];
 
             await workoutApi.save({
                 exercises: allExercises,
@@ -594,6 +644,7 @@ export default function AddExercisePage() {
         } catch (error) {
             console.error("Error adding exercises to workout:", error);
         }
+
     };
 
 

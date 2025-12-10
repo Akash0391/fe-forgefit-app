@@ -1531,7 +1531,7 @@ export function WorkoutExerciseCard({
               {set.setNumber}
             </div>
             <div
-              className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-500"
+              className={`text-lg font-semibold text-center ${set.completed ? "text-gray-400" : "text-gray-400"
                 }`}
             >
               {set.previous}

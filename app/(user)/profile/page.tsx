@@ -668,11 +668,13 @@ export default function ProfilePage() {
         <div className="">
           <div className="p-4">
             {/* Top row: "X hours this week" (optional) */}
-            <div className="flex items-center justify-between mb-2">
+            {summary.length !==0 && 
+              <div className="flex items-center justify-between mb-2">
               <span className="text-lg text-gray-500">
                 {thisWeekHours} hours this week
               </span>
             </div>
+            }
 
             {/* Chart / empty states */}
             {loadingSummary ? (
@@ -680,9 +682,9 @@ export default function ProfilePage() {
                 Loading…
               </div>
             ) : summary.length === 0 ? (
-              <div className="h-32 flex flex-col items-center justify-center text-sm text-gray-400">
-                <span className="mb-1">No data yet</span>
-                <span className="text-xs">Complete a workout to see stats</span>
+              <div className="h-32 flex flex-col border rounded-[10px] h-44 items-center justify-center text-sm text-gray-400">
+                <ChartNoAxesColumnIncreasing className="size-10" />
+                <span className="text-lg">No data yet</span>
               </div>
             ) : (
               <div className="h-44 w-full ml-[-10]">

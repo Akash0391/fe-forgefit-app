@@ -206,6 +206,21 @@ export interface RoutineFolder {
   updatedAt: string;
 }
 
+export interface WorkoutSummaryPoint {
+  date: string;            // "2025-12-10"
+  durationSeconds: number;
+  durationMinutes: number;
+  totalVolumeKg: number;
+  totalReps: number;
+}
+
+export interface WorkoutSummaryResponse {
+  success: boolean;
+  data: WorkoutSummaryPoint[];
+  thisWeekHours: number;
+}
+
+
 // Workout-related API methods
 export const workoutApi = {
   getActive: () => apiClient.get<{
@@ -323,6 +338,23 @@ export const workoutApi = {
       success: boolean;
       data: RoutineFolder;
     }>(`/api/workouts/folders/${folderId}`, { name }),
+
+      // ---------- Charts & stats ----------
+
+  getSummary: (range: "1w" | "1m" | "3m" | "1y" = "3m") =>
+    apiClient.get<WorkoutSummaryResponse>(`/api/workouts/summary?range=${range}`),
+
+  // used for PREVIOUS column in log workout (already have controller)
+  getLastSets: (exerciseId: string) =>
+    apiClient.get<{
+      success: boolean;
+      data: {
+        setNumber: number;
+        kg: number;
+        reps: number;
+        previous: string; // e.g. "5x12"
+      }[];
+    }>(`/api/workouts/last-sets/${exerciseId}`),
 
 };
 

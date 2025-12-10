@@ -23,14 +23,224 @@ import { useRouter } from "next/navigation";
 import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
 import WorkoutOptionsModal from "@/components/WorkoutOptionsModal";
 import DeleteWorkoutModal from "@/components/DeleteWorkoutModal";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 
 export default function ProfilePage() {
+
+  type Metric = "duration" | "volume" | "reps";
+
+  type SummaryPoint = {
+    date: string;
+    durationSeconds: number;
+    durationMinutes: number;
+    totalVolumeKg: number;
+    totalReps: number;
+  };
+
+  const [metric, setMetric] = useState<Metric>("duration");
+  const [summary, setSummary] = useState<SummaryPoint[]>([]);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [thisWeekHours, setThisWeekHours] = useState(0);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await workoutApi.getSummary("3m");
+        if (res.success) {
+          setSummary(res.data || []);
+          setThisWeekHours(res.thisWeekHours ?? 0);
+        }
+      } catch (err) {
+        console.error("Error loading workout summary:", err);
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  // transform for chart – aggregate into 14-day buckets over last 3 months
+  const chartData = (() => {
+    if (!summary.length) return [];
+
+    // Prepare data with Date objects
+    const withDates = summary.map((item) => ({
+      ...item,
+      // force midnight to avoid timezone drift
+      dateObj: new Date(item.date + "T00:00:00"),
+    }));
+
+    const now = new Date();
+    const rangeStart = new Date(now);
+    rangeStart.setMonth(rangeStart.getMonth() - 3); // same "3m" range as backend
+    rangeStart.setHours(0, 0, 0, 0);
+
+    const buckets: {
+      label: string;
+      durationMinutes: number;
+      totalVolumeKg: number;
+      totalReps: number;
+    }[] = [];
+
+    let bucketStart = rangeStart;
+
+    while (bucketStart <= now) {
+      const bucketEnd = new Date(bucketStart);
+      bucketEnd.setDate(bucketEnd.getDate() + 13); // 14-day window
+
+      let durationMinutes = 0;
+      let totalVolumeKg = 0;
+      let totalReps = 0;
+
+      // Sum all days that fall inside this 14-day window
+      withDates.forEach((item) => {
+        if (item.dateObj >= bucketStart && item.dateObj <= bucketEnd) {
+          durationMinutes += item.durationMinutes;
+          totalVolumeKg += item.totalVolumeKg;
+          totalReps += item.totalReps;
+        }
+      });
+
+      buckets.push({
+        label: bucketStart.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+        durationMinutes,
+        totalVolumeKg,
+        totalReps,
+      });
+
+      // move start forward by 14 days
+      bucketStart = new Date(bucketStart);
+      bucketStart.setDate(bucketStart.getDate() + 14);
+    }
+
+    return buckets;
+  })();
+
+  // ---------- METRIC VALUES + BAR DATA ----------
+  const metricValues = chartData.map((d) =>
+    metric === "duration"
+      ? d.durationMinutes / 60 // show in hours on Y-axis
+      : metric === "volume"
+        ? d.totalVolumeKg
+        : d.totalReps
+  );
+
+
+  const dataForChart = {
+    labels: chartData.map((d) => d.label),
+    datasets: [
+      {
+        label:
+          metric === "duration"
+            ? "Duration (min)"
+            : metric === "volume"
+              ? "Volume (kg)"
+              : "Reps",
+        data: chartData.map((d) =>
+          metric === "duration"
+            ? d.durationMinutes
+            : metric === "volume"
+              ? d.totalVolumeKg
+              : d.totalReps
+        ),
+        backgroundColor: "#2196F3",
+        barPercentage: 0.7,       // 0–1, smaller = thinner inside category
+        categoryPercentage: 0.6,  // space between groups
+        maxBarThickness: 20,
+      },
+    ],
+  };
+
+  // ---------- Y-AXIS CONFIG PER METRIC ----------
+  const maxValue = metricValues.length ? Math.max(...metricValues) : 0;
+
+  let yStepSize: number;
+  let ySuggestedMax: number;
+  let yTickFormatter: (v: number) => string;
+
+  if (metric === "duration") {
+    // 0h, 1h, 2h...
+    yStepSize = 1;
+    ySuggestedMax = Math.max(1, Math.ceil(maxValue));
+    yTickFormatter = (v) => `${v}h`;
+  } else if (metric === "volume") {
+    // 0kg, 1kg, 2kg...
+    yStepSize = 1;
+    ySuggestedMax = Math.max(1, Math.ceil(maxValue));
+    yTickFormatter = (v) => `${v}kg`;
+  } else {
+    // reps: 0, 100, 200, 300...
+    yStepSize = 100;
+    ySuggestedMax = Math.max(100, Math.ceil(maxValue / 100) * 100);
+    yTickFormatter = (v) => `${v}reps`;
+  }
+
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const v = ctx.raw ?? 0;
+            if (metric === "duration") return `${v} min`;
+            if (metric === "volume") return `${v} kg`;
+            return `${v} reps`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 10 } },
+      },
+      y: {
+        beginAtZero: true,
+        suggestedMax: ySuggestedMax,
+        grid: { color: "#f3f4f6" },
+        ticks: {
+          stepSize: yStepSize,
+          font: { size: 10 },
+          callback: (value: any) => yTickFormatter(Number(value)),
+        },
+      },
+    },
+  } as const;
+
   const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [selectedMetric, setSelectedMetric] = useState<
     "Duration" | "Volume" | "Reps"
   >("Duration");
+
+  useEffect(() => {
+    if (selectedMetric === "Duration") {
+      setMetric("duration");
+    } else if (selectedMetric === "Volume") {
+      setMetric("volume");
+    } else {
+      setMetric("reps");
+    }
+  }, [selectedMetric]);
+
+
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -454,10 +664,34 @@ export default function ProfilePage() {
 
       {/* Data Visualization Area */}
       <div className="px-4 mb-6">
-        <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px]">
-          <ChartNoAxesColumnIncreasing className="size-12 text-gray-300 mb-4" />
-          <p className="text-muted-foreground">No data yet</p>
+        {/* Workout summary card with Chart.js */}
+        <div className="">
+          <div className="p-4">
+            {/* Top row: "X hours this week" (optional) */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-lg text-gray-500">
+                {thisWeekHours} hours this week
+              </span>
+            </div>
+
+            {/* Chart / empty states */}
+            {loadingSummary ? (
+              <div className="h-32 flex items-center justify-center text-sm text-gray-400">
+                Loading…
+              </div>
+            ) : summary.length === 0 ? (
+              <div className="h-32 flex flex-col items-center justify-center text-sm text-gray-400">
+                <span className="mb-1">No data yet</span>
+                <span className="text-xs">Complete a workout to see stats</span>
+              </div>
+            ) : (
+              <div className="h-44 w-full">
+                <Bar data={dataForChart} options={options} />
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* Metric Selection Buttons */}
         <div className="flex gap-6 mt-4">
@@ -652,7 +886,7 @@ export default function ProfilePage() {
                       <ThumbsUp className="size-7" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                        <MessageCircle className="size-7" />
+                      <MessageCircle className="size-7" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
                       <Share className="size-7" />

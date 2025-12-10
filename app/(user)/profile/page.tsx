@@ -17,7 +17,9 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { workoutApi, Workout, SetData } from "@/lib/api";
+import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
+import WorkoutOptionsModal from "@/components/WorkoutOptionsModal";
+import DeleteWorkoutModal from "@/components/DeleteWorkoutModal";
 
 
 export default function ProfilePage() {
@@ -32,6 +34,7 @@ export default function ProfilePage() {
   const [logoutCountdown, setLogoutCountdown] = useState<number | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const logoutExecutedRef = useRef<boolean>(false);
@@ -178,6 +181,132 @@ export default function ProfilePage() {
     }
   };
 
+  const handleEditWorkout = () => {
+    if (!selectedWorkout) return;
+
+    // store full workout to edit
+    sessionStorage.setItem(
+      "workoutToEdit",
+      JSON.stringify(selectedWorkout)
+    );
+
+    // close modal
+    setShowWorkoutModal(false);
+
+    // go to finish-workout page in edit mode
+    router.push("/workout/quick-start/finish-workout?mode=edit");
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedWorkout) return;
+
+    try {
+      // Call delete workout API
+      await workoutApi.delete(selectedWorkout._id);
+
+      // Remove workout from list
+      setWorkouts(workouts.filter((w) => w._id !== selectedWorkout._id));
+
+      // Close modals
+      setShowDeleteModal(false);
+      setShowWorkoutModal(false);
+      setSelectedWorkout(null);
+    } catch (error) {
+      console.error("Error deleting workout:", error);
+      // Keep modals open on error so user can retry
+    }
+  };
+
+  const handleShareWorkout = () => {
+    // TODO: Implement share workout functionality
+    console.log("Share workout:", selectedWorkout?._id);
+  };
+
+  const handleToggleVisibility = () => {
+    // TODO: Implement toggle visibility functionality
+    console.log("Toggle visibility:", selectedWorkout?._id);
+  };
+
+  const handleCopyWorkout = () => {
+    if (!selectedWorkout) return;
+
+    const workout = selectedWorkout;
+
+    const payload = {
+      exercises: (workout.exercises || []).map((we: any) => {
+        const exercise: Exercise =
+          typeof we.exerciseId === "object"
+            ? (we.exerciseId as Exercise)
+            : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+
+        return {
+          exercise,                        // full Exercise object
+          sets: we.sets || [],
+          restTimerSeconds: we.restTimerSeconds ?? 0,
+        };
+      }),
+
+      // keep supersets so UI matches the original workout
+      supersetGroups: (workout.supersetGroups || []).map((group: any) =>
+        Array.isArray(group) ? group : group.exerciseIds || []
+      ),
+    };
+
+    sessionStorage.setItem(
+      "copyWorkoutToQuickStart",
+      JSON.stringify(payload)
+    );
+
+    // we’re starting a brand-new workout from this copy
+    localStorage.removeItem("workoutStartTime");
+    localStorage.removeItem("workoutInProgress");
+
+    setShowWorkoutModal(false);
+    router.push("/workout/quick-start");
+  };
+
+  const handleSaveAsRoutine = () => {
+    if (!selectedWorkout) return;            // safety
+
+    const workout = selectedWorkout;
+
+    const payload = {
+      name: workout.name || "",
+      exercises: (workout.exercises || []).map((we: any) => {
+        const exercise: Exercise =
+          typeof we.exerciseId === "object"
+            ? (we.exerciseId as Exercise)
+            : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+
+        return {
+          exercise,
+          sets: we.sets || [],
+          notes: we.notes || "",
+          restTimerSeconds: we.restTimerSeconds ?? 0,   // ✅ keep rest timer
+        };
+      }),
+      supersetGroups: (workout.supersetGroups || []).map((group: any) =>
+        Array.isArray(group) ? group : group.exerciseIds || []
+      ),
+    };
+
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(payload));
+    router.push("/workout/new-routine");
+  };
+
+  const handleDeleteWorkoutClick = () => {
+    // Close workout options modal and open delete confirmation modal
+    setShowWorkoutModal(false);
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    // Also close workout options modal when delete modal is closed
+    setShowWorkoutModal(false);
+    setSelectedWorkout(null);
+  };
+
   // Handle countdown timer
   useEffect(() => {
     // Clear any existing timer
@@ -316,8 +445,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setSelectedMetric("Duration")}
             className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Duration"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-black border border-gray-300"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-100 text-black border border-gray-300"
               }`}
           >
             Duration
@@ -325,8 +454,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setSelectedMetric("Volume")}
             className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Volume"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-black border border-gray-300"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-100 text-black border border-gray-300"
               }`}
           >
             Volume
@@ -334,8 +463,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setSelectedMetric("Reps")}
             className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Reps"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-black border border-gray-300"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-100 text-black border border-gray-300"
               }`}
           >
             Reps
@@ -525,7 +654,27 @@ export default function ProfilePage() {
         )}
       </div>
 
-      
+      {/* Workout Options Modal */}
+      <WorkoutOptionsModal
+        open={showWorkoutModal}
+        onClose={handleCloseWorkoutModal}
+        workout={selectedWorkout}
+        onEdit={handleEditWorkout}
+        onDelete={handleConfirmDelete}
+        onShare={handleShareWorkout}
+        onCopy={handleCopyWorkout}
+        onToggleVisibility={handleToggleVisibility}
+        onSaveAsRoutine={handleSaveAsRoutine}
+        onDeleteClick={handleDeleteWorkoutClick}
+      />
+
+      {/* Delete Workout Confirmation Modal */}
+      <DeleteWorkoutModal
+        open={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        message="Are you sure you want to delete this workout?"
+      />
     </div>
   );
 }

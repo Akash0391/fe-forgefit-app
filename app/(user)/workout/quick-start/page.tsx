@@ -789,35 +789,35 @@ const loadWorkout = async () => {
   };
 
   const finishWorkout = async () => {
-    try {
-      // Set flag to prevent auto-save on unmount
-      isFinishingRef.current = true;
+  try {
+    isFinishingRef.current = true;
 
-      await workoutApi.finish();
+    // 👇 get response with workout
+    const response = await workoutApi.finish();
+    const finishedWorkout = response.data; // adjust to your API shape
 
-      // Reset duration to 0
-      setDuration(0);
+    // 👇 store once for the success page
+    sessionStorage.setItem(
+      "lastFinishedWorkout",
+      JSON.stringify(finishedWorkout)
+    );
 
-      // Clear timer interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+    // clear locals ...
+    setDuration(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    localStorage.removeItem("workoutStartTime");
+    localStorage.removeItem("workoutInProgress");
+    setWorkoutExercises([]);
+    setExerciseSets({});
+    setSupersetGroups([]);
 
-      // Clear local state
-      localStorage.removeItem("workoutStartTime");
-      localStorage.removeItem("workoutInProgress");
-      setWorkoutExercises([]);
-      setExerciseSets({});
-      setSupersetGroups([]);
+    router.push("/workout/quick-start/finish-workout");
+  } catch (error) {
+    console.error("Error finishing workout:", error);
+    isFinishingRef.current = false;
+  }
+};
 
-      // Navigate to finish-workout page
-      router.push("/workout/quick-start/finish-workout");
-    } catch (error) {
-      console.error("Error finishing workout:", error);
-      // Reset flag on error
-      isFinishingRef.current = false;
-    }
-  };
 
   const handleCancelFinish = () => {
     setShowFinishConfirmationModal(false);

@@ -5,19 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     // If already authenticated, redirect to workout or intended destination
     if (!loading && isAuthenticated) {
       router.push("/workout");
     }
-  }, [isAuthenticated, loading, router, searchParams]);
+  }, [isAuthenticated, loading, router]);
 
   const handleGoogleLogin = () => {
     // Redirect to workout page after login

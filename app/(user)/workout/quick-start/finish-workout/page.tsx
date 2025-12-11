@@ -8,11 +8,11 @@ import { ArrowLeft, ChevronRight, ImagePlus, Plus } from "lucide-react";
 import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
 import MediaSelectionModal from "@/components/MediaSelectionModal";
 import VisibilityModal from "@/components/VisibilityModal";
-import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
-import { WorkoutExerciseCard } from "../page";
+import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";;
 import { RestTimerModal } from "@/components/RestTimerModal";
 import ExerciseOptionsModal from "@/components/ExerciseOptionsModal";
 import AddToSupersetModal from "@/components/AddToSupersetModal";
+import { WorkoutExerciseCard } from "@/components/WorkoutExerciseCard";
 
 export default function FinishWorkoutPage() {
   const router = useRouter();

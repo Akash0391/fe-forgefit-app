@@ -4,7 +4,14 @@ import { useEffect } from "react";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const theme = localStorage.getItem("theme") || "dark";
+    let theme = localStorage.getItem("theme");
+
+    // If no theme exists, set "light" as default
+    if (!theme) {
+      localStorage.setItem("theme", "light");
+      theme = "light";
+    }
+
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, []);
 
@@ -14,7 +21,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
-              const theme = localStorage.getItem('theme') || 'dark';
+              let theme = localStorage.getItem('theme');
+              if (!theme) {
+                localStorage.setItem('theme', 'light');
+                theme = 'light';
+              }
               document.documentElement.classList.toggle('dark', theme === 'dark');
             })();
           `,
@@ -24,4 +35,3 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </>
   );
 }
-

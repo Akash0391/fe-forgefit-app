@@ -111,7 +111,7 @@ export default function WorkoutOptionsModal({
       />
       {/* Modal Content - Bottom Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[50vh] ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
           isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -141,7 +141,7 @@ export default function WorkoutOptionsModal({
                       onClose();
                     }
                   }}
-                  className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
+                  className={`w-full flex items-center gap-5 px-5 py-5 transition-colors text-left ${
                     !isLast ? "border-b border-gray-100" : ""
                   } hover:bg-gray-50 active:bg-gray-100`}
                 >

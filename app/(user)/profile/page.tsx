@@ -612,18 +612,18 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between h-16 px-4">
 
           {/* Center: Username */}
-          <h1 className="text-lg font-regular">{getUsername()}</h1>
+          <h1 className="text-sm font-regular">{getUsername()}</h1>
 
           {/* Right: Share and Settings */}
           <div className="flex items-center gap-5">
             <button onClick={handleEditProfile} className="text-muted-foreground">
-              <Pencil className="size-7" />
+              <Pencil className="size-6" />
             </button>
             <button className="text-muted-foreground">
-              <ShareIcon className="size-7" />
+              <ShareIcon className="size-6" />
             </button>
             <button className="text-muted-foreground">
-              <Settings className="size-7" />
+              <Settings className="size-6" />
             </button>
           </div>
         </div>
@@ -633,7 +633,7 @@ export default function ProfilePage() {
       <div className="px-4 py-6">
         <div className="flex items-start gap-4">
           {/* Profile Picture */}
-          <Avatar className="size-28">
+          <Avatar className="size-20">
             <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
             <AvatarFallback>
               {user.name ? getInitials(user.name) : "U"}
@@ -642,20 +642,20 @@ export default function ProfilePage() {
 
           {/* Name and Stats */}
           <div className="flex-1 pt-2">
-            <h2 className="text-2xl font-semibold mb-4">{user.name || "User"}</h2>
+            <h2 className="text-sm font-semibold mb-4">{user.name || "User"}</h2>
             <div className="flex justify-between gap-6">
               <div>
                 <p className="text-sm text-gray-500">Workouts</p>
-                <p className="text-lg font-regular">{workouts.length}</p>
+                <p className="text-sm font-regular">{workouts.length}</p>
 
               </div>
               <div>
                 <p className="text-sm text-gray-500">Followers</p>
-                <p className="text-lg font-regular">0</p>
+                <p className="text-sm font-regular">0</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Following</p>
-                <p className="text-lg font-regular">0</p>
+                <p className="text-sm font-regular">0</p>
               </div>
             </div>
           </div>
@@ -670,7 +670,7 @@ export default function ProfilePage() {
             {/* Top row: "X hours this week" (optional) */}
             {summary.length !==0 && 
               <div className="flex items-center justify-between mb-2">
-              <span className="text-lg text-gray-500">
+              <span className="text-sm text-gray-500">
                 {thisWeekHours} hours this week
               </span>
             </div>
@@ -678,16 +678,16 @@ export default function ProfilePage() {
 
             {/* Chart / empty states */}
             {loadingSummary ? (
-              <div className="h-32 flex items-center justify-center text-sm text-gray-400">
+              <div className="h-24 flex items-center justify-center text-sm text-gray-400">
                 Loading…
               </div>
             ) : summary.length === 0 ? (
-              <div className="h-32 flex flex-col border rounded-[10px] h-44 items-center justify-center text-sm text-gray-400">
+              <div className="h-24 flex flex-col border rounded-[10px] h-32 items-center justify-center text-sm text-gray-400">
                 <ChartNoAxesColumnIncreasing className="size-10" />
-                <span className="text-lg">No data yet</span>
+                <span className="text-sm">No data yet</span>
               </div>
             ) : (
-              <div className="h-44 w-full ml-[-10]">
+              <div className="h-32 w-full ml-[-10]">
                 <Bar data={dataForChart} options={options} />
               </div>
             )}
@@ -696,10 +696,10 @@ export default function ProfilePage() {
 
 
         {/* Metric Selection Buttons */}
-        <div className="flex gap-6 mt-4">
+        <div className="flex gap-2 mt-4">
           <button
             onClick={() => setSelectedMetric("Duration")}
-            className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Duration"
+            className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Duration"
               ? "bg-blue-500 text-white"
               : "bg-gray-100 text-black border border-gray-300"
               }`}
@@ -708,7 +708,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setSelectedMetric("Volume")}
-            className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Volume"
+            className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Volume"
               ? "bg-blue-500 text-white"
               : "bg-gray-100 text-black border border-gray-300"
               }`}
@@ -717,7 +717,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setSelectedMetric("Reps")}
-            className={`flex py-2 px-4 rounded-full text-lg font-regular transition-colors ${selectedMetric === "Reps"
+            className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Reps"
               ? "bg-blue-500 text-white"
               : "bg-gray-100 text-black border border-gray-300"
               }`}
@@ -729,32 +729,32 @@ export default function ProfilePage() {
 
       {/* Dashboard Section */}
       <div className="px-4 mb-6">
-        <h3 className="text-lg font-regular text-muted-foreground mb-4">
+        <h3 className="text-sm font-regular text-muted-foreground mb-4">
           Dashboard
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {/* Statistics */}
           <button onClick={handleStatistics} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <TrendingUp className="size-6 text-gray-600" />
-            <span className="text-lg font-regular">Statistics</span>
+            <span className="text-sm font-regular">Statistics</span>
           </button>
 
           {/* Exercises */}
           <button onClick={handleExercises} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <Dumbbell className="size-6 text-gray-600" />
-            <span className="text-lg font-regular">Exercises</span>
+            <span className="text-sm font-regular">Exercises</span>
           </button>
 
           {/* Measures */}
           <button onClick={handleMeasures} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <PersonStanding className="size-6 text-gray-600" />
-            <span className="text-lg font-regular">Measures</span>
+            <span className="text-sm font-regular">Measures</span>
           </button>
 
           {/* Calendar */}
           <button onClick={handleCalendar} className="bg-gray-100 rounded-[10px] p-4 flex flex-row items-center  gap-3 hover:bg-gray-50 transition-colors">
             <CalendarDays className="size-6 text-gray-600" />
-            <span className="text-lg font-regular">Calendar</span>
+            <span className="text-sm font-regular">Calendar</span>
           </button>
         </div>
       </div>
@@ -762,14 +762,14 @@ export default function ProfilePage() {
       {/* Workouts Section */}
       {/* Workouts Section */}
       <div className="px-4 mb-6">
-        <h3 className="text-lg font-regular text-muted-foreground mb-4">
+        <h3 className="text-sm font-regular text-muted-foreground mb-4">
           Workouts
         </h3>
 
         {workoutsLoading ? (
           // 6.1 loading state
           <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px]">
-            <p className="text-lg font-regular text-gray-500">
+            <p className="text-sm font-regular text-gray-500">
               Loading workouts...
             </p>
           </div>
@@ -779,13 +779,13 @@ export default function ProfilePage() {
             <div className="relative pb-3 pr-3">
               <div className="relative bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px] z-10">
                 <Dumbbell className="size-14 text-gray-300 mb-4" />
-                <p className="text-lg font-regular text-gray-500 mb-4">
+                <p className="text-sm font-regular text-gray-500 mb-4">
                   No workouts
                 </p>
               </div>
             </div>
             <div className="flex justify-center mt-4">
-              <button className="text-blue-500 text-lg font-regular flex items-center gap-1">
+              <button className="text-blue-500 text-sm font-regular flex items-center gap-1">
                 Start tracking here
                 <ChevronDown className="size-4" />
               </button>
@@ -817,7 +817,7 @@ export default function ProfilePage() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="text-lg font-regular text-gray-900">
+                        <span className="text-sm font-regular text-gray-900">
                           {getUsername()}
                         </span>
                         <span className="text-sm font-regular text-gray-500">
@@ -829,12 +829,12 @@ export default function ProfilePage() {
                       onClick={() => handleOpenWorkoutModal(workout)}
                       className="text-gray-600 hover:text-gray-900"
                     >
-                      <Ellipsis className="size-7" />
+                      <Ellipsis className="size-6" />
                     </button>
                   </div>
 
                   {/* title */}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">
                     {workout.name || "Quick Start Workout"}
                   </h3>
 
@@ -842,13 +842,13 @@ export default function ProfilePage() {
                   <div className="flex gap-6 mb-4 border-b border-gray-100 pb-4">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Time</p>
-                      <p className="text-base font-regular text-gray-900">
+                      <p className="text-sm font-regular text-gray-900">
                         {formatDuration(workout.duration)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Volume</p>
-                      <p className="text-base font-regular text-gray-900">
+                      <p className="text-sm font-regular text-gray-900">
                         {totalVolume} kg
                       </p>
                     </div>
@@ -863,7 +863,7 @@ export default function ProfilePage() {
 
                       return (
                         <div key={index} className="flex items-center gap-3">
-                          <div className="size-16 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+                          <div className="size-14 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
                             {thumbnail ? (
                               <img
                                 src={thumbnail}
@@ -871,10 +871,10 @@ export default function ProfilePage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <Dumbbell className="size-5 text-gray-400" />
+                              <Dumbbell className="size-4 text-gray-400" />
                             )}
                           </div>
-                          <span className="text-base font-regular text-gray-900">
+                          <span className="text-sm font-regular text-gray-900">
                             {completedSets} set
                             {completedSets !== 1 ? "s" : ""} {name}
                           </span>
@@ -885,13 +885,13 @@ export default function ProfilePage() {
                   {/* Action Buttons: Like, Comment, Share */}
                   <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100">
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                      <ThumbsUp className="size-7" />
+                      <ThumbsUp className="size-6" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                      <MessageCircle className="size-7" />
+                      <MessageCircle className="size-6" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                      <Share className="size-7" />
+                      <Share className="size-6" />
                     </button>
                   </div>
                 </div>
@@ -906,7 +906,7 @@ export default function ProfilePage() {
       <div className="px-4 mb-6">
         {isLoggingOut && logoutCountdown !== null ? (
           <div className="bg-red-50 border border-red-200 rounded-[10px] p-4">
-            <p className="text-red-700 text-center text-lg font-regular">
+            <p className="text-red-700 text-center text-sm font-regular">
               Logging out in {logoutCountdown} second{logoutCountdown !== 1 ? "s" : ""}...
             </p>
           </div>
@@ -916,7 +916,7 @@ export default function ProfilePage() {
             className="w-full bg-red-500 hover:bg-red-600 text-white rounded-[10px] p-4 flex items-center justify-center gap-3 transition-colors"
           >
             <LogOut className="size-5" />
-            <span className="text-lg font-regular">Logout</span>
+            <span className="text-sm font-regular">Logout</span>
           </button>
         )}
       </div>

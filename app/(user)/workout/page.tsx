@@ -298,7 +298,7 @@ export default function WorkoutPage() {
         <div className="flex items-center justify-between h-16 px-4">
 
           {/* Middle: Workout Title */}
-          <h1 className="text-2xl font-semibold">Workout</h1>
+          <h1 className="text-xl font-semibold">Workout</h1>
 
           {/* Right: Refresh Icon */}
           <div className="flex items-center">
@@ -316,19 +316,19 @@ export default function WorkoutPage() {
       </header>
 
       {/* Content */}
-      <div className="p-4 space-y-6 pb-20 mt-8">
+      <div className="p-4 space-y-4 pb-20">
         {/* Quick Start Section */}
         <section>
-          <h2 className="text-lg font-semibold mb-5">Quick Start</h2>
+          <h2 className="text-xm font-semibold mb-5">Quick Start</h2>
           <Button
             onClick={() => {
               handleStartEmptyWorkout();
             }}
             variant="outline"
-            className="w-full justify-start text-lg bg-gray-100 rounded-[10px] p-8"
+            className="w-full justify-start text-xm bg-gray-100 rounded-[10px] p-6"
             size="lg"
           >
-            <Plus className="size-[26px]" />{" "}
+            <Plus className="size-[18px]" />{" "}
             <span className="font-regular">Start Empty Workout</span>
           </Button>
         </section>
@@ -336,7 +336,7 @@ export default function WorkoutPage() {
         {/* Routines Section */}
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold">Routines</h2>
+            <h2 className="text-xm font-semibold">Routines</h2>
             {/* ✅ Show folder icon ONLY if at least one routine exists */}
             {!loadingRoutines && routines.length > 0 && (
               <button
@@ -344,7 +344,7 @@ export default function WorkoutPage() {
                 className="flex items-center justify-center rounded-[10px] p-2 transition-colors cursor-pointer"
                 aria-label="New Routine"
               >
-                <FolderPlus className="size-[26px]" />
+                <FolderPlus className="size-[22px]" />
               </button>
             )}
           </div>
@@ -353,19 +353,19 @@ export default function WorkoutPage() {
               onClick={() => {
                 router.push("/workout/new-routine");
               }}
-              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-8 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
+              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >
               <Notebook className="size-[20px] mb-2" />
-              <p className="text-lg font-regular">New Routine</p>
+              <p className="text-xm font-regular">New Routine</p>
             </button>
             <button
               onClick={() => {
                 handleExploreRoutines();
               }}
-              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-8 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
+              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >
               <Search className="size-[20px] mb-2" />
-              <p className="text-lg font-regular">Explore routines</p>
+              <p className="text-xm font-regular">Explore routines</p>
             </button>
           </div>
         </section>
@@ -388,13 +388,13 @@ export default function WorkoutPage() {
                   }
                   className="flex items-center justify-between w-full mb-2"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {expanded ? (
-                      <ChevronDown className="size-5 text-gray-400" />
+                      <ChevronDown className="size-4 text-gray-400" />
                     ) : (
-                      <ChevronRight className="size-5 text-gray-400" />
+                      <ChevronRight className="size-4 text-gray-400" />
                     )}
-                    <span className="text-lg font-semibold text-gray-500">
+                    <span className="text-sm font-semibold text-gray-500">
                       {folder.name}
                     </span>
                   </div>
@@ -408,7 +408,7 @@ export default function WorkoutPage() {
                     }}
                     className="p-1 rounded-full hover:bg-gray-100"
                   >
-                    <MoreHorizontal className="size-7 text-gray-900" />
+                    <MoreHorizontal className="size-6 text-gray-900" />
                   </button>
                 </button>
 
@@ -435,9 +435,9 @@ export default function WorkoutPage() {
                         >
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
-                              <h3 className="text-xl font-semibold">{routine.name}</h3>
+                              <h3 className="text-sm font-semibold">{routine.name}</h3>
                               {exercise && (
-                                <p className="text-lg text-gray-500">
+                                <p className="text-sm text-gray-500">
                                   {formatExerciseName(exercise)}
                                 </p>
                               )}
@@ -450,7 +450,7 @@ export default function WorkoutPage() {
                               className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                               aria-label="Routine options"
                             >
-                              <MoreHorizontal className="size-7 text-black" />
+                              <MoreHorizontal className="size-6 text-black" />
                             </button>
                           </div>
                           <Button
@@ -458,7 +458,7 @@ export default function WorkoutPage() {
                               e.stopPropagation();
                               handleStartRoutine(routine);
                             }}
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-[10px] py-6"
+                            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-[10px] py-6"
                           >
                             Start Routine
                           </Button>
@@ -468,14 +468,14 @@ export default function WorkoutPage() {
 
                     {/* ⬇️ Only show dashed Add button if folder is empty */}
                     {folderRoutines.length === 0 && (
-                      <div className="border border-dashed border-gray-300 rounded-[10px] py-6 px-4 flex items-center justify-center">
+                      <div className="border border-dashed border-gray-300 rounded-[10px] p-4 flex items-center justify-center">
                         <button
                           onClick={() =>
                             router.push(`/workout/new-routine?folderId=${folder._id}`)
                           }
-                          className="flex items-center gap-2 text-blue-500 text-lg font-regular hover:text-blue-600"
+                          className="flex items-center gap-2 text-blue-500 text-xm font-regular hover:text-blue-600"
                         >
-                          <Plus className="size-5" />
+                          <Plus className="size-4" />
                           <span>Add new routine</span>
                         </button>
                       </div>
@@ -493,14 +493,14 @@ export default function WorkoutPage() {
           <section>
             <button
               onClick={() => setShowRoutines(!showRoutines)}
-              className="flex items-center gap-2 mb-5 w-full text-left"
+              className="flex items-center gap-1 mb-5 w-full text-left"
             >
               {showRoutines ? (
-                <ChevronDown className="size-6 text-gray-400" />
+                <ChevronDown className="size-4 text-gray-400" />
               ) : (
-                <ChevronRight className="size-6 text-gray-400" />
+                <ChevronRight className="size-4 text-gray-400" />
               )}
-              <h2 className="text-lg text-gray-400 font-semibold">
+              <h2 className="text-sm text-gray-400 font-semibold">
                 My Routines ({myRoutines.length})
               </h2>
             </button>
@@ -526,11 +526,11 @@ export default function WorkoutPage() {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold">
+                          <h3 className="text-sm font-semibold">
                             {routine.name}
                           </h3>
                           {exercise && (
-                            <p className="text-lg text-gray-500">
+                            <p className="text-sm text-gray-500">
                               {formatExerciseName(exercise)}
                             </p>
                           )}
@@ -543,7 +543,7 @@ export default function WorkoutPage() {
                           className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                           aria-label="Routine options"
                         >
-                          <MoreHorizontal className="size-7 text-black" />
+                          <MoreHorizontal className="size-6 text-black" />
                         </button>
                       </div>
                       <Button
@@ -551,7 +551,7 @@ export default function WorkoutPage() {
                           e.stopPropagation();
                           handleStartRoutine(routine);
                         }}
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-[10px] py-6"
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-[10px] p-4"
                       >
                         Start Routine
                       </Button>

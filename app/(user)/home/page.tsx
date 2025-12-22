@@ -349,7 +349,7 @@ export default function HomePage() {
       </header>
 
       {/* Content */}
-      <div className="p-4 bg-white">
+      <div className="p-2 bg-white">
         {workouts.length === 0 ? (
           <div className="space-y-4">
             {showWelcome && (
@@ -477,7 +477,7 @@ export default function HomePage() {
 
                       return (
                         <div key={index} className="flex items-center gap-3">
-                          <div className="size-14 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+                          <div className="size-12 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
                             {thumbnail ? (
                               <img
                                 src={thumbnail}

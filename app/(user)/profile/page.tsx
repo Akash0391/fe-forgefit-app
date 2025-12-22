@@ -630,7 +630,7 @@ export default function ProfilePage() {
       </header>
 
       {/* Profile Information Section */}
-      <div className="px-4 py-6">
+      <div className="px-3 py-4">
         <div className="flex items-start gap-4">
           {/* Profile Picture */}
           <Avatar className="size-20">
@@ -663,7 +663,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Data Visualization Area */}
-      <div className="px-4 mb-6">
+      <div className="px-3 mb-6">
         {/* Workout summary card with Chart.js */}
         <div className="">
           <div className="p-4">
@@ -728,7 +728,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Dashboard Section */}
-      <div className="px-4 mb-6">
+      <div className="px-3 mb-6">
         <h3 className="text-sm font-regular text-muted-foreground mb-4">
           Dashboard
         </h3>
@@ -761,7 +761,7 @@ export default function ProfilePage() {
 
       {/* Workouts Section */}
       {/* Workouts Section */}
-      <div className="px-4 mb-6">
+      <div className="px-3 mb-6">
         <h3 className="text-sm font-regular text-muted-foreground mb-4">
           Workouts
         </h3>
@@ -863,7 +863,7 @@ export default function ProfilePage() {
 
                       return (
                         <div key={index} className="flex items-center gap-3">
-                          <div className="size-14 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+                          <div className="size-10 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
                             {thumbnail ? (
                               <img
                                 src={thumbnail}

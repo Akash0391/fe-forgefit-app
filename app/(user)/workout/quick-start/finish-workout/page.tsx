@@ -316,7 +316,7 @@ export default function FinishWorkoutPage() {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-14 px-2">
           {/* Left: Back Button */}
           <Button
             variant="ghost"
@@ -325,11 +325,11 @@ export default function FinishWorkoutPage() {
             className="h-10 w-10"
             aria-label="Go back"
           >
-            <ArrowLeft className="size-[24px]" />
+            <ArrowLeft className="size-[20px]" />
           </Button>
 
           {/* Center: Title */}
-          <h1 className="text-lg font-regular">
+          <h1 className="text-sm font-regular">
             {isEditMode ? "Edit Workout" : "Save Workout"}
           </h1>
 
@@ -337,7 +337,7 @@ export default function FinishWorkoutPage() {
           <Button
             variant="default"
             onClick={handleSave}
-            className="bg-blue-500 hover:bg-blue-600 text-lg font-regular text-white px-3 rounded-[6px] py-2 h-10"
+            className="bg-blue-500 hover:bg-blue-600 text-sm font-regular text-white px-3 py-2 h-8"
           >
             Save
           </Button>
@@ -345,38 +345,38 @@ export default function FinishWorkoutPage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-7 space-y-8">
+      <div className="flex-1 px-2 py-4 space-y-4">
         {/* Workout Title */}
         <Input
           type="text"
           placeholder="Workout title"
           value={workoutTitle}
           onChange={(e) => setWorkoutTitle(e.target.value)}
-          className="text-xl font-bold border-none bg-transparent mb-12 p-1 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="text-xm font-bold border-none bg-transparent mb-6 p-1 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
         />
 
         {/* Metrics */}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-500 mb-1">Duration</p>
-            <p className="text-xl font-regular text-blue-500">
+            <p className="text-sm font-regular text-blue-500">
               {formatDuration(duration)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Volume</p>
-            <p className="text-xl font-regular">{totalVolume} kg</p>
+            <p className="text-sm font-regular">{totalVolume} kg</p>
           </div>
           <div>
             <p className="text-sm text-gray-500 mb-1">Sets</p>
-            <p className="text-xl font-regular">{totalSets}</p>
+            <p className="text-sm font-regular">{totalSets}</p>
           </div>
         </div>
 
         {/* When */}
         <div>
           <p className="text-sm text-gray-500 mb-1">When</p>
-          <p className="text-lg text-blue-500">{formatDateTime()}</p>
+          <p className="text-sm text-blue-500">{formatDateTime()}</p>
         </div>
 
         {/* Add Photo/Video */}
@@ -384,10 +384,10 @@ export default function FinishWorkoutPage() {
           onClick={() => setShowMediaModal(true)}
           className="flex flex-row items-center gap-5 w-full text-left"
         >
-          <div className="border-2 border-dashed border-gray-200 rounded-[10px] p-10 flex items-center justify-center min-w-[100px] min-h-[100px]">
-            <ImagePlus className="size-8 text-black" />
+          <div className="border-2 border-dashed border-gray-200 rounded-[10px] p-6 flex items-center justify-center min-w-[80px] min-h-[80px]">
+            <ImagePlus className="size-6 text-black" />
           </div>
-          <p className="text-black text-lg font-regular">
+          <p className="text-black text-sm font-regular">
             Add a photo / video
           </p>
         </button>
@@ -401,21 +401,21 @@ export default function FinishWorkoutPage() {
             placeholder="How did your workout go? Leave some notes here..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-1 text-lg border-none bg-transparent rounded-lg font-regular text-black placeholder:text-gray-400 resize-none"
+            className="w-full p-1 text-sm border-none bg-transparent rounded-lg font-regular text-black placeholder:text-gray-400 resize-none"
           />
         </div>
 
         {/* Visibility */}
         <div className="flex itemscenter justify-between">
-          <label className="text-lg font-regular text-black">
+          <label className="text-sm font-regular text-black">
             Visibility
           </label>
           <button
             onClick={() => setShowVisibilityModal(true)}
-            className="flex items-center gap-2 text-lg font-regular text-gray-500"
+            className="flex items-center gap-2 text-sm font-regular text-gray-500"
           >
             <span>{visibility}</span>
-            <ChevronRight className="size-6 text-gray-400" />
+            <ChevronRight className="size-4 text-gray-400" />
           </button>
         </div>
 

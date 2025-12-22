@@ -104,7 +104,7 @@ export function WorkoutExerciseCard({
       <div className="flex items-center justify-between gap-3 mb-4">
         {/* Exercise Image/Icon */}
         <div className="flex items-center gap-4">
-          <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+          <div className="relative flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-100">
             {exercise.thumbnailUrl ? (
               <img
                 src={exercise.thumbnailUrl}
@@ -113,13 +113,13 @@ export function WorkoutExerciseCard({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                <Dumbbell className="size-5 text-gray-400" />
+                <Dumbbell className="size-4 text-gray-400" />
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-blue-600 truncate">
+            <h3 className="text-sm font-semibold text-blue-600 truncate">
               {formatExerciseName()}
             </h3>
           </div>
@@ -130,14 +130,14 @@ export function WorkoutExerciseCard({
           onClick={onMenuClick}
           className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors"
         >
-          <MoreVertical className="size-7 text-gray-600" />
+          <MoreVertical className="size-5 text-gray-600" />
         </button>
       </div>
       {/* Exercise Name */}
       <div className="flex-1 flex-col min-w-0">
         {/* Superset Badge */}
         {isInSuperset && (
-          <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
+          <div className="bg-[#b600fd] text-white text-sm font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
             Superset
           </div>
         )}
@@ -149,7 +149,7 @@ export function WorkoutExerciseCard({
           placeholder="Add notes here..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full !border-none text-gray-500 placeholder:text-gray-400"
+          className="w-full !border-none text-gray-500 placeholder:text-gray-400 text-sm"
         />
       </div>
 
@@ -158,8 +158,8 @@ export function WorkoutExerciseCard({
         className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         onClick={onRestTimerClick}
       >
-        <Timer className="size-7 text-blue-600" />
-        <span className="text-lg text-blue-600 font-regular">
+        <Timer className="size-5 text-blue-600" />
+        <span className="text-sm text-blue-600 font-regular">
           Rest Timer:{" "}
           {isRestTimerOn ? `${restTimerSeconds}s` : "OFF"}
         </span>
@@ -170,16 +170,16 @@ export function WorkoutExerciseCard({
       {/* Sets Table */}
       <div className="mb-4">
         {/* Table Header */}
-        <div className="grid grid-cols-5 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
+        <div className="grid grid-cols-5 gap-20 text-sm font-regular text-gray-500 pb-2">
           <div className="text-center">SET</div>
           <div className="text-center">PREVIOUS</div>
           <div className="flex items-center justify-center gap-1">
-            <Dumbbell className="size-3" />
+            <Dumbbell className="size-2" /> 
             KG
           </div>
           <div className="text-center">REPS</div>
           <div className="flex justify-center">
-            <Check className="size-5 text-blue-600" />
+            <Check className="size-4 text-blue-600" />
           </div>
         </div>
 
@@ -191,13 +191,13 @@ export function WorkoutExerciseCard({
               }`}
           >
             <div
-              className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
+              className={`text-sm font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
                 }`}
             >
               {set.setNumber}
             </div>
             <div
-              className={`text-lg font-semibold text-center ${set.completed ? "text-gray-400" : "text-gray-400"
+              className={`text-sm font-semibold text-center ${set.completed ? "text-gray-400" : "text-gray-400"
                 }`}
             >
               {set.previous}
@@ -209,7 +209,7 @@ export function WorkoutExerciseCard({
                 onChange={(e) =>
                   handleSetChange(index, "kg", parseInt(e.target.value) || 0)
                 }
-                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
                   }`}
                 placeholder="0"
               />
@@ -221,7 +221,7 @@ export function WorkoutExerciseCard({
                 onChange={(e) =>
                   handleSetChange(index, "reps", parseInt(e.target.value) || 0)
                 }
-                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
+                className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${set.completed ? "bg-green-100" : ""
                   }`}
                 placeholder="0"
               />
@@ -240,9 +240,9 @@ export function WorkoutExerciseCard({
                 className="cursor-pointer"
               >
                 {set.completed ? (
-                  <SquareCheck className="size-6 text-green-600" />
+                  <SquareCheck className="size-5 text-green-600" />
                 ) : (
-                  <SquareCheck className="size-6 text-gray-300" />
+                  <SquareCheck className="size-5 text-gray-300" />
                 )}
               </button>
 
@@ -255,10 +255,10 @@ export function WorkoutExerciseCard({
       <Button
         variant="ghost"
         onClick={handleAddSet}
-        className="w-full rounded-[10px]  text-gray-700 bg-gray-100 py-2 h-auto"
+        className="w-full rounded-[10px]  text-gray-700 bg-gray-100 py-2 h-auto text-sm"
       >
-        <Plus className="size-6 mr-2" />
-        <span className="text-lg font-regular">Add Set</span>
+        <Plus className="size-4" />
+        <span className="text-sm font-regular">Add Set</span>
       </Button>
     </div>
   );

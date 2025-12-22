@@ -923,9 +923,9 @@ const loadWorkout = async () => {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border relative">
-        <div className="flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-14 px-2">
           {/* Left: Back Button */}
-          <div className="flex items-center gap-3 flex-row">
+          <div className="flex items-center gap-2 flex-row">
             <Button
               variant="ghost"
               size="icon"
@@ -933,11 +933,11 @@ const loadWorkout = async () => {
               className="h-10 w-10"
               aria-label="Go back"
             >
-              <ChevronDown className="size-[24px]" />
+              <ChevronDown className="size-[20px]" />
             </Button>
 
             {/* Center: Title */}
-            <h1 className="text-lg font-regular">
+            <h1 className="text-sm font-regular">
               {showDurationInHeader ? (
                 <span className="text-blue-500">
                   {formatDuration(duration)}
@@ -949,18 +949,18 @@ const loadWorkout = async () => {
           </div>
 
           {/* Right: Clock and Finish Button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleTimerIconClick}
               className="p-1 hover:opacity-80 transition-opacity"
               aria-label="Open timer"
             >
-              <AlarmClock className="size-[24px] text-muted-foreground" />
+              <AlarmClock className="size-[20px] text-muted-foreground" />
             </button>
             <Button
               variant="default"
               onClick={handleFinish}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 h-9"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 h-8 text-sm"
             >
               Finish
             </Button>
@@ -968,7 +968,7 @@ const loadWorkout = async () => {
         </div>
         {/* Progress Bar */}
         {workoutExercises.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200">
             <div
               className="h-full bg-blue-500 transition-all duration-300 ease-out"
               style={{ width: `${workoutProgress}%` }}
@@ -984,7 +984,7 @@ const loadWorkout = async () => {
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Duration</p>
-          <p className="text-xl font-bold text-blue-500">
+          <p className="text-sm font-bold text-blue-500">
             {formatDuration(duration)}
           </p>
         </button>
@@ -993,14 +993,14 @@ const loadWorkout = async () => {
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Volume</p>
-          <p className="text-xl font-regular">{totalVolume} kg</p>
+          <p className="text-sm font-regular">{totalVolume} kg</p>
         </button>
         <button
           onClick={handleSetsClick}
           className="text-left cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
         >
           <p className="text-sm text-muted-foreground mb-1">Sets</p>
-          <p className="text-xl font-regular">{totalSets}</p>
+          <p className="text-sm font-regular">{totalSets}</p>
         </button>
       </div>
 
@@ -1008,9 +1008,9 @@ const loadWorkout = async () => {
       {workoutExercises.length === 0 ? (
         <>
           <div className="flex flex flex-col items-center justify-center px-4 pt-12 pb-2">
-            <Dumbbell className="size-[36px] text-gray-300 mb-6 stroke-[1.5]" />
-            <h2 className="text-xl font-bold mb-2">Get started</h2>
-            <p className="text-muted-foreground text-xm text-center">
+            <Dumbbell className="size-[30px] text-gray-300 mb-6 stroke-[1.5]" />
+            <h2 className="text-lg font-bold mb-2">Get started</h2>
+            <p className="text-muted-foreground text-sm text-center">
               Add an exercise to start your workout
             </p>
           </div>
@@ -1021,25 +1021,25 @@ const loadWorkout = async () => {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-[18px] mr-2" />
               Add Exercise
             </Button>
 
             {/* Secondary Buttons */}
-            <div className="flex gap-5">
+            <div className="flex gap-2">
               <Button
                 variant="default"
                 onClick={handleSettings}
-                className="flex-1 text-lg py-6 bg-gray-100 text-black rounded-[10px] "
+                className="flex-1 text-sm py-4 bg-gray-100 text-black rounded-[10px] "
               >
                 Settings
               </Button>
               <Button
                 variant="default"
                 onClick={handleDiscardClick}
-                className="flex-1 text-lg py-6 bg-gray-100 text-red-500 rounded-[10px] "
+                className="flex-1 text-sm py-4 bg-gray-100 text-red-500 rounded-[10px] "
               >
                 Discard Workout
               </Button>
@@ -1047,7 +1047,7 @@ const loadWorkout = async () => {
           </div>
         </>
       ) : (
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-2 py-2">
           <div className="space-y-4">
             {workoutExercises.map((exercise, index) => {
               const isRemoving = removingExerciseIds.has(exercise._id);
@@ -1099,30 +1099,30 @@ const loadWorkout = async () => {
           </div>
 
           {/* Bottom Action Buttons - Show below exercise cards */}
-          <div className="p-2 pt-4 space-y-5 pb-6">
+          <div className="p-2 pt-2 space-y-4 pb-4">
             {/* Primary Button */}
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-[18px] mr-2" />
               Add Exercise
             </Button>
 
             {/* Secondary Buttons */}
-            <div className="flex gap-5">
+            <div className="flex gap-2">
               <Button
                 variant="default"
                 onClick={handleSettings}
-                className="flex-1 text-lg py-6 bg-gray-100 text-black rounded-[10px] "
+                className="flex-1 text-sm py-4 bg-gray-100 text-black rounded-[10px] "
               >
                 Settings
               </Button>
               <Button
                 variant="default"
                 onClick={handleDiscardClick}
-                className="flex-1 text-lg py-6 bg-gray-100 text-red-500 rounded-[10px] "
+                className="flex-1 text-sm py-4 bg-gray-100 text-red-500 rounded-[10px] "
               >
                 Discard Workout
               </Button>

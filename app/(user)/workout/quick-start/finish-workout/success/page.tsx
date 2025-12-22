@@ -121,8 +121,8 @@ export default function WorkoutSuccessPage() {
 
       {/* HEADER */}
       <div className="pt-6 pb-4 px-4 text-center relative">
-        <h1 className="text-3xl font-bold text-black mb-1">Nice Work!</h1>
-        <p className="text-gray-500 text-xm">
+        <h1 className="text-lg font-bold text-black mb-1">Nice Work!</h1>
+        <p className="text-gray-500 text-sm">
         {workoutCount
           ? `This is your ${getOrdinal(workoutCount)} workout`
           : "Workout summary"}
@@ -138,7 +138,7 @@ export default function WorkoutSuccessPage() {
       <div className="flex-1 overflow-hidden">
         <div className="w-full h-full flex items-start">
           <div className="w-full overflow-x-auto">
-            <div className="flex flex-nowrap gap-15 px-10 pt-6 pb-4 snap-x snap-mandatory">
+            <div className="flex flex-nowrap gap-15 px-10 pt-4 pb-2 snap-x snap-mandatory">
               {cards.map((v) => (
                 <div
                   key={v}
@@ -161,11 +161,11 @@ export default function WorkoutSuccessPage() {
 
 
       {/* Done Button – stays at bottom */}
-      <div className="pb-8 px-4">
+      <div className="pb-6 px-2">
         <Button
           variant="default"
           onClick={handleDone}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-lg font-regular text-white py-6 rounded-[10px]"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-sm font-regular text-white py-4 rounded-[10px]"
         >
           Done
         </Button>

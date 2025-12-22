@@ -506,7 +506,7 @@ export default function FinishWorkoutPage() {
               <Button
                 variant="default"
                 onClick={handleAddExercise}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
               >
                 <Plus className="size-[20px] mr-2" />
                 Add Exercise
@@ -519,7 +519,7 @@ export default function FinishWorkoutPage() {
           <div className="pb-6 text-center">
             <button
               onClick={handleDiscard}
-              className="mt-4 text-red-500 text-lg font-regular"
+              className="mt-4 text-red-500 text-sm font-regular"
             >
               Discard Workout
             </button>

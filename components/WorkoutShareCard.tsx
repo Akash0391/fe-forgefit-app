@@ -34,33 +34,33 @@ export default function WorkoutShareCard({
     // Variant 0
     if (variant === 0) {
         return (
-            <div className="w-full h-full bg-white rounded-[24px] shadow-lg px-6 py-8 flex flex-col justify-between">
+            <div className="w-full h-full bg-white rounded-[24px] shadow-lg px-4 py-6 flex flex-col justify-between">
                 <div className="flex flex-col gap-7">
-                    <h2 className="text-2xl font-semibold">
+                    <h2 className="text-xm font-semibold">
                         {workout.name || "Workout"} 🌞
                     </h2>
                     <div className="flex gap-8 text-lg">
                         <div>
-                            <div className="text-xl text-gray-800">Duration</div>
-                            <div className="font-semibold text-2xl">{durationText}</div>
+                            <div className="text-sm text-gray-800">Duration</div>
+                            <div className="font-semibold text-lg">{durationText}</div>
                         </div>
                         <div>
-                            <div className="text-xl text-gray-800">Volume</div>
-                            <div className="font-semibold text-2xl">{volumeText}</div>
+                            <div className="text-sm text-gray-800">Volume</div>
+                            <div className="font-semibold text-lg">{volumeText}</div>
                         </div>
                         <div>
-                            <div className="text-xl text-gray-800">Sets</div>
-                            <div className="font-semibold text-2xl">{setsText}</div>
+                            <div className="text-sm text-gray-800">Sets</div>
+                            <div className="font-semibold text-lg">{setsText}</div>
                         </div>
                     </div>
 
                     <div className=" text-base">
-                        <span className="text-blue-500 font-semibold text-2xl">{exerciseCount}x </span>
-                        <span className="text-xl">{exerciseName}</span>
+                        <span className="text-blue-500 font-semibold text-xl">{exerciseCount}x </span>
+                        <span className="text-lg">{exerciseName}</span>
                     </div>
                 </div>
 
-                <div className="mt-6 text-2xl text-black flex justify-between">
+                <div className="mt-6 text-xl text-black flex justify-between">
                     <span className="font-bold">Forgefit</span>
                     <span>@{username}</span>
                 </div>
@@ -72,31 +72,31 @@ export default function WorkoutShareCard({
     if (variant === 1) {
         return (
             <div className="w-full h-full bg-white rounded-[24px] shadow-lg px-6 py-8 flex flex-col justify-between">
-                <div className="flex flex-col gap-7 mt-15">
-                    <h2 className="text-3xl font-semibold mb-4">
+                <div className="flex flex-col gap-7 mt-10">
+                    <h2 className="text-xl font-semibold mb-4">
                         {workout.name || "Workout"} 🌞
                     </h2>
 
                     <div className="grid grid-cols-2 gap-y-8 text-start">
                         <div>
-                            <div className="font-semibold text-4xl">{durationText}</div>
-                            <div className="text-xl text-gray-800">Duration</div>
+                            <div className="font-semibold text-lg">{durationText}</div>
+                            <div className="text-sm text-gray-800">Duration</div>
                         </div>
                         <div>
-                            <div className="font-semibold text-4xl">{volumeText}</div>
-                            <div className="text-xl text-gray-800">Volume</div>
+                            <div className="font-semibold text-lg">{volumeText}</div>
+                            <div className="text-sm text-gray-800">Volume</div>
                         </div>
                         <div>
-                            <div className="font-semibold text-4xl">{exerciseCount}</div>
-                            <div className="text-xl text-gray-800">Exercise</div>
+                            <div className="font-semibold text-lg">{exerciseCount}</div>
+                            <div className="text-sm text-gray-800">Exercise</div>
                         </div>
                         <div>
-                            <div className="font-semibold text-4xl">{setsText}</div>
-                            <div className="text-xl text-gray-800">Sets</div>
+                            <div className="font-semibold text-lg">{setsText}</div>
+                            <div className="text-sm text-gray-800">Sets</div>
                         </div>
                     </div>
                 </div>
-                <div className="mt-6 text-2xl text-black flex justify-between">
+                <div className="mt-6 text-xl text-black flex justify-between">
                     <span className="font-bold">Forgefit</span>
                     <span>@{username}</span>
                 </div>
@@ -110,20 +110,20 @@ export default function WorkoutShareCard({
 
             <div className="flex flex-col items-center mt-6 space-y-4">
                 <div className="text-center">
-                    <div className="text-2xl font-semibold">{durationText}</div>
-                    <div className="text-xl text-gray-500">Duration</div>
+                    <div className="text-xl font-semibold">{durationText}</div>
+                    <div className="text-lg text-gray-500">Duration</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-2xl font-semibold">{volumeText}</div>
-                    <div className="text-xl text-gray-500">Volume</div>
+                    <div className="text-xl font-semibold">{volumeText}</div>
+                    <div className="text-lg  text-gray-500">Volume</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-2xl font-semibold">{setsText}</div>
-                    <div className="text-xl text-gray-500">Sets</div>
+                    <div className="text-xl font-semibold">{setsText}</div>
+                    <div className="text-lg text-gray-500">Sets</div>
                 </div>
                 <div className="mt-6 text-center text-black flex flex-col justify-between">
-                    <span className="text-2xl font-bold">Forgefit</span>
-                    <span className="text-xm">@{username}</span>
+                    <span className="text-xl font-bold">Forgefit</span>
+                    <span className="text-sm">@{username}</span>
                 </div>
             </div>
 

@@ -121,17 +121,17 @@ export default function SaveRoutinePage() {
           <button 
           onClick={() => router.back()}
           aria-label="Go back"
-          className="text-blue-500 text-lg font-regular">Cancel</button>
+          className="text-blue-500 text-sm font-regular">Cancel</button>
 
           {/* Center: Username */}
-          <h1 className="text-lg font-regular">Create Routine</h1>
+          <h1 className="text-sm font-regular">Create Routine</h1>
 
           {/* Right: Save Button */}
           <Button
             variant="default"
             onClick={handleSave}
             disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
-            className={`text-lg font-regular ${
+            className={`text-sm font-regular ${
               exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-500 hover:bg-blue-600 text-white"
@@ -152,7 +152,7 @@ export default function SaveRoutinePage() {
               setRoutineTitle(e.target.value);
               setError(null);
             }}
-            className="text-xl p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-xl"
+            className="text-sm p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-sm"
           />
           {routineTitle && (
             <button
@@ -176,7 +176,7 @@ export default function SaveRoutinePage() {
         <>
           <div className="flex flex flex-col items-center justify-center px-4 pt-20 pb-2">
             <Dumbbell className="size-[36px] text-gray-300 mb-6 stroke-[1.5]" />
-            <p className="text-gray-500 font-regular text-lg text-center">
+            <p className="text-gray-500 font-regular text-sm text-center">
               Get started by adding an exercise to your routine.
             </p>
           </div>
@@ -186,7 +186,7 @@ export default function SaveRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
             >
               <Plus className="size-[20px] mr-2" />
               Add Exercise
@@ -224,7 +224,7 @@ export default function SaveRoutinePage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-blue-600 truncate">
+                        <h3 className="text-sm font-semibold text-blue-600 truncate">
                           {formatExerciseName(exercise)}
                         </h3>
                       </div>
@@ -253,7 +253,7 @@ export default function SaveRoutinePage() {
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
                   >
                     <Timer className="size-7 text-blue-600" />
-                    <span className="text-lg text-blue-600 font-regular">
+                    <span className="text-sm text-blue-600 font-regular">
                       Rest Timer: OFF
                     </span>
                   </div>
@@ -261,7 +261,7 @@ export default function SaveRoutinePage() {
                   {/* Sets Table */}
                   <div className="mb-4">
                     {/* Table Header */}
-                    <div className="grid grid-cols-5 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
+                      <div className="grid grid-cols-5 gap-15 mb-2 text-sm font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
                       <div className="flex items-center justify-center gap-1">
                         <Dumbbell className="size-3" />
@@ -280,7 +280,7 @@ export default function SaveRoutinePage() {
                           }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${
+                            className={`text-sm font-semibold text-center ${
                               set.completed ? "text-black" : "text-gray-700"
                             }`}
                           >
@@ -288,7 +288,7 @@ export default function SaveRoutinePage() {
                           </div>
                           <div className="flex justify-center">
                             <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${
+                              className={`w-full h-8 px-2 text-sm text-center flex items-center justify-center ${
                                 set.completed ? "bg-green-100" : ""
                               }`}
                             >
@@ -297,7 +297,7 @@ export default function SaveRoutinePage() {
                           </div>
                           <div className="flex justify-center">
                             <div
-                              className={`w-full h-8 px-2 text-lg text-center flex items-center justify-center ${
+                              className={`w-full h-8 px-2 text-sm text-center flex items-center justify-center ${
                                 set.completed ? "bg-green-100" : ""
                               }`}
                             >
@@ -320,7 +320,7 @@ export default function SaveRoutinePage() {
                     className="w-full text-gray-700 bg-gray-100 py-2 rounded-[10px] h-auto"
                   >
                     <Plus className="size-6 mr-2" />
-                    <span className="text-lg font-regular">Add Set</span>
+                    <span className="text-sm font-regular">Add Set</span>
                   </Button>
                 </div>
               );
@@ -333,7 +333,7 @@ export default function SaveRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
             >
               <Plus className="size-[20px] mr-2" />
               Add Exercise

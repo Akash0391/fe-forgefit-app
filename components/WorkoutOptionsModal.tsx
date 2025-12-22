@@ -145,8 +145,8 @@ export default function WorkoutOptionsModal({
                     !isLast ? "border-b border-gray-100" : ""
                   } hover:bg-gray-50 active:bg-gray-100`}
                 >
-                  <Icon className={`size-7 ${item.textColor} flex-shrink-0`} />
-                  <span className={`text-lg font-regular ${item.textColor}`}>
+                  <Icon className={`size-5 ${item.textColor} flex-shrink-0`} />
+                  <span className={`text-sm font-regular ${item.textColor}`}>
                     {item.label}
                   </span>
                 </button>

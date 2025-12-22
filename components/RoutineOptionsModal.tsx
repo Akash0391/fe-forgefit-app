@@ -111,11 +111,11 @@ export default function RoutineOptionsModal({
         {/* Header with Routine Title */}
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-regular text-center">
-            {routine?.name || "Routine"}
+            {routine?.name}
           </h2>
         </div>
 
-        <div className="px-6 py-7 pb-8">
+        <div className="px-6 py-6 pb-8">
           <div className="bg-white rounded-[10px] overflow-hidden">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
@@ -132,12 +132,12 @@ export default function RoutineOptionsModal({
                       onClose();
                     }
                   }}
-                  className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${
+                  className={`w-full flex items-center gap-5 px-5 py-5 transition-colors text-left ${
                     !isLast ? "border-b border-gray-100" : ""
                   } hover:bg-gray-50 active:bg-gray-100`}
                 >
-                  <Icon className={`size-7 ${item.textColor} flex-shrink-0`} />
-                  <span className={`text-lg font-regular ${item.textColor}`}>
+                  <Icon className={`size-5 ${item.textColor} flex-shrink-0`} />
+                  <span className={`text-sm font-regular ${item.textColor}`}>
                     {item.label}
                   </span>
                 </button>

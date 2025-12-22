@@ -180,15 +180,15 @@ export default function EditProfilePage() {
           onClick={() => router.back()}
           aria-label="Back"
         >
-          <ArrowLeft className="size-7" />
+          <ArrowLeft className="size-6" />
         </button>
 
-        <h1 className="text-lg font-regular">Edit Profile</h1>
+        <h1 className="text-sm font-regular">Edit Profile</h1>
 
         <button
           onClick={handleDone}
           disabled={isSaving}
-          className="text-blue-500 text-lg font-regular disabled:opacity-50"
+          className="text-blue-500 text-sm font-regular disabled:opacity-50"
         >
           {isSaving ? "Saving..." : "Done"}
         </button>
@@ -198,7 +198,7 @@ export default function EditProfilePage() {
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-24">
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
-          <Avatar className="w-28 h-28 mb-3">
+          <Avatar className="w-20 h-20 mb-3">
             <AvatarImage src={avatar || ""} alt={user.name} />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
@@ -206,7 +206,7 @@ export default function EditProfilePage() {
           <Button
             onClick={() => setShowProfileMediaModal(true)}
             variant="ghost"
-            className="text-blue-500 text-lg font-semibold"
+            className="text-blue-500 text-sm font-semibold"
           >
             Change Picture
           </Button>
@@ -214,37 +214,37 @@ export default function EditProfilePage() {
 
         {/* Public profile data */}
         <section className="mb-8">
-          <p className="text-lg text-gray-500 mb-3">Public profile data</p>
+          <p className="text-sm text-gray-500 mb-3">Public profile data</p>
 
           {/* Name */}
           <div className="py-3 pb-6 flex flex-row gap-20 items-center border-b border-gray-100">
-            <p className="text-lg text-black mb-1">Name</p>
+            <p className="text-sm text-black mb-1">Name</p>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="border-0 px-0 shadow-none h-7 text-lg focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-7 text-sm focus-visible:ring-0"
             />
           </div>
 
           {/* Bio */}
           <div className="py-3 mt-3 pb-6 flex flex-row gap-25  border-b border-gray-100">
-            <p className="text-lg text-black mb-1">Bio</p>
+            <p className="text-sm text-black mb-1">Bio</p>
             <Input
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Describe yourself"
-              className="border-0 px-0 shadow-none h-20 text-lg font-regular placeholder:text-gray-400 focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-20 text-sm font-regular placeholder:text-gray-400 focus-visible:ring-0"
             />
           </div>
 
           {/* Link */}
           <div className="py-3 mt-3 pb-6 flex flex-row gap-23  border-b border-gray-100">
-            <p className="text-lg text-black mb-1">Link</p>
+            <p className="text-sm text-black mb-1">Link</p>
             <Input
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="https://example.com"
-              className="border-0 px-0 shadow-none h-15 text-lg font-regular placeholder:text-gray-400 focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-15 text-sm font-regular placeholder:text-gray-400 focus-visible:ring-0"
             />
           </div>
         </section>
@@ -253,7 +253,7 @@ export default function EditProfilePage() {
         <section>
           <div className="mb-6 mt-12 ">
             <div className="flex items-center gap-2">
-              <p className="text-lg font-regular text-gray-400">Private Data</p>
+                <p className="text-sm font-regular text-gray-400">Private Data</p>
               <button
                 onClick={() => setShowInfoModal(true)}
                 className="flex items-center justify-center rounded-full bg-gray-200 p-1 hover:bg-gray-300 transition-colors"
@@ -270,10 +270,10 @@ export default function EditProfilePage() {
 
           {/* Sex */}
           <div className="border-b border-gray-100 py-3 pb-6 flex items-center justify-between">
-            <p className="text-lg text-black font-regular">Sex</p>
+            <p className="text-sm text-black font-regular">Sex</p>
             <button
               onClick={() => setShowSexModal(true)}
-              className="text-blue-500 text-lg"
+              className="text-blue-500 text-sm"
             >
               {sex ? sex[0].toUpperCase() + sex.slice(1) : "Not set"}
             </button>
@@ -281,9 +281,9 @@ export default function EditProfilePage() {
 
           {/* Birthday */}
           <div className="border-b border-gray-100 py-3 pt-6 pb-6 flex items-center justify-between">
-            <p className="text-lg text-black font-regular">Birthday</p>
+            <p className="text-sm text-black font-regular">Birthday</p>
             <button
-              className="text-blue-500 text-lg"
+              className="text-blue-500 text-sm"
               onClick={() => setShowBirthdayModal(true)}
             >
               {getBirthdayLabel(birthday)}
@@ -330,10 +330,10 @@ export default function EditProfilePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className=" text-center px-6">
-              <h2 className="text-xl font-bold text-black mt-8">Private Data</h2>
+              <h2 className="text-sm font-bold text-black mt-8">Private Data</h2>
             </div>
             <div className="px-6 pb-6 pt-0">
-              <p className="text-lg font-regular text-gray-700 mb-8 mt-2 text-center">
+              <p className="text-sm font-regular text-gray-700 mb-8 mt-2 text-center">
                 Your private data will not be displaayed on your public profile.
                 ForgeFit will use this data to tailor features to your specific
                 demograpghic. We'll also be adding more features for comparing
@@ -343,7 +343,7 @@ export default function EditProfilePage() {
               </p>
               <button
                 onClick={() => setShowInfoModal(false)}
-                className="w-full py-3 px-4 bg-blue-500 text-white rounded-[10px] font-regular text-lg hover:bg-blue-600 transition-colors"
+                className="w-full py-3 px-4 bg-blue-500 text-white rounded-[10px] font-regular text-sm hover:bg-blue-600 transition-colors"
               >
                 Ok
               </button>

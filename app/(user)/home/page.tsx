@@ -333,16 +333,16 @@ export default function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-[4px] text-xl font-regular text-gray-700 transition-colors">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-[4px] text-sm font-regular text-gray-700 transition-colors">
             <span>Home</span>
-            <ChevronDown className="size-6" />
+            <ChevronDown className="size-4" />
           </button>
           <div className="flex items-center gap-4">
             <button className="text-gray-700 hover:text-gray-900 transition-colors">
-              <Search className="size-7" />
+              <Search className="size-6" />
             </button>
             <button onClick={handleNotification} className="text-gray-700 hover:text-gray-900 transition-colors">
-              <Bell className="size-7" />
+              <Bell className="size-6" />
             </button>
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function HomePage() {
             {showWelcome && (
               <div className="">
                 <div className="flex flex-row items-center justify-between">
-                  <h2 className="text-2xl font-semibold">
+                  <h2 className="text-sm font-semibold">
                     Hey {getUsername()}! 👋
                   </h2>
                   <button
@@ -363,19 +363,19 @@ export default function HomePage() {
                     className="text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center"
                     aria-label="Dismiss welcome message"
                   >
-                    <X className="size-5" />
+                    <X className="size-4" />
                   </button>
                 </div>
                 <div className="pr-8 mt-4">
-                  <p className="text-black text-xm font-regular leading-relaxed mb-4">
+                  <p className="text-black text-sm font-regular leading-relaxed mb-4">
                     My name is Akash, I built ForgeFit. Thank you for tying out
                     the app!
                   </p>
-                  <p className="text-black text-xm font-regular mb-4">
+                  <p className="text-black text-sm font-regular mb-4">
                     I'm trying to build the best workout tracker ever, so any
                     feedback you have would be greatly appreciated.
                   </p>
-                  <p className="text-black text-xm font-regular">
+                  <p className="text-black text-sm font-regular">
                     You can email me at akashjaunpur0391@gmail.com, and feel
                     free to follow me!
                   </p>
@@ -384,17 +384,17 @@ export default function HomePage() {
                 <div className="flex flex-row items-center gap-6 mt-6">
                   <Avatar className="size-30">
                     <AvatarImage src="/api/placeholder/56/56" alt="Akash" />
-                    <AvatarFallback className="bg-gray-200 text-gray-600 text-4xl font-semibold">
+                    <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-semibold">
                       A
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col justify-between gap-2 flex-1">
-                    <h3 className="text-2xl font-semibold text-gray-900 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 w-full">
                       Akash
                     </h3>
                     <Button
                       variant="default"
-                      className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-6 rounded-[8px] font-regular text-lg transition-colors"
+                      className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-6 rounded-[8px] font-regular text-sm transition-colors"
                     >
                       Follow
                     </Button>
@@ -404,7 +404,7 @@ export default function HomePage() {
             )}
             <div className="flex flex-col items-center bg-gray-100 rounded-[10px] justify-center py-12">
               <Dumbbell className="size-12 text-gray-300 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">No workouts yet</h2>
+              <h2 className="text-sm font-semibold mb-2">No workouts yet</h2>
               <p className="text-muted-foreground text-center">
                 Complete a workout to see it here
               </p>
@@ -431,7 +431,7 @@ export default function HomePage() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="text-lg font-regular text-gray-900">
+                        <span className="text-sm font-regular text-gray-900">
                           {getUsername()}
                         </span>
                         <span className="text-sm font-regular text-gray-500">
@@ -443,12 +443,12 @@ export default function HomePage() {
                       onClick={() => handleOpenWorkoutModal(workout)}
                       className="text-gray-600 hover:text-gray-900"
                     >
-                      <Ellipsis className="size-7" />
+                      <Ellipsis className="size-6" /> 
                     </button>
                   </div>
 
                   {/* Workout Title */}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">
                     {workout.name || "Quick Start Workout"}
                   </h3>
 
@@ -456,13 +456,13 @@ export default function HomePage() {
                   <div className="flex gap-6 mb-4 border-b border-gray-100 pb-4">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Time</p>
-                      <p className="text-base font-regular text-gray-900">
+                      <p className="text-sm font-regular text-gray-900">
                         {formatDuration(workout.duration)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Volume</p>
-                      <p className="text-base font-regular text-gray-900">
+                      <p className="text-sm font-regular text-gray-900">
                         {totalVolume} kg
                       </p>
                     </div>
@@ -477,7 +477,7 @@ export default function HomePage() {
 
                       return (
                         <div key={index} className="flex items-center gap-3">
-                          <div className="size-16 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+                          <div className="size-14 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
                             {thumbnail ? (
                               <img
                                 src={thumbnail}
@@ -485,10 +485,10 @@ export default function HomePage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <Dumbbell className="size-5 text-gray-400" />
+                              <Dumbbell className="size-4 text-gray-400" />
                             )}
                           </div>
-                          <span className="text-base font-regular text-gray-900">
+                          <span className="text-sm font-regular text-gray-900">
                             {completedSets} set{completedSets !== 1 ? "s" : ""} {exerciseName}
                           </span>
                         </div>
@@ -499,13 +499,13 @@ export default function HomePage() {
                   {/* Action Buttons: Like, Comment, Share */}
                   <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                      <ThumbsUp className="size-7" />
+                      <ThumbsUp className="size-6" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                        <MessageCircle className="size-7" />
+                        <MessageCircle className="size-6" />  
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                      <Share className="size-7" />
+                      <Share className="size-6" />
                     </button>
                   </div>
                 </div>

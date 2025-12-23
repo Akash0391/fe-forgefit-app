@@ -1,5 +1,5 @@
 'use client';
-import { ArrowLeft, ChevronRight, Lock, UserRound } from "lucide-react";
+import { ArrowLeft, ChevronRight, Lock, Mail, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -21,40 +21,48 @@ export default function SettingsPage() {
 
         {/* Centered title */}
         <h1 className="absolute left-1/2 -translate-x-1/2 text-sm font-normal">
-          Settings
+          Account Settings
         </h1>
 
       </div>
 
       {/* Main Content */}
-      <div className="py-4">
+      <div className="">
         {/* Account Settings */}
         <div className="mb-6">
-          <h2 className="text-sm font-regular text-gray-400 mb-3 px-4">Account</h2>
           <button
-            onClick={() => { router.push("/profile/edit-profile"); }}
+            onClick={() => { router.push("/profile/settings/account-settings/change-username"); }}
             className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
             <UserRound className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Profile</span>
+            <span className="text-sm font-regular text-black">Change Username</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
             </div>
           </button>
           <button
-            onClick={() => { router.push("/profile/settings/account-settings"); }}
+            onClick={() => { router.push("/profile/settings/account-settings/update-password"); }}
             className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
             <Lock className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Account</span>
+            <span className="text-sm font-regular text-black">Update Password</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
             </div>
           </button>
+
+          <div className="pb-6 text-center">
+            <button
+              onClick={() => {}}
+              className="mt-10 text-red-500 text-sm font-regular"
+            >
+              Delete Account
+            </button>
+          </div>
         </div>
         </div>
     </div>

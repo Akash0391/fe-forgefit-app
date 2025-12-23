@@ -589,6 +589,10 @@ export default function ProfilePage() {
     router.push("/profile/edit-profile");
   }
 
+  const handleSettingClick = () => {
+    router.push("/profile/settings");
+  }
+
   const handleStatistics = () => {
     console.log("statistics clicked")
   }
@@ -622,7 +626,7 @@ export default function ProfilePage() {
             <button className="text-muted-foreground">
               <ShareIcon className="size-6" />
             </button>
-            <button className="text-muted-foreground">
+            <button onClick={handleSettingClick} className="text-muted-foreground">
               <Settings className="size-6" />
             </button>
           </div>

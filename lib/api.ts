@@ -391,6 +391,12 @@ export const authApi = {
       success: boolean;
       data: User;
     }>("/api/auth/profile", data),
+
+    updatePassword: (password: string) =>
+    apiClient.put<{
+      success: boolean;
+      message: string;
+    }>("/api/auth/password", { password }),
 };
 
 

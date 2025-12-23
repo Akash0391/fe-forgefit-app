@@ -2,9 +2,19 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronRight, Lock, Mail, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { authApi } from "@/lib/api";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
+  const [password, setPassword] = useState("");
+const isValid = password.length >= 6;
+
+const handleUpdate = async () => {
+  await authApi.updatePassword(password);
+  router.back();
+};
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -38,11 +48,13 @@ export default function UpdatePasswordPage() {
             <input
               type="text"
               id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full py-2 mb-4 px-1 border-none rounded-md focus:outline-none text-sm"
               placeholder="(minimum 6 characters)"
             />
           </div>
-          <Button className="w-full bg-blue-500 text-white py-6 px-4 rounded-md hover:bg-blue-600 rounded-[10px]">
+          <Button onClick={handleUpdate} disabled={!isValid} className="w-full bg-blue-500 text-white py-6 px-4 rounded-md hover:bg-blue-600 rounded-[10px]">
             Update
           </Button>
         </div>

@@ -1,10 +1,22 @@
 'use client';
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, ChevronRight, Lock, Mail, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { authApi } from "@/lib/api";
 
 export default function ChangeUsernamePage() {
     const router = useRouter();
+    const { user, setUser } = useAuth();
+    const [name, setName] = useState(user?.name || "");
+const isChanged = name.trim() !== user?.name;
+
+const handleUpdate = async () => {
+  const res = await authApi.updateProfile({ name });
+  setUser(res.data); // update profile page instantly
+  router.back();
+};
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
@@ -38,11 +50,13 @@ export default function ChangeUsernamePage() {
                         <input
                             type="text"
                             id="username"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             className="w-full py-2 mb-4 px-1 border-none rounded-md focus:outline-none text-sm"
                             placeholder="Enter new username"
                         />
                     </div>
-                    <Button className="w-full bg-blue-500 text-white py-6 px-4 rounded-md hover:bg-blue-600 rounded-[10px]">
+                    <Button onClick={handleUpdate} disabled={!isChanged} className="w-full bg-blue-500 text-white py-6 px-4 rounded-md hover:bg-blue-600 rounded-[10px]">
                         Update
                     </Button>
                 </div>

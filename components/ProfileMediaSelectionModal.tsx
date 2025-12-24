@@ -111,11 +111,11 @@ export default function ProfileMediaSelectionModal({
                                             onClose();
                                         }
                                     }}
-                                    className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
+                                    className={`w-full flex items-center gap-5 px-6 py-5 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
                                         } hover:bg-gray-50 active:bg-gray-100`}
                                 >
-                                    <Icon className={`size-8 ${item.textColor} flex-shrink-0`} />
-                                    <span className={`text-lg font-regular ${item.textColor}`}>
+                                    <Icon className={`size-6 ${item.textColor} flex-shrink-0`} />
+                                    <span className={`text-sm font-regular ${item.textColor}`}>
                                         {item.label}
                                     </span>
                                 </button>

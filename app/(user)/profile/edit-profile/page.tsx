@@ -27,7 +27,9 @@ export default function EditProfilePage() {
   const [showSexModal, setShowSexModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [link, setLink] = useState("");
@@ -57,7 +59,8 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (user) {
       const u: any = user;
-      setAvatar(u.avatar || null);
+      setAvatarPreview(u.avatar || null);
+      setAvatarFile(null); // reset file
       setName(u.name || "");
       setBio(u.bio || "");
       setLink(u.link || "");
@@ -89,62 +92,71 @@ export default function EditProfilePage() {
   };
 
   const handleDone = async () => {
-  if (!user || isSaving) return;
-  const u: any = user;
+    if (!user || isSaving) return;
+    const u: any = user;
 
-  const payload: any = {};
+    const formData = new FormData();
 
-//   // avatar
-//   if ((avatar || null) !== (u.avatar || null)) {
-//     payload.avatar = avatar;
-//   }
+    // avatar changed
+    if (avatarFile) {
+      formData.append("avatar", avatarFile);
+    }
 
-  // name, bio, link, sex
-  if (name !== (u.name || "")) payload.name = name;
-  if (bio !== (u.bio || "")) payload.bio = bio;
-  if (link !== (u.link || "")) payload.link = link;
-  if (sex !== (u.sex || "")) payload.sex = sex || null;
+    // avatar deleted
+    if (!avatarPreview && user.avatar) {
+      formData.append("avatarDeleted", "true");
+    }
 
-  // birthday comparison
-  const originalBirthdayDate = u.birthday ? new Date(u.birthday) : null;
-  const newBirthdayDate = birthday
-    ? new Date(birthday.year, birthday.month - 1, birthday.day)
-    : null;
+    // other fields
+    if (name !== user.name) formData.append("name", name);
+    if (bio !== (user.bio || "")) formData.append("bio", bio);
+    if (link !== (user.link || "")) formData.append("link", link);
+    if (sex !== (user.sex || "")) formData.append("sex", sex || "");
+    const originalBirthdayDate = user.birthday
+      ? new Date(user.birthday)
+      : null;
 
-  const birthdayChanged =
-    (originalBirthdayDate && !newBirthdayDate) ||
-    (!originalBirthdayDate && newBirthdayDate) ||
-    (originalBirthdayDate &&
-      newBirthdayDate &&
-      (originalBirthdayDate.getFullYear() !== newBirthdayDate.getFullYear() ||
-        originalBirthdayDate.getMonth() !== newBirthdayDate.getMonth() ||
-        originalBirthdayDate.getDate() !== newBirthdayDate.getDate()));
+    const newBirthdayDate = birthday
+      ? new Date(birthday.year, birthday.month - 1, birthday.day)
+      : null;
 
-  if (birthdayChanged) {
-    payload.birthday = newBirthdayDate ? newBirthdayDate.toISOString() : null;
-  }
+    const birthdayChanged =
+      (originalBirthdayDate && !newBirthdayDate) ||
+      (!originalBirthdayDate && newBirthdayDate) ||
+      (originalBirthdayDate &&
+        newBirthdayDate &&
+        (originalBirthdayDate.getFullYear() !== newBirthdayDate.getFullYear() ||
+          originalBirthdayDate.getMonth() !== newBirthdayDate.getMonth() ||
+          originalBirthdayDate.getDate() !== newBirthdayDate.getDate()));
 
-  // nothing changed → just go back
-  if (Object.keys(payload).length === 0) {
-    router.back();
-    return;
-  }
+    if (birthdayChanged) {
+      formData.append(
+        "birthday",
+        newBirthdayDate ? newBirthdayDate.toISOString() : ""
+      );
+    }
 
-  try {
-    setIsSaving(true);
-    const res = await authApi.updateProfile(payload);
-    if (res.success && res.data) {
-    setUser(res.data); // ✅ INSTANTLY UPDATES PROFILE PAGE WITHOUT REFRESH
-}
-    // optionally: refresh auth context if you expose a reload function
-    router.back();
-  } catch (err) {
-    console.error("Failed to update profile", err);
-    // TODO: show toast/error UI if you want
-  } finally {
-    setIsSaving(false);
-  }
-};
+    // nothing changed
+    if ([...formData.keys()].length === 0) {
+      router.back();
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const res = await authApi.updateProfile(formData);
+      if (res.success && res.data) {
+        setUser(res.data); // ✅ INSTANTLY UPDATES PROFILE PAGE WITHOUT REFRESH
+      }
+      // optionally: refresh auth context if you expose a reload function
+      router.back();
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      // TODO: show toast/error UI if you want
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
 
   if (loading || !isAuthenticated || !user) {
@@ -155,21 +167,25 @@ export default function EditProfilePage() {
     );
   }
 
-  // TODO: wire these to actually pick / upload an image
   const handleTakePhoto = () => {
-    console.log("Take photo clicked");
-    // setAvatar(newUrl)
+    const input = document.getElementById("avatarInput") as HTMLInputElement;
+    if (input) {
+      input.setAttribute("capture", "environment");
+      input.click();
+    }
   };
+
 
   const handleSelectFromLibrary = () => {
-    console.log("Select from library clicked");
-    // setAvatar(newUrl)
+    document.getElementById("avatarInput")?.click();
   };
 
+
   const handleDeletePicture = () => {
-    console.log("Delete picture clicked");
-    setAvatar(null);
+    setAvatarPreview(null);
+    setAvatarFile(null);
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -199,7 +215,7 @@ export default function EditProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <Avatar className="w-20 h-20 mb-3">
-            <AvatarImage src={avatar || ""} alt={user.name} />
+            <AvatarImage src={avatarPreview || ""} alt={user.name} />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
 
@@ -253,7 +269,7 @@ export default function EditProfilePage() {
         <section>
           <div className="mb-6 mt-12 ">
             <div className="flex items-center gap-2">
-                <p className="text-sm font-regular text-gray-400">Private Data</p>
+              <p className="text-sm font-regular text-gray-400">Private Data</p>
               <button
                 onClick={() => setShowInfoModal(true)}
                 className="flex items-center justify-center rounded-full bg-gray-200 p-1 hover:bg-gray-300 transition-colors"
@@ -351,6 +367,21 @@ export default function EditProfilePage() {
           </div>
         </>
       )}
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        id="avatarInput"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          setAvatarFile(file);
+          setAvatarPreview(URL.createObjectURL(file));
+        }}
+      />
+
     </div>
   );
 }

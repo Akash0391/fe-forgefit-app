@@ -13,31 +13,34 @@ class ApiClient {
     allow401: boolean = false
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
+    const isFormData = options.body instanceof FormData;
+
     const config: RequestInit = {
+      credentials: 'include',
+      ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...options.headers,
       },
-      credentials: 'include', // Include cookies for session-based auth
-      ...options,
     };
+
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         // Handle 401 (Unauthorized) gracefully if allowed
         if (response.status === 401 && allow401) {
-          const errorData = await response.json().catch(() => ({ 
+          const errorData = await response.json().catch(() => ({
             success: false,
-            message: 'Not authenticated' 
+            message: 'Not authenticated'
           }));
           throw { status: 401, data: errorData };
         }
-        
-        const error = await response.json().catch(() => ({ 
-          error: 'An error occurred' 
+
+        const error = await response.json().catch(() => ({
+          error: 'An error occurred'
         }));
         throw new Error(error.error || error.message || 'Request failed');
       }
@@ -62,16 +65,18 @@ class ApiClient {
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     });
   }
+
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     });
   }
+
 
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
@@ -100,36 +105,36 @@ export interface Exercise {
 
 // Exercise-related API methods
 export const exerciseApi = {
-// inside api.ts — replace exerciseApi.getAll implementation
-getAll: (params?: {
-  search?: string;
-  muscle?: string;        // prefer 'muscle'
-  muscleGroup?: string;   // keep compat
-  equipment?: string;
-  limit?: number;
-  page?: number;
-}) => {
-  const queryParams = new URLSearchParams();
-  if (params?.search) queryParams.append('search', params.search);
-  // prefer sending `muscle` param if provided, otherwise fallback to muscleGroup
-  if (params?.muscle) queryParams.append('muscle', params.muscle);
-  else if (params?.muscleGroup) queryParams.append('muscleGroup', params.muscleGroup);
-  if (params?.equipment) queryParams.append('equipment', params.equipment);
-  if (params?.limit) queryParams.append('limit', params.limit.toString());
-  if (params?.page) queryParams.append('page', params.page.toString());
+  // inside api.ts — replace exerciseApi.getAll implementation
+  getAll: (params?: {
+    search?: string;
+    muscle?: string;        // prefer 'muscle'
+    muscleGroup?: string;   // keep compat
+    equipment?: string;
+    limit?: number;
+    page?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    // prefer sending `muscle` param if provided, otherwise fallback to muscleGroup
+    if (params?.muscle) queryParams.append('muscle', params.muscle);
+    else if (params?.muscleGroup) queryParams.append('muscleGroup', params.muscleGroup);
+    if (params?.equipment) queryParams.append('equipment', params.equipment);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
 
-  const queryString = queryParams.toString();
-  return apiClient.get<{
-    success: boolean;
-    data: Exercise[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
-  }>(`/api/exercises${queryString ? `?${queryString}` : ''}`);
-},
+    const queryString = queryParams.toString();
+    return apiClient.get<{
+      success: boolean;
+      data: Exercise[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        pages: number;
+      };
+    }>(`/api/exercises${queryString ? `?${queryString}` : ''}`);
+  },
 
 
   getById: (id: string) => apiClient.get<{
@@ -323,25 +328,25 @@ export const workoutApi = {
       data: RoutineFolder;
     }>('/api/workouts/folders', { name }),
 
-    reorderRoutineFolders: (folders: { folderId: string; order: number }[]) =>
+  reorderRoutineFolders: (folders: { folderId: string; order: number }[]) =>
     apiClient.put<{
       success: boolean;
       data: RoutineFolder[];
     }>("/api/workouts/folders/reorder", { folders }),
 
-    deleteRoutineFolder: (folderId: string) =>
+  deleteRoutineFolder: (folderId: string) =>
     apiClient.delete<{
       success: boolean;
       message: string;
     }>(`/api/workouts/folders/${folderId}`),
 
-    renameRoutineFolder: (folderId: string, name: string) =>
+  renameRoutineFolder: (folderId: string, name: string) =>
     apiClient.put<{
       success: boolean;
       data: RoutineFolder;
     }>(`/api/workouts/folders/${folderId}`, { name }),
 
-      // ---------- Charts & stats ----------
+  // ---------- Charts & stats ----------
 
   getSummary: (range: "1w" | "1m" | "3m" | "1y" = "3m") =>
     apiClient.get<WorkoutSummaryResponse>(`/api/workouts/summary?range=${range}`),
@@ -363,7 +368,7 @@ export const workoutApi = {
 // ---------- User / Auth types & API ----------
 
 export interface User {
-  id?: string; 
+  id?: string;
   _id: string;
   email?: string;
   name?: string;
@@ -381,25 +386,25 @@ export interface User {
 }
 
 export const authApi = {
-  // you probably already use this somewhere
   getMe: () =>
     apiClient.get<{
       success: boolean;
       data: User | null;
     }>("/api/auth/me", true),
 
-  updateProfile: (data: Partial<Pick<User, "name" | "avatar" | "bio" | "link" | "sex" | "birthday">>) =>
+  updateProfile: (data: FormData | Record<string, any>) =>
     apiClient.put<{
       success: boolean;
       data: User;
     }>("/api/auth/profile", data),
 
-    updatePassword: (password: string) =>
+  updatePassword: (password: string) =>
     apiClient.put<{
       success: boolean;
       message: string;
     }>("/api/auth/password", { password }),
 };
+
 
 export const uploadApi = {
   uploadWorkoutMedia: async (files: File[]) => {

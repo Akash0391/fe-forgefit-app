@@ -51,6 +51,13 @@ export default function ProfilePage() {
   const [summary, setSummary] = useState<SummaryPoint[]>([]);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [thisWeekHours, setThisWeekHours] = useState(0);
+  const [activeSlides, setActiveSlides] = useState<Record<string, number>>({});
+  const setSlideForWorkout = (workoutId: string, index: number) => {
+    setActiveSlides((prev) => ({
+      ...prev,
+      [workoutId]: index,
+    }));
+  };
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -735,6 +742,7 @@ export default function ProfilePage() {
               const totalVolume = calculateTotalVolume(workout);
               const workoutTime =
                 workout.endTime || workout.startTime || workout.createdAt;
+                const hasMedia = workout.media && workout.media.length > 0;
 
               return (
                 <div
@@ -791,33 +799,106 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* exercises */}
-                  <div className="space-y-3">
-                    {workout.exercises.map((exercise, index) => {
-                      const name = getExerciseName(exercise);
-                      const completedSets = countCompletedSets(exercise.sets);
-                      const thumbnail = getExerciseThumbnail(exercise);
+                  {/* Swipeable Content */}
+                  <div className="mb-4">
+                    {hasMedia ? (
+                      <>
+                        <div
+                          onScroll={(e) => {
+                            const el = e.currentTarget;
+                            const index = Math.round(el.scrollLeft / el.clientWidth);
+                            setSlideForWorkout(workout._id, index);
+                          }}
+                          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+                        >
+                          {/* 🖼 Media slides */}
+                          {workout.media!.map((url, i) => (
+                            <div key={i} className="min-w-full snap-center px-1">
+                              <div className="rounded-[12px] overflow-hidden bg-gray-100">
+                                <img
+                                  src={url}
+                                  alt={`Workout media ${i + 1}`}
+                                  className="w-full h-100 object-cover"
+                                />
+                              </div>
+                            </div>
+                          ))}
 
-                      return (
-                        <div key={index} className="flex items-center gap-3">
-                          <div className="size-10 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
-                            {thumbnail ? (
-                              <img
-                                src={thumbnail}
-                                alt={name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Dumbbell className="size-4 text-gray-400" />
-                            )}
+                          {/* 🏋️ Exercise slide */}
+                          <div className="min-w-full snap-center px-1">
+                            <div className="bg-white rounded-[12px] p-4 space-y-3">
+                              {workout.exercises.map((exercise, index) => {
+                                const exerciseName = getExerciseName(exercise);
+                                const completedSets = countCompletedSets(exercise.sets);
+                                const thumbnail = getExerciseThumbnail(exercise);
+
+                                return (
+                                  <div key={index} className="flex items-center gap-3">
+                                    <div className="size-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                      {thumbnail ? (
+                                        <img
+                                          src={thumbnail}
+                                          alt={exerciseName}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <Dumbbell className="size-4 text-gray-400" />
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-regular text-gray-900">
+                                      {completedSets} set{completedSets !== 1 ? "s" : ""}{" "}
+                                      {exerciseName}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <span className="text-sm font-regular text-gray-900">
-                            {completedSets} set
-                            {completedSets !== 1 ? "s" : ""} {name}
-                          </span>
                         </div>
-                      );
-                    })}
+
+                        {/* 🔘 Dynamic dots */}
+                        <div className="flex justify-center gap-2 mt-2">
+                          {Array.from({ length: workout.media!.length + 1 }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={`w-2 h-2 rounded-full transition-all ${(activeSlides[workout._id] ?? 0) === i
+                                  ? "bg-gray-600"
+                                  : "bg-gray-300"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      /* No media → show exercises directly */
+                      <div className="bg-white rounded-[12px] p-4 space-y-3">
+                        {workout.exercises.map((exercise, index) => {
+                          const exerciseName = getExerciseName(exercise);
+                          const completedSets = countCompletedSets(exercise.sets);
+                          const thumbnail = getExerciseThumbnail(exercise);
+
+                          return (
+                            <div key={index} className="flex items-center gap-3">
+                              <div className="size-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                {thumbnail ? (
+                                  <img
+                                    src={thumbnail}
+                                    alt={exerciseName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Dumbbell className="size-4 text-gray-400" />
+                                )}
+                              </div>
+                              <span className="text-sm font-regular text-gray-900">
+                                {completedSets} set{completedSets !== 1 ? "s" : ""}{" "}
+                                {exerciseName}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   {/* Action Buttons: Like, Comment, Share */}
                   <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100">

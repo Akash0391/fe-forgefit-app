@@ -578,7 +578,7 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4">
           {/* Profile Picture */}
           <Avatar className="size-20">
-            <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
+            <AvatarImage src={user.avatar ?? undefined} alt={user.name} className="object-cover" />
             <AvatarFallback>
               {user.name ? getInitials(user.name) : "U"}
             </AvatarFallback>
@@ -756,6 +756,7 @@ export default function ProfilePage() {
                         <AvatarImage
                           src={user?.avatar ?? undefined}
                           alt={getUsername()}
+                          className="object-cover"
                         />
                         <AvatarFallback className="bg-orange-200 text-orange-700 text-sm font-semibold">
                           {getUsername().charAt(0).toUpperCase()}

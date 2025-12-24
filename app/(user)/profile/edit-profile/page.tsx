@@ -215,7 +215,7 @@ export default function EditProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <Avatar className="w-20 h-20 mb-3">
-            <AvatarImage src={avatarPreview || ""} alt={user.name} />
+            <AvatarImage src={avatarPreview || ""} alt={user.name} className="object-cover" />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
 

@@ -183,6 +183,7 @@ export interface Workout {
   visibility?: 'Everyone' | 'Private';
   exercises: WorkoutExercise[];
   supersetGroups: SupersetGroup[];
+  media?: string[]; // 👈 ADD THIS
   duration: number;
   user?: {
     username: string;
@@ -264,6 +265,7 @@ export const workoutApi = {
     visibility?: 'Everyone' | 'Private';
     exercises?: WorkoutExercise[];
     supersetGroups?: string[][];
+    media?: string[]; // 👈 ADD THIS
   }) => apiClient.put<{
     success: boolean;
     data: Workout;
@@ -398,6 +400,33 @@ export const authApi = {
       message: string;
     }>("/api/auth/password", { password }),
 };
+
+export const uploadApi = {
+  uploadWorkoutMedia: async (files: File[]) => {
+    const uploadedUrls: string[] = [];
+
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_URL}/api/uploads/workout-media`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Media upload failed");
+      }
+
+      const data = await res.json();
+      uploadedUrls.push(data.url); // backend should return { url }
+    }
+
+    return uploadedUrls;
+  },
+};
+
 
 
 

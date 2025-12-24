@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, ChevronRight, ImagePlus, Plus } from "lucide-react";
-import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
+import { workoutApi, Workout, SetData, Exercise, uploadApi } from "@/lib/api";
 import MediaSelectionModal from "@/components/MediaSelectionModal";
 import VisibilityModal from "@/components/VisibilityModal";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";;
@@ -17,6 +17,9 @@ import { WorkoutExerciseCard } from "@/components/WorkoutExerciseCard";
 export default function FinishWorkoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = searchParams.get("mode") === "edit";
 
   const [workout, setWorkout] = useState<Workout | null>(null);
@@ -41,6 +44,10 @@ export default function FinishWorkoutPage() {
   const [showSupersetModal, setShowSupersetModal] = useState(false);
   const [removingExerciseIds, setRemovingExerciseIds] =
     useState<Set<string>>(new Set());
+
+  const [selectedMedia, setSelectedMedia] = useState<File[]>([]);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string[]>([]);
+
 
   // rest timer edit per exercise
   const [restTimerModalExercise, setRestTimerModalExercise] =
@@ -238,6 +245,7 @@ export default function FinishWorkoutPage() {
 
   const handleSave = async () => {
     if (!workout) return;
+    const urls = await uploadApi.uploadWorkoutMedia(selectedMedia);
 
     try {
       await workoutApi.updateDetails(workout._id, {
@@ -246,6 +254,7 @@ export default function FinishWorkoutPage() {
         visibility,
         exercises: workout.exercises,
         supersetGroups: supersetGroups.map((g) => Array.from(g)), // 🔹 send to backend
+        media: urls
       });
 
       if (isEditMode) {
@@ -273,12 +282,44 @@ export default function FinishWorkoutPage() {
   };
 
   const handleTakePhoto = () => {
-    console.log("Take photo clicked");
+    cameraInputRef.current?.click();
   };
 
   const handleSelectFromLibrary = () => {
-    console.log("Select from library clicked");
+    galleryInputRef.current?.click();
   };
+
+  const MAX_MEDIA = 5; // optional limit
+
+  const handleMediaSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      alert("Only image or video files are allowed");
+      return;
+    }
+
+    if (selectedMedia.length >= MAX_MEDIA) {
+      alert(`You can upload up to ${MAX_MEDIA} files`);
+      return;
+    }
+
+    setSelectedMedia((prev) => [...prev, file]);
+    setMediaPreviewUrl((prev) => [...prev, URL.createObjectURL(file)]);
+
+    e.target.value = "";
+  };
+
+  const removeMedia = (index: number) => {
+    setSelectedMedia((prev) => prev.filter((_, i) => i !== index));
+    setMediaPreviewUrl((prev) => {
+      URL.revokeObjectURL(prev[index]); // cleanup
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+
 
   const handleAddExercise = () => {
     if (!workout) return;
@@ -380,17 +421,57 @@ export default function FinishWorkoutPage() {
         </div>
 
         {/* Add Photo/Video */}
-        <button
-          onClick={() => setShowMediaModal(true)}
+        <div
           className="flex flex-row items-center gap-5 w-full text-left"
         >
-          <div className="border-2 border-dashed border-gray-200 rounded-[10px] p-6 flex items-center justify-center min-w-[80px] min-h-[80px]">
-            <ImagePlus className="size-6 text-black" />
+          {/* Media Preview Grid */}
+          <div className="flex gap-3 flex-wrap">
+            {mediaPreviewUrl.map((url, index) => (
+              <div
+                key={index}
+                className="relative w-[80px] h-[80px] rounded-[10px] overflow-hidden"
+              >
+                {selectedMedia[index]?.type.startsWith("video/") ? (
+                  <video
+                    src={url}
+                    className="w-full h-full object-cover"
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
+                {/* Remove button */}
+                <button
+                  onClick={() => removeMedia(index)}
+                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full px-1.5"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+
+            {/* ImagePlus tile (always visible until max reached) */}
+            {selectedMedia.length < MAX_MEDIA && (
+              <button
+                onClick={() => setShowMediaModal(true)}
+                className="border-2 border-dashed border-gray-200 rounded-[10px] w-[80px] h-[80px] flex items-center justify-center"
+              >
+                <ImagePlus className="size-6 text-black" />
+              </button>
+            )}
           </div>
+
+
           <p className="text-black text-sm font-regular">
-            Add a photo / video
+            {mediaPreviewUrl.length === 0 && "Add a photo / video"}
           </p>
-        </button>
+        </div>
+
 
         {/* Description */}
         <div>
@@ -720,6 +801,26 @@ export default function FinishWorkoutPage() {
           });
         }}
       />
+
+      {/* Hidden Camera Input */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => handleMediaSelected(e)}
+      />
+
+      {/* Hidden Gallery Input */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*,video/*"
+        hidden
+        onChange={(e) => handleMediaSelected(e)}
+      />
+
     </div>
   );
 }

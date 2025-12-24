@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { workoutApi, Workout, SetData, Exercise } from "@/lib/api";
 import {
   Calendar,
@@ -32,7 +32,23 @@ export default function HomePage() {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const swipeRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
+  const isVideo = (url: string) => {
+    return url.includes("/video/") || url.endsWith(".mp4");
+  };
+
+  const handleSwipeScroll = () => {
+    if (!swipeRef.current) return;
+
+    const scrollLeft = swipeRef.current.scrollLeft;
+    const width = swipeRef.current.clientWidth;
+
+    const index = Math.round(scrollLeft / width);
+    setActiveSlide(index);
+  };
+
 
   useEffect(() => {
     loadWorkouts();
@@ -192,20 +208,20 @@ export default function HomePage() {
   };
 
   const handleEditWorkout = () => {
-  if (!selectedWorkout) return;
+    if (!selectedWorkout) return;
 
-  // store full workout to edit
-  sessionStorage.setItem(
-    "workoutToEdit",
-    JSON.stringify(selectedWorkout)
-  );
+    // store full workout to edit
+    sessionStorage.setItem(
+      "workoutToEdit",
+      JSON.stringify(selectedWorkout)
+    );
 
-  // close modal
-  setShowWorkoutModal(false);
+    // close modal
+    setShowWorkoutModal(false);
 
-  // go to finish-workout page in edit mode
-  router.push("/workout/quick-start/finish-workout?mode=edit");
-};
+    // go to finish-workout page in edit mode
+    router.push("/workout/quick-start/finish-workout?mode=edit");
+  };
 
 
   const handleDeleteWorkoutClick = () => {
@@ -223,14 +239,14 @@ export default function HomePage() {
 
   const handleConfirmDelete = async () => {
     if (!selectedWorkout) return;
-    
+
     try {
       // Call delete workout API
       await workoutApi.delete(selectedWorkout._id);
-      
+
       // Remove workout from list
       setWorkouts(workouts.filter((w) => w._id !== selectedWorkout._id));
-      
+
       // Close modals
       setShowDeleteModal(false);
       setShowWorkoutModal(false);
@@ -242,42 +258,42 @@ export default function HomePage() {
   };
 
   const handleCopyWorkout = () => {
-  if (!selectedWorkout) return;
+    if (!selectedWorkout) return;
 
-  const workout = selectedWorkout;
+    const workout = selectedWorkout;
 
-  const payload = {
-    exercises: (workout.exercises || []).map((we: any) => {
-      const exercise: Exercise =
-        typeof we.exerciseId === "object"
-          ? (we.exerciseId as Exercise)
-          : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+    const payload = {
+      exercises: (workout.exercises || []).map((we: any) => {
+        const exercise: Exercise =
+          typeof we.exerciseId === "object"
+            ? (we.exerciseId as Exercise)
+            : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
 
-      return {
-        exercise,                        // full Exercise object
-        sets: we.sets || [],
-        restTimerSeconds: we.restTimerSeconds ?? 0,
-      };
-    }),
+        return {
+          exercise,                        // full Exercise object
+          sets: we.sets || [],
+          restTimerSeconds: we.restTimerSeconds ?? 0,
+        };
+      }),
 
-    // keep supersets so UI matches the original workout
-    supersetGroups: (workout.supersetGroups || []).map((group: any) =>
-      Array.isArray(group) ? group : group.exerciseIds || []
-    ),
+      // keep supersets so UI matches the original workout
+      supersetGroups: (workout.supersetGroups || []).map((group: any) =>
+        Array.isArray(group) ? group : group.exerciseIds || []
+      ),
+    };
+
+    sessionStorage.setItem(
+      "copyWorkoutToQuickStart",
+      JSON.stringify(payload)
+    );
+
+    // we’re starting a brand-new workout from this copy
+    localStorage.removeItem("workoutStartTime");
+    localStorage.removeItem("workoutInProgress");
+
+    setShowWorkoutModal(false);
+    router.push("/workout/quick-start");
   };
-
-  sessionStorage.setItem(
-    "copyWorkoutToQuickStart",
-    JSON.stringify(payload)
-  );
-
-  // we’re starting a brand-new workout from this copy
-  localStorage.removeItem("workoutStartTime");
-  localStorage.removeItem("workoutInProgress");
-
-  setShowWorkoutModal(false);
-  router.push("/workout/quick-start");
-};
 
   const handleShareWorkout = () => {
     // TODO: Implement share workout functionality
@@ -289,34 +305,34 @@ export default function HomePage() {
     console.log("Toggle visibility:", selectedWorkout?._id);
   };
 
- const handleSaveAsRoutine = () => {
-  if (!selectedWorkout) return;            // safety
+  const handleSaveAsRoutine = () => {
+    if (!selectedWorkout) return;            // safety
 
-  const workout = selectedWorkout;
+    const workout = selectedWorkout;
 
-  const payload = {
-    name: workout.name || "",
-    exercises: (workout.exercises || []).map((we: any) => {
-      const exercise: Exercise =
-        typeof we.exerciseId === "object"
-          ? (we.exerciseId as Exercise)
-          : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
+    const payload = {
+      name: workout.name || "",
+      exercises: (workout.exercises || []).map((we: any) => {
+        const exercise: Exercise =
+          typeof we.exerciseId === "object"
+            ? (we.exerciseId as Exercise)
+            : ({ _id: we.exerciseId, name: "Exercise" } as Exercise);
 
-      return {
-        exercise,
-        sets: we.sets || [],
-        notes: we.notes || "",
-        restTimerSeconds: we.restTimerSeconds ?? 0,   // ✅ keep rest timer
-      };
-    }),
-    supersetGroups: (workout.supersetGroups || []).map((group: any) =>
-      Array.isArray(group) ? group : group.exerciseIds || []
-    ),
+        return {
+          exercise,
+          sets: we.sets || [],
+          notes: we.notes || "",
+          restTimerSeconds: we.restTimerSeconds ?? 0,   // ✅ keep rest timer
+        };
+      }),
+      supersetGroups: (workout.supersetGroups || []).map((group: any) =>
+        Array.isArray(group) ? group : group.exerciseIds || []
+      ),
+    };
+
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(payload));
+    router.push("/workout/new-routine");
   };
-
-  sessionStorage.setItem("workoutToRoutine", JSON.stringify(payload));
-  router.push("/workout/new-routine");
-};
 
 
 
@@ -415,6 +431,8 @@ export default function HomePage() {
             {workouts.map((workout) => {
               const totalVolume = calculateTotalVolume(workout);
               const workoutTime = workout.endTime || workout.startTime || workout.createdAt;
+              const hasMedia = workout.media && workout.media.length > 0;
+
 
               return (
                 <div
@@ -443,7 +461,7 @@ export default function HomePage() {
                       onClick={() => handleOpenWorkoutModal(workout)}
                       className="text-gray-600 hover:text-gray-900"
                     >
-                      <Ellipsis className="size-6" /> 
+                      <Ellipsis className="size-6" />
                     </button>
                   </div>
 
@@ -468,33 +486,105 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Exercises List */}
-                  <div className="space-y-3 mb-4">
-                    {workout.exercises.map((exercise, index) => {
-                      const exerciseName = getExerciseName(exercise);
-                      const completedSets = countCompletedSets(exercise.sets);
-                      const thumbnail = getExerciseThumbnail(exercise);
-
-                      return (
-                        <div key={index} className="flex items-center gap-3">
-                          <div className="size-12 ml-2 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
-                            {thumbnail ? (
+                  {/* Swipeable Content */}
+                  <div className="mb-4">
+                    {hasMedia ? (
+                      <>
+                        {/* Media + Exercises swipe */}
+                        <div
+                          ref={swipeRef}
+                          onScroll={handleSwipeScroll}
+                          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
+                        >
+                          {/* Slide 1: Media */}
+                          <div className="min-w-full snap-center px-1">
+                            <div className="rounded-[12px] overflow-hidden bg-gray-100">
                               <img
-                                src={thumbnail}
-                                alt={exerciseName}
-                                className="w-full h-full object-cover"
+                                src={workout.media![0]}
+                                alt="Workout media"
+                                className="w-full h-64 object-cover"
+                                loading="lazy"
                               />
-                            ) : (
-                              <Dumbbell className="size-4 text-gray-400" />
-                            )}
+                            </div>
                           </div>
-                          <span className="text-sm font-regular text-gray-900">
-                            {completedSets} set{completedSets !== 1 ? "s" : ""} {exerciseName}
-                          </span>
+
+                          {/* Slide 2: Exercises */}
+                          <div className="min-w-full snap-center px-1">
+                            <div className="bg-white rounded-[12px] p-4 space-y-3">
+                              {workout.exercises.map((exercise, index) => {
+                                const exerciseName = getExerciseName(exercise);
+                                const completedSets = countCompletedSets(exercise.sets);
+                                const thumbnail = getExerciseThumbnail(exercise);
+
+                                return (
+                                  <div key={index} className="flex items-center gap-3">
+                                    <div className="size-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                      {thumbnail ? (
+                                        <img
+                                          src={thumbnail}
+                                          alt={exerciseName}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <Dumbbell className="size-4 text-gray-400" />
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-regular text-gray-900">
+                                      {completedSets} set{completedSets !== 1 ? "s" : ""}{" "}
+                                      {exerciseName}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
-                      );
-                    })}
+
+                        {/* Dots */}
+                        <div className="flex justify-center gap-2 mt-2">
+                          {[0, 1].map((i) => (
+                            <span
+                              key={i}
+                              className={`w-2 h-2 rounded-full transition-all ${activeSlide === i ? "bg-gray-600" : "bg-gray-300"
+                                }`}
+                            />
+                          ))}
+                        </div>
+
+                      </>
+                    ) : (
+                      /* No media → show exercises directly */
+                      <div className="bg-white rounded-[12px] p-4 space-y-3">
+                        {workout.exercises.map((exercise, index) => {
+                          const exerciseName = getExerciseName(exercise);
+                          const completedSets = countCompletedSets(exercise.sets);
+                          const thumbnail = getExerciseThumbnail(exercise);
+
+                          return (
+                            <div key={index} className="flex items-center gap-3">
+                              <div className="size-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                {thumbnail ? (
+                                  <img
+                                    src={thumbnail}
+                                    alt={exerciseName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Dumbbell className="size-4 text-gray-400" />
+                                )}
+                              </div>
+                              <span className="text-sm font-regular text-gray-900">
+                                {completedSets} set{completedSets !== 1 ? "s" : ""}{" "}
+                                {exerciseName}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
+
+
 
                   {/* Action Buttons: Like, Comment, Share */}
                   <div className="flex items-center gap-6 pt-3 border-t border-gray-100">
@@ -502,7 +592,7 @@ export default function HomePage() {
                       <ThumbsUp className="size-6" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                        <MessageCircle className="size-6" />  
+                      <MessageCircle className="size-6" />
                     </button>
                     <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
                       <Share className="size-6" />

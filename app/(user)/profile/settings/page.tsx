@@ -129,21 +129,20 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
         </div>
 
         {/* Logout Section */}
-      <div className="px-4 mb-6">
+      <div className="mb-6">
         {isLoggingOut && logoutCountdown !== null ? (
-          <div className="bg-red-50 border border-red-200 rounded-[10px] p-4">
-            <p className="text-red-700 text-center text-sm font-regular">
+          <div className="bg-white p-4">
+            <p className="text-red-500 text-center text-sm font-regular">
               Logging out in {logoutCountdown} second{logoutCountdown !== 1 ? "s" : ""}...
             </p>
           </div>
         ) : (
-          <button
+          <div
             onClick={handleLogout}
-            className="w-full bg-red-500 hover:bg-red-600 text-white rounded-[10px] p-4 flex items-center justify-center gap-3 transition-colors"
+            className="w-full bg-white text-red-500 p-4 flex items-center justify-center gap-3 transition-colors"
           >
-            <LogOut className="size-5" />
             <span className="text-sm font-regular">Logout</span>
-          </button>
+          </div>
         )}
       </div>
         </div>

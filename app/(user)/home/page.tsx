@@ -32,22 +32,20 @@ export default function HomePage() {
   const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeSlides, setActiveSlides] = useState<Record<string, number>>({});
   const swipeRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
   const isVideo = (url: string) => {
     return url.includes("/video/") || url.endsWith(".mp4");
   };
 
-  const handleSwipeScroll = () => {
-    if (!swipeRef.current) return;
-
-    const scrollLeft = swipeRef.current.scrollLeft;
-    const width = swipeRef.current.clientWidth;
-
-    const index = Math.round(scrollLeft / width);
-    setActiveSlide(index);
+  const setSlideForWorkout = (workoutId: string, index: number) => {
+    setActiveSlides((prev) => ({
+      ...prev,
+      [workoutId]: index,
+    }));
   };
+
 
 
   useEffect(() => {
@@ -490,25 +488,28 @@ export default function HomePage() {
                   <div className="mb-4">
                     {hasMedia ? (
                       <>
-                        {/* Media + Exercises swipe */}
                         <div
-                          ref={swipeRef}
-                          onScroll={handleSwipeScroll}
+                          onScroll={(e) => {
+                            const el = e.currentTarget;
+                            const index = Math.round(el.scrollLeft / el.clientWidth);
+                            setSlideForWorkout(workout._id, index);
+                          }}
                           className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
                         >
-                          {/* Slide 1: Media */}
-                          <div className="min-w-full snap-center px-1">
-                            <div className="rounded-[12px] overflow-hidden bg-gray-100">
-                              <img
-                                src={workout.media![0]}
-                                alt="Workout media"
-                                className="w-full h-64 object-cover"
-                                loading="lazy"
-                              />
+                          {/* 🖼 Media slides */}
+                          {workout.media!.map((url, i) => (
+                            <div key={i} className="min-w-full snap-center px-1">
+                              <div className="rounded-[12px] overflow-hidden bg-gray-100">
+                                <img
+                                  src={url}
+                                  alt={`Workout media ${i + 1}`}
+                                  className="w-full h-100 object-cover"
+                                />
+                              </div>
                             </div>
-                          </div>
+                          ))}
 
-                          {/* Slide 2: Exercises */}
+                          {/* 🏋️ Exercise slide */}
                           <div className="min-w-full snap-center px-1">
                             <div className="bg-white rounded-[12px] p-4 space-y-3">
                               {workout.exercises.map((exercise, index) => {
@@ -540,17 +541,18 @@ export default function HomePage() {
                           </div>
                         </div>
 
-                        {/* Dots */}
+                        {/* 🔘 Dynamic dots */}
                         <div className="flex justify-center gap-2 mt-2">
-                          {[0, 1].map((i) => (
+                          {Array.from({ length: workout.media!.length + 1 }).map((_, i) => (
                             <span
                               key={i}
-                              className={`w-2 h-2 rounded-full transition-all ${activeSlide === i ? "bg-gray-600" : "bg-gray-300"
+                              className={`w-2 h-2 rounded-full transition-all ${(activeSlides[workout._id] ?? 0) === i
+                                  ? "bg-gray-600"
+                                  : "bg-gray-300"
                                 }`}
                             />
                           ))}
                         </div>
-
                       </>
                     ) : (
                       /* No media → show exercises directly */

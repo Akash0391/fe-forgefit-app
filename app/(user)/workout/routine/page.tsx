@@ -78,15 +78,22 @@ export default function RoutineDetailsPage() {
       setRoutine(foundRoutine);
 
       // Convert routine exercises to RoutineExercise format
-      const routineExercises: RoutineExercise[] = foundRoutine.exercises.map((ex: any) => {
-        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-        return {
-          exercise: exercise as Exercise,
-          sets: ex.sets || [],
-          notes: ex.notes || "",
-          restTimerSeconds: ex.restTimerSeconds ?? 0,
-        };
-      });
+      const routineExercises: RoutineExercise[] = foundRoutine.exercises
+        .filter((ex: any) => ex?.exerciseId)             // <-- remove null / deleted exercises
+        .map((ex: any) => {
+          const exercise =
+            typeof ex.exerciseId === "object"
+              ? ex.exerciseId
+              : { _id: ex.exerciseId };
+
+          return {
+            exercise: exercise as Exercise,
+            sets: ex.sets || [],
+            notes: ex.notes || "",
+            restTimerSeconds: ex.restTimerSeconds ?? 0,
+          };
+        });
+
 
       setExercises(routineExercises);
     } catch (err: any) {
@@ -145,7 +152,7 @@ export default function RoutineDetailsPage() {
     setShowRoutineModal(true);
   };
 
-  
+
   const handleStartRoutine = () => {
     if (!routine) return;
 
@@ -255,9 +262,9 @@ export default function RoutineDetailsPage() {
               className="h-10 w-10"
               aria-label="More options"
               onClick={(e) => {
-                            e.stopPropagation();
-                            handleRoutineOptionsClick(routine);
-                          }}
+                e.stopPropagation();
+                handleRoutineOptionsClick(routine);
+              }}
             >
               <MoreHorizontal className="size-7" />
             </Button>

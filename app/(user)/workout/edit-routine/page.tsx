@@ -419,12 +419,12 @@ export default function EditRoutinePage() {
           <button
             onClick={() => router.back()}
             aria-label="Go back"
-            className="text-blue-500 text-lg font-regular"
+            className="text-blue-500 text-sm font-regular"
           >
             Cancel
           </button>
 
-          <h1 className="text-lg font-regular">Edit Routine</h1>
+          <h1 className="text-sm font-regular">Edit Routine</h1>
 
           <Button
             variant="default"
@@ -432,10 +432,10 @@ export default function EditRoutinePage() {
             disabled={
               exercises.length === 0 || isSaving || !routineTitle.trim()
             }
-            className={`text-lg font-regular ${
+            className={`text-sm font-regular ${
               exercises.length === 0 || isSaving || !routineTitle.trim()
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600 text-white rounded-[8px] py-6"
+                : "bg-blue-500 hover:bg-blue-600 text-white rounded-[8px] py-4"
             }`}
           >
             {isSaving ? "Updating..." : "Update"}
@@ -443,7 +443,7 @@ export default function EditRoutinePage() {
         </div>
       </header>
 
-      <div className="px-4 py-6">
+      <div className="px-2 py-4">
         <div className="relative flex items-center">
           <Input
             type="text"
@@ -453,15 +453,15 @@ export default function EditRoutinePage() {
               setRoutineTitle(e.target.value);
               setError(null);
             }}
-            className="text-xl p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-xl"
+            className="text-base p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-base"
           />
           {routineTitle && (
             <button
               onClick={() => setRoutineTitle("")}
-              className="absolute right-4 flex bg-gray-200 p-1 items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 transition-colors"
+              className="absolute right-4 flex bg-gray-200 p-1 items-center justify-center size-5 rounded-full hover:bg-gray-100 transition-colors"
               aria-label="Clear title"
             >
-              <X className="size-6 text-gray-500" />
+              <X className="size-4 text-gray-500" />
             </button>
           )}
         </div>
@@ -484,9 +484,9 @@ export default function EditRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-6 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-[16px]" />
               Add Exercise
             </Button>
           </div>
@@ -518,13 +518,13 @@ export default function EditRoutinePage() {
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        <h3 className="text-lg font-semibold text-blue-600 truncate">
+                        <h3 className="text-sm font-semibold text-blue-600 truncate">
                           {formatExerciseName(exercise)}
                         </h3>
 
                         {/* Superset badge */}
                         {isExerciseInSuperset(exercise._id) && (
-                          <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
+                          <div className="bg-[#b600fd] text-white text-sm font-regular rounded-[8px] text-center py-0.5 px-5 inline-block">
                             Superset
                           </div>
                         )}
@@ -539,7 +539,7 @@ export default function EditRoutinePage() {
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors p-1"
                       aria-label="Exercise options"
                     >
-                      <MoreVertical className="size-7 text-gray-600" />
+                      <MoreVertical className="size-5 text-gray-600" />
                     </button>
                   </div>
 
@@ -549,7 +549,7 @@ export default function EditRoutinePage() {
                       placeholder="Add routine note here"
                       value={routineExercise.notes || ""}
                       onChange={(e) => handleNotesChange(index, e.target.value)}
-                      className="w-full !border-none text-gray-500 placeholder:text-gray-400"
+                      className="w-full !border-none text-gray-500 text-sm placeholder:text-gray-400"
                     />
                   </div>
 
@@ -558,8 +558,8 @@ export default function EditRoutinePage() {
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
                     onClick={() => openRestTimerSheet(index)}
                   >
-                    <Timer className="size-7 text-blue-600" />
-                    <span className="text-lg text-blue-600 font-regular">
+                    <Timer className="size-5 text-blue-600" />
+                    <span className="text-sm text-blue-600 font-regular">
                       Rest Timer:{" "}
                       {formatRestTimerLabel(routineExercise.restTimerSeconds)}
                     </span>
@@ -567,7 +567,7 @@ export default function EditRoutinePage() {
 
                   {/* Sets Table */}
                   <div className="mb-4">
-                    <div className="grid grid-cols-3 gap-20 mb-2 text-sm font-regular text-gray-500 pb-2">
+                    <div className="grid grid-cols-3 gap-20 mb-2 text-xs font-regular text-gray-500 pb-2">
                       <div className="text-center">SET</div>
                       <div className="flex items-center justify-center gap-1">
                         <Dumbbell className="size-3" />
@@ -597,7 +597,7 @@ export default function EditRoutinePage() {
                           }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${
+                            className={`text-sm font-semibold text-center ${
                               set.completed ? "text-black" : "text-gray-700"
                             }`}
                           >
@@ -615,7 +615,7 @@ export default function EditRoutinePage() {
                                   parseInt(e.target.value) || 0
                                 )
                               }
-                              className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                              className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                                 set.completed ? "bg-green-100" : ""
                               }`}
                               placeholder="0"
@@ -634,7 +634,7 @@ export default function EditRoutinePage() {
                                     parseInt(e.target.value) || 0
                                   )
                                 }
-                                className={`w-full h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                className={`w-full h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                                   set.completed ? "bg-green-100" : ""
                                 }`}
                                 placeholder="0"
@@ -652,7 +652,7 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                  className={`w-16 h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                                     set.completed ? "bg-green-100" : ""
                                   }`}
                                   placeholder="-"
@@ -671,7 +671,7 @@ export default function EditRoutinePage() {
                                       parseInt(e.target.value) || 0
                                     )
                                   }
-                                  className={`w-16 h-8 px-2 text-lg text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
+                                  className={`w-16 h-8 px-2 text-sm text-center !border-0 border-none focus:!border-0 focus:border-none focus:ring-0 focus:outline-none shadow-none ${
                                     set.completed ? "bg-green-100" : ""
                                   }`}
                                   placeholder="-"
@@ -694,8 +694,8 @@ export default function EditRoutinePage() {
                     onClick={() => handleAddSet(index)}
                     className="w-full text-gray-700 bg-gray-100 py-2 h-auto rounded-[10px]"
                   >
-                    <Plus className="size-6 mr-2" />
-                    <span className="text-lg font-regular">Add Set</span>
+                    <Plus className="size-5" />
+                    <span className="text-sm font-regular">Add Set</span>
                   </Button>
                 </div>
               );
@@ -707,9 +707,9 @@ export default function EditRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-5 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-5" />
               Add Exercise
             </Button>
           </div>
@@ -729,7 +729,7 @@ export default function EditRoutinePage() {
             }}
           />
           <div
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
+            className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[30vh] ${
               isRepetitionModalVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-full opacity-0"
@@ -737,16 +737,16 @@ export default function EditRoutinePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center pt-2">
-              <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+              <div className="h-1 w-15 bg-gray-400 rounded-lg"></div>
             </div>
 
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-regular text-center">
+            <div className="px-6 py-2 border-b border-gray-200">
+              <h2 className="text-sm font-regular text-center">
                 Repetition options
               </h2>
             </div>
 
-            <div className="px-6 py-7 pb-8">
+            <div className="px-4 py-5 pb-4">
               <div className="bg-white rounded-[10px] overflow-hidden">
                 {[
                   { id: "reps", label: "Reps" },
@@ -767,7 +767,7 @@ export default function EditRoutinePage() {
                       } hover:bg-gray-50 active:bg-gray-100`}
                     >
                       <span
-                        className={`text-lg font-regular ${
+                        className={`text-sm font-regular ${
                           isSelected ? "text-blue-600" : "text-gray-900"
                         }`}
                       >
@@ -778,7 +778,7 @@ export default function EditRoutinePage() {
                           isSelected ? "text-blue-600" : "text-gray-400"
                         }`}
                       >
-                        {isSelected && <Check className="size-7" />}
+                        {isSelected && <Check className="size-5" />}
                       </div>
                     </button>
                   );

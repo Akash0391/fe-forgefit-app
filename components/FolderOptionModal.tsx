@@ -99,18 +99,18 @@ export default function FolderOptionModal({
             />
             {/* Modal Content - Bottom Sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[50vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Drag Handle */}
                 <div className="flex justify-center pt-2">
-                    <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+                    <div className="h-1 w-15 bg-gray-400 rounded-lg"></div>
                 </div>
 
                 {/* ✅ Folder name under drag handle */}
-                <div className="mt-6 text-center border-b border-gray-200 px-6 pb-5">
-                    <p className="text-xl font-regular text-gray-500">
+                <div className="mt-4 text-center border-b border-gray-200 px-6 pb-5">
+                    <p className="text-sm font-regular text-gray-500">
                         {folderName}
                     </p>
                 </div>
@@ -130,11 +130,11 @@ export default function FolderOptionModal({
                                             onClose();
                                         }
                                     }}
-                                    className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
+                                    className={`w-full flex items-center gap-3 p-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
                                         } hover:bg-gray-50 active:bg-gray-100`}
                                 >
-                                    <Icon className={`size-7 ${item.textColor} flex-shrink-0`} />
-                                    <span className={`text-lg font-regular ${item.textColor}`}>
+                                    <Icon className={`size-5 ${item.textColor} flex-shrink-0`} />
+                                    <span className={`text-sm font-regular ${item.textColor}`}>
                                         {item.label}
                                     </span>
                                 </button>

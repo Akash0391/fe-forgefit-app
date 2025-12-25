@@ -278,17 +278,17 @@ export default function NewRoutinePage() {
           <button
             onClick={() => router.push("/workout")}
             aria-label="Go back"
-            className="text-blue-500 text-lg font-regular">Cancel</button>
+            className="text-blue-500 text-sm font-regular">Cancel</button>
 
           {/* Center: Username */}
-          <h1 className="text-lg font-regular">Create Routine</h1>
+          <h1 className="text-sm font-regular">Create Routine</h1>
 
           {/* Right: Save Button */}
           <Button
             variant="default"
             onClick={handleSave}
             disabled={exercises.length === 0 || isSaving || !routineTitle.trim()}
-            className={`text-lg font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
+            className={`text-sm font-regular ${exercises.length === 0 || isSaving || !routineTitle.trim()
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
@@ -298,7 +298,7 @@ export default function NewRoutinePage() {
         </div>
       </header>
 
-      <div className="px-4 py-6">
+      <div className="px-2 py-4">
         <div className="relative flex items-center">
           <Input
             type="text"
@@ -308,15 +308,15 @@ export default function NewRoutinePage() {
               setRoutineTitle(e.target.value);
               setError(null);
             }}
-            className="text-xl p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-xl"
+            className="text-base p-4 pr-12 font-semibold border-none outline-none placeholder:text-gray-400 placeholder:text-base"
           />
           {routineTitle && (
             <button
               onClick={() => setRoutineTitle("")}
-              className="absolute right-4 flex bg-gray-200 p-1 items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 transition-colors"
+              className="absolute right-4 flex bg-gray-200 p-1 items-center justify-center size-5 rounded-full hover:bg-gray-100 transition-colors"
               aria-label="Clear title"
             >
-              <X className="size-6 text-gray-500" />
+              <X className="size-4 text-gray-500" />
             </button>
           )}
         </div>
@@ -330,9 +330,9 @@ export default function NewRoutinePage() {
       {/* Main Content Area - Get Started or Exercise List */}
       {exercises.length === 0 ? (
         <>
-          <div className="flex flex flex-col items-center justify-center px-4 pt-20 pb-2">
-            <Dumbbell className="size-[36px] text-gray-300 mb-6 stroke-[1.5]" />
-            <p className="text-gray-500 font-regular text-lg text-center">
+          <div className="flex flex flex-col items-center justify-center px-4 pt-16 pb-2">
+            <Dumbbell className="size-8 text-gray-300 mb-6 stroke-[1.5]" />
+            <p className="text-gray-500 font-regular text-base text-center">
               Get started by adding an exercise to your routine.
             </p>
           </div>
@@ -342,9 +342,9 @@ export default function NewRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-5 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-[18px]" />
               Add Exercise
             </Button>
           </div>

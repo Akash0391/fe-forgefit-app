@@ -234,7 +234,7 @@ export default function RoutineDetailsPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-gray-200">
-        <div className="flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-16 px-2">
           <Button
             variant="ghost"
             size="icon"
@@ -242,31 +242,31 @@ export default function RoutineDetailsPage() {
             className="h-10 w-10"
             aria-label="Go back"
           >
-            <ArrowLeft className="size-7" />
+            <ArrowLeft className="size-5" />
           </Button>
 
-          <h1 className="text-lg font-regular">Routine</h1>
+          <h1 className="text-sm font-regular">Routine</h1>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10"
+              className="size-8"
               aria-label="More options"
             >
-              <Share className="size-7" />
+              <Share className="size-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10"
+              className="size-8"
               aria-label="More options"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRoutineOptionsClick(routine);
               }}
             >
-              <MoreHorizontal className="size-7" />
+              <MoreHorizontal className="size-6" />
             </Button>
           </div>
         </div>
@@ -276,26 +276,26 @@ export default function RoutineDetailsPage() {
       <div className="p-4 space-y-6 pb-20">
         {/* Routine Header */}
         <div>
-          <h2 className="text-2xl font-semibold mb-2">
+          <h2 className="text-lg font-semibold mb-2">
             {routine.name}
           </h2>
-          <p className="text-gray-500 text-xm mb-4">
+          <p className="text-gray-500 text-xs mb-4">
             Created by {getUsername()}
           </p>
           <Button
             onClick={handleStartRoutine}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg rounded-[10px] py-6"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-[10px] py-5"
           >
             Start Routine
           </Button>
         </div>
 
         {/* Data Visualization Area */}
-        <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px]">
-          <div className="text-gray-400 mb-4">
+        <div className="bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[120px]">
+          <div className="text-gray-400">
             <svg
-              width="48"
-              height="48"
+              width="36"
+              height="36"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -303,21 +303,21 @@ export default function RoutineDetailsPage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <rect x="3" y="3" width="4" height="18" rx="1" />
-              <rect x="10" y="8" width="4" height="13" rx="1" />
-              <rect x="17" y="13" width="4" height="8" rx="1" />
+              <rect x="3" y="3" width="3" height="16" rx="1" />
+              <rect x="10" y="8" width="3" height="11" rx="1" />
+              <rect x="17" y="13" width="3" height="6" rx="1" />
             </svg>
           </div>
-          <p className="text-gray-400 text-lg">No data yet</p>
+          <p className="text-gray-400 text-sm">No data yet</p>
         </div>
 
         {/* View Filters */}
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           {(["Volume", "Reps", "Duration"] as const).map((view) => (
             <button
               key={view}
               onClick={() => setSelectedView(view)}
-              className={`flex py-2 px-6 rounded-full text-xm font-medium transition-colors ${selectedView === view
+              className={`flex py-2 px-4 rounded-full text-sm font-medium transition-colors ${selectedView === view
                 ? "bg-blue-500 text-white"
                 : "bg-gray-100 text-gray-600"
                 }`}
@@ -330,10 +330,10 @@ export default function RoutineDetailsPage() {
         {/* Exercises Section */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-500">Exercises</h3>
+            <h3 className="text-sm font-semibold text-gray-500">Exercises</h3>
             <button
               onClick={handleEditRoutine}
-              className="text-blue-500 text-xm font-regular hover:text-blue-600"
+              className="text-blue-500 text-sm font-regular hover:text-blue-600"
             >
               Edit Routine
             </button>
@@ -370,7 +370,7 @@ export default function RoutineDetailsPage() {
                           </div>
                         )}
                       </div>
-                      <h4 className="text-lg font-semibold flex-1">
+                      <h4 className="text-sm font-semibold flex-1">
                         {formatExerciseName(exercise)}
                       </h4>
                     </div>
@@ -378,8 +378,8 @@ export default function RoutineDetailsPage() {
                     <div
                       className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
                     >
-                      <Timer className="size-7 text-blue-600" />
-                      <span className="text-lg text-blue-600 font-regular">
+                      <Timer className="size-5 text-blue-600" />
+                      <span className="text-sm text-blue-600 font-regular">
                         Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds)}
                       </span>
                     </div>
@@ -408,13 +408,13 @@ export default function RoutineDetailsPage() {
                                 key={setIndex}
                                 className="border-b border-gray-100 last:border-b-0"
                               >
-                                <td className="py-2 text-lg font-semibold pl-2">
+                                <td className="py-2 text-sm font-semibold pl-2">
                                   {set.setNumber || setIndex + 1}
                                 </td>
-                                <td className="py-2 text-lg">
+                                <td className="py-2 text-sm">
                                   {set.kg || 0}
                                 </td>
-                                <td className="py-2 text-lg pl-2">
+                                <td className="py-2 text-sm pl-2">
                                   {formatReps(set)}
                                 </td>
                               </tr>

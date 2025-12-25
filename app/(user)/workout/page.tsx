@@ -566,24 +566,24 @@ export default function WorkoutPage() {
 
         {/* Workout on Progress */}
         {workoutInProgress && (
-          <div className="fixed bottom-20 left-0 right-0 px-4 md:hidden border-t border-gray-200 pt-3">
-            <div className="w-full bg-white rounded-[10px] px-4">
-              <p className="text-lg font-regular text-muted-foreground text-center">Workout in Progress</p>
+          <div className="fixed bottom-18 left-0 right-0 px-4 md:hidden bg-white border-t border-gray-100 pt-3">
+            <div className="w-full">
+              <p className="text-sm font-regular text-muted-foreground text-center">Workout in Progress</p>
               <div className="flex gap-3">
                 <Button
                   variant="default"
-                  className="flex-1 text-lg bg-white hover:bg-blue-600 text-blue-500 rounded-[10px]"
+                  className="flex-1 text-sm bg-white hover:bg-blue-600 text-blue-500 rounded-[10px]"
                   onClick={handleResumeWorkout}
                 >
-                  <Play className="size-[16px] mr-2" />
+                  <Play className="size-4" />
                   Resume
                 </Button>
                 <Button
                   variant="default"
-                  className="flex-1 text-lg bg-white text-red-500 hover:bg-gray-200 rounded-[10px]"
+                  className="flex-1 text-sm bg-white text-red-500 hover:bg-gray-200 rounded-[10px]"
                   onClick={handleDiscardClick}
                 >
-                  <X className="size-[16px] mr-2" />
+                  <X className="size-4" />
                   Discard
                 </Button>
               </div>

@@ -790,19 +790,19 @@ export default function AddExercisePage() {
         <div className="fixed inset-0 flex flex-col bg-background">
             {/* Header */}
             <header className="flex-shrink-0 bg-background border-b border-border">
-                <div className="flex items-center justify-between h-16 px-4">
+                <div className="flex items-center justify-between h-14 px-4">
                     <Button
                         variant="ghost"
                         onClick={handleCancel}
                         className="h-10 px-0 hover:bg-transparent"
                         aria-label="Go back"
                     >
-                        <span className="text-lg font-regular text-blue-600">
+                        <span className="text-sm font-regular text-blue-600">
                             Cancel
                         </span>
                     </Button>
 
-                    <h1 className="text-lg font-regular capitalize">
+                    <h1 className="text-sm font-regular capitalize">
                         {isReplaceMode ? "Replace Exercise" : "add exercise"}
                     </h1>
 
@@ -812,7 +812,7 @@ export default function AddExercisePage() {
                         className="h-10 px-0 hover:bg-transparent"
                         aria-label="Create"
                     >
-                        <span className="text-lg font-regular text-blue-600">
+                        <span className="text-sm font-regular text-blue-600">
                             Create
                         </span>
                     </Button>
@@ -820,7 +820,7 @@ export default function AddExercisePage() {
             </header>
 
             {/* Search + filters */}
-            <div className="flex-shrink-0 p-4 space-y-4 bg-background">
+            <div className="flex-shrink-0 p-4 space-y-3 bg-background">
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 size-5 text-gray-400 pointer-events-none z-10" />
                     <Input
@@ -828,16 +828,16 @@ export default function AddExercisePage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                        className="w-full h-12 pl-12 pr-4 text-base rounded-[8px] bg-gray-100 border-none outline-none placeholder:text-gray-400 transition-colors"
+                        className="w-full h-10 pl-12 pr-4 text-sm rounded-[8px] bg-gray-100 border-none outline-none placeholder:text-gray-400 transition-colors"
                     />
                 </div>
 
-                <div className="flex flex-row items-center gap-3">
+                <div className="flex flex-row items-center gap-2">
                     {/* Equipment Button */}
                     <button
                         type="button"
                         onClick={() => setIsEquipOpen(true)}
-                        className={`relative flex items-center justify-center flex-1 px-4 py-3 h-auto text-base rounded-[8px] border-none font-regular transition-colors
+                        className={`relative flex items-center justify-center flex-1 px-4 py-2 h-auto text-sm rounded-[8px] border-none font-regular transition-colors
       ${equipment && equipment !== "all"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-100 text-black"
@@ -871,7 +871,7 @@ export default function AddExercisePage() {
                     <button
                         type="button"
                         onClick={() => setIsMuscleOpen(true)}
-                        className={`relative flex items-center justify-center flex-1 px-4 py-3 h-auto text-base rounded-[8px] border-none font-regular transition-colors
+                        className={`relative flex items-center justify-center flex-1 px-4 py-2 h-auto text-sm rounded-[8px] border-none font-regular transition-colors
       ${muscle && muscle !== "all"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-100 text-black"
@@ -905,9 +905,9 @@ export default function AddExercisePage() {
                         <button
                             type="button"
                             onClick={clearAllFilters}
-                            className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-black"
+                            className="flex items-center justify-center size-5 rounded-full bg-gray-200 text-black"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="size-3" />
                         </button>
                     )}
                 </div>
@@ -931,12 +931,12 @@ export default function AddExercisePage() {
                     }
                 }}
             >
-                <div className="space-y-10 px-4">
+                <div className="space-y-8 px-3">
                     {/* Custom Exercises */}
                     {filteredCustom.length > 0 && (
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <h2 className="text-base font-semibold text-gray-700">
+                                <h2 className="text-sm font-semibold text-gray-700">
                                     Custom Exercises ({filteredCustom.length})
                                 </h2>
                             </div>
@@ -963,7 +963,7 @@ export default function AddExercisePage() {
 
                     {/* All Exercises */}
                     <div>
-                        <h2 className="text-base font-semibold text-gray-700 mb-2">
+                        <h2 className="text-sm font-semibold text-gray-700 mb-2">
                             All Exercises
                         </h2>
 

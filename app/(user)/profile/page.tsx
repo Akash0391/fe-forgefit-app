@@ -361,16 +361,21 @@ export default function ProfilePage() {
     return "Exercise";
   };
 
-  const getExerciseThumbnail = (exercise: any): string | null => {
-    if (typeof exercise.exerciseId === "object") {
-      return (
-        exercise.exerciseId.gifUrl ||
-        exercise.exerciseId.thumbnailUrl ||
-        null
-      );
-    }
-    return null;
-  };
+  function getExerciseThumbnail(exercise: any) {
+  const ex = exercise?.exerciseId;
+
+  // case 1: populated object
+  if (ex && typeof ex === "object") {
+    return ex.gifUrl || ex.thumbnailUrl || null;
+  }
+
+  // case 2: missing / deleted exercise
+  if (!ex) return null;
+
+  // case 3: it's just an ID string
+  return null;
+}
+
 
   const countCompletedSets = (sets: SetData[]): number =>
     sets.filter((set) => set.completed).length;

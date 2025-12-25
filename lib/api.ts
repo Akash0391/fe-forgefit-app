@@ -90,6 +90,9 @@ export interface Exercise {
   _id: string;
   name: string;
   description: string;
+  // NEW MODEL
+  primaryMuscle?: string;
+  secondaryMuscles?: string[];
   muscleGroups: string[];
   equipment: string;
   videoUrl: string;

@@ -128,16 +128,16 @@ export default function CreateExercisePage() {
                             router.push("/workout/quick-start/add-exercise")
                         }
                     >
-                        <ArrowLeft className="size-7 text-gray-700" />
+                        <ArrowLeft className="size-5 text-gray-700" />
                     </button>
 
-                    <h1 className="flex-1 text-center text-lg font-regular">
+                    <h1 className="flex-1 text-center text-sm font-regular">
                         Create Exercise
                     </h1>
 
                     <button
                         aria-label="Save"
-                        className="px-4 py-2 bg-blue-500 text-white text-lg rounded-[8px] disabled:opacity-60"
+                        className="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-[6px] disabled:opacity-60"
                         onClick={handleSave}
                         disabled={isSaving}
                     >
@@ -148,23 +148,23 @@ export default function CreateExercisePage() {
 
             <main className="px-4">
                 {/* Asset upload circle */}
-                <div className="w-full flex flex-col gap-2 items-center justify-center mt-12">
-                    <div className="w-36 h-36 rounded-full border border-gray-200 flex items-center justify-center">
+                <div className="w-full flex flex-col gap-2 items-center justify-center mt-8">
+                    <div className="size-30 rounded-full border border-gray-200 flex items-center justify-center">
                         <button
                             aria-label="Add asset"
                             className="flex flex-col items-center justify-center"
                             onClick={() => setShowMediaModal(true)}
                         >
-                            <div className="w-12 h-12 flex items-center justify-center">
-                                <Camera className="size-8 text-black" />
+                            <div className="size-10 flex items-center justify-center">
+                                <Camera className="size-6 text-black" />
                             </div>
                         </button>
                     </div>
-                    <span className="text-lg text-blue-500 mt-3">Add Asset</span>
+                    <span className="text-sm text-blue-500 mt-3">Add Asset</span>
                 </div>
 
                 {/* Exercise Name input */}
-                <div className="mt-8 border-b border-gray-100 pb-5">
+                <div className="mt-8 border-b border-gray-100 pb-2">
                     <Input
                         type="text"
                         placeholder="Exercise Name"
@@ -172,14 +172,14 @@ export default function CreateExercisePage() {
                         onChange={(e) => {setTitle(e.target.value)
                             setErrors((prev) => ({ ...prev, title: undefined }));
                         }}  // 👈 Zustand
-                        className="text-xl font-bold border-none bg-transparent p-1 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="text-xm font-bold border-none bg-transparent p-1 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
 
 
 
                 </div>
                 {errors.title && (
-                    <p className="text-lg text-red-500 mt-2">{errors.title}</p>
+                    <p className="text-sm text-red-500 mt-2">{errors.title}</p>
                 )}
             </main>
 
@@ -195,20 +195,20 @@ export default function CreateExercisePage() {
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
                         <div className="flex-1 flex items-start flex-col gap-2">
-                            <span className="text-lg font-regular text-black">
+                            <span className="text-sm font-regular text-black">
                                 Equipment
                             </span>
                             {equipment ? (
-                                <span className="text-lg text-gray-500">{equipment}</span>
+                                <span className="text-sm text-gray-500">{equipment}</span>
                             ) : (
-                                <span className="text-lg text-blue-500">Select</span>
+                                <span className="text-sm text-blue-500">Select</span>
                             )}
                         </div>
                         <div className="flex items-center">
                             {errors.equipment && (
-                                <p className="text-lg text-red-500">{errors.equipment}</p>
+                                <p className="text-sm text-red-500">{errors.equipment}</p>
                             )}
-                            <ChevronRight className="size-7 text-gray-400" />
+                            <ChevronRight className="size-6 text-gray-400" />
                         </div>
                     </button>
                 </div>
@@ -224,22 +224,22 @@ export default function CreateExercisePage() {
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
                         <div className="flex-1 flex items-start flex-col gap-2">
-                            <span className="text-lg font-regular text-black">
+                            <span className="text-sm font-regular text-black">
                                 Primary Muscle Group
                             </span>
                             {primaryMuscle ? (
-                                <span className="text-lg text-gray-500">
+                                <span className="text-sm text-gray-500">
                                     {primaryMuscle}
                                 </span>
                             ) : (
-                                <span className="text-lg text-blue-500">Select</span>
+                                <span className="text-sm text-blue-500">Select</span>
                             )}
                         </div>
                         <div className="flex items-center">
                             {errors.primaryMuscle && (
-                                <p className="text-lg text-red-500 mt-1">{errors.primaryMuscle}</p>
+                                <p className="text-sm text-red-500 mt-1">{errors.primaryMuscle}</p>
                             )}
-                            <ChevronRight className="size-7 text-gray-400" />
+                            <ChevronRight className="size-6 text-gray-400" />
                         </div>
                     </button>
                 </div>
@@ -255,22 +255,22 @@ export default function CreateExercisePage() {
                         className="w-full flex justify-between py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
                     >
                         <div className="flex-1 flex items-start flex-col gap-2">
-                            <span className="text-lg font-regular text-black">
+                            <span className="text-sm font-regular text-black">
                                 Other Muscles
                             </span>
                             {otherMuscles ? (
-                                <span className="text-lg text-gray-500">
+                                <span className="text-sm text-gray-500">
                                     {otherMuscles}
                                 </span>
                             ) : (
-                                <span className="text-lg text-blue-500">
+                                <span className="text-sm text-blue-500">
                                     Select{" "}
-                                    <span className="text-lg text-gray-400">(optional)</span>
+                                    <span className="text-sm text-gray-400">(optional)</span>
                                 </span>
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <ChevronRight className="size-7 text-gray-400" />
+                            <ChevronRight className="size-6 text-gray-400" />
                         </div>
                     </button>
                 </div>
@@ -286,22 +286,22 @@ export default function CreateExercisePage() {
                         className="w-full flex justify-between py-3 hover:bg-gray-50 transition-colors"
                     >
                         <div className="flex-1 flex items-start flex-col gap-2">
-                            <span className="text-lg font-regular text-black">
+                            <span className="text-sm font-regular text-black">
                                 Exercise Type
                             </span>
                             {exerciseType ? (
-                                <span className="text-lg text-gray-500">
+                                <span className="text-sm text-gray-500">
                                     {exerciseType}
                                 </span>
                             ) : (
-                                <span className="text-lg text-blue-500">Select</span>
+                                <span className="text-sm text-blue-500">Select</span>
                             )}
                         </div>
                         <div className="flex items-center">
                             {errors.exerciseType && (
-                                <p className="text-lg text-red-500 mt-1">{errors.exerciseType}</p>
+                                <p className="text-sm text-red-500 mt-1">{errors.exerciseType}</p>
                             )}
-                            <ChevronRight className="size-7 text-gray-400" />
+                            <ChevronRight className="size-6 text-gray-400" />
                         </div>
                     </button>
                 </div>

@@ -26,15 +26,15 @@ export default function FinishWorkoutConfirmationModal({
       <DialogContent className="rounded-[10px] w-[360px]">
         <DialogHeader>
           <DialogTitle className="sr-only">Finish Workout</DialogTitle>
-          <DialogDescription className="text-center text-lg font-regular mb-4">
+          <DialogDescription className="text-center text-sm font-regular mb-2">
             {message}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col sm:flex-row gap-5">
+        <DialogFooter className="flex-col sm:flex-row gap-3">
           <Button
             variant="default"
             onClick={onClose}
-            className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white p-6 text-lg rounded-[10px]"
+            className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white p-5 text-sm rounded-[10px]"
           >
             Ok
           </Button>

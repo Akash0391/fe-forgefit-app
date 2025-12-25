@@ -71,53 +71,53 @@ export default function VisibilityModal({
       />
       {/* Modal Content - Bottom Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[60vh] ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[50vh] ${
           isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
         <div className="flex justify-center pt-2">
-          <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+          <div className="h-1 w-12 bg-gray-400 rounded-lg"></div>
         </div>
 
-        <div className="py-5 pb-6">    
-          <div className="mb-6 text-center border-b border-gray-200 -mx-6 px-6">
+        <div className="py-3 pb-6">    
+          <div className="mb-3 text-center border-b border-gray-200 -mx-6 px-6">
             {/* Title */}
-            <h2 className="text-lg font-regular text-black mb-6">Visibility</h2>
+            <h2 className="text-sm font-regular text-black mb-3">Visibility</h2>
           </div>
 
         <div className="px-6">
 
-          <div className="mb-6">
-            <p className="text-lg font-regular text-gray-500">
+          <div className="mb-3">
+            <p className="text-xm font-regular text-gray-500">
               Workout Visibility
             </p>
           </div>
 
           {/* Visibility Options */}
-          <div className="bg-white rounded-[10px] overflow-hidden mb-4">
+          <div className="bg-white rounded-[10px] overflow-hidden mb-2">
             {/* Everyone Option */}
             <button
               onClick={() => {
                 onVisibilityChange("Everyone");
                 onClose();
               }}
-              className="w-full flex items-center gap-4 px-6 py-5 transition-colors text-left hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100"
+              className="w-full flex items-center gap-4 px-5 py-4 transition-colors text-left hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100"
             >
               <div className="flex-1">
-                <div className="mb-2">
-                  <span className="text-lg font-regular text-black">
+                <div className="mb-1">
+                  <span className="text-xm font-regular text-black">
                     Everyone
                   </span>
                 </div>
-                <p className="text-xm font-regular text-gray-500">
+                <p className="text-sm font-regular text-gray-500">
                   This workout is publicly available to all users on ForgeFit.
                 </p>
               </div>
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 {visibility === "Everyone" && (
-                  <Check className="size-8 text-blue-500" />
+                  <Check className="size-5 text-blue-500" />
                 )}
               </div>
             </button>
@@ -128,37 +128,37 @@ export default function VisibilityModal({
                 onVisibilityChange("Private");
                 onClose();
               }}
-              className="w-full flex items-center gap-4 px-6 py-5 transition-colors text-left hover:bg-gray-50 active:bg-gray-100"
+              className="w-full flex items-center gap-4 px-5 py-4 transition-colors text-left hover:bg-gray-50 active:bg-gray-100"
             >
               <div className="flex-1">
-                <div className="mb-2">
-                  <span className="text-lg font-regular text-black">
+                <div className="mb-1">
+                  <span className="text-xm font-regular text-black">
                     Private
                   </span>
                 </div>
-                <p className="text-xm font-regular text-gray-500">
+                <p className="text-sm font-regular text-gray-500">
                   Keep this workout private and visible only to you for personal
                   use.
                 </p>
               </div>
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                 {visibility === "Private" && (
-                  <Check className="size-8 text-blue-500" />
+                  <Check className="size-5 text-blue-500" />
                 )}
               </div>
             </button>
           </div>
 
-          <div className="mb-6 mt-6 ">
+          <div className="mb-4 mt-4 ">
             <div className="flex items-center justify-between">
-            <p className="text-lg font-regular text-gray-500">
+            <p className="text-xm font-regular text-gray-500">
               Public Data
             </p>
             <button
               onClick={() => setShowInfoModal(true)}
               className="flex items-center justify-center rounded-full bg-gray-200 p-1 hover:bg-gray-300 transition-colors"
             >
-              <Image src="/icons/punctuation-marks.png" alt="Info" width={12} height={12} />
+              <Image src="/icons/punctuation-marks.png" alt="Info" width={10} height={10} />
             </button>
             </div>
           </div>
@@ -166,13 +166,13 @@ export default function VisibilityModal({
           {/* Public Data Section */}
           <div className="bg-white rounded-[10px] overflow-hidden px-6 py-5">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-regular text-black">
+              <span className="text-sm font-regular text-black">
                 Show My Heart Rate & Calories
               </span>
               <Switch 
                 checked={showHeartRate}
                 onCheckedChange={onShowHeartRateChange}
-                className="h-10 w-17 data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 [&>[data-slot=switch-thumb]]:size-8 [&>[data-slot=switch-thumb]]:bg-white [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[2rem] [&>[data-slot=switch-thumb]]:data-[state=unchecked]:translate-x-[0.125rem]"
+                className="h-7 w-13 data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-gray-300 [&>[data-slot=switch-thumb]]:size-6 [&>[data-slot=switch-thumb]]:bg-white [&>[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[1.5rem] [&>[data-slot=switch-thumb]]:data-[state=unchecked]:translate-x-[0.125rem]"
               />
             </div>
           </div>
@@ -194,12 +194,12 @@ export default function VisibilityModal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <p className="text-lg font-regular text-gray-700 mb-8 mt-2 text-center">
+              <p className="text-sm font-regular text-gray-700 mb-8 mt-2 text-center">
                 When enabled, and while working out with your wearable, your heart rate and calorie data will be displayed publicly with your workout.
               </p>
               <button
                 onClick={() => setShowInfoModal(false)}
-                className="w-full py-3 px-4 bg-blue-500 text-white rounded-[10px] font-regular text-lg hover:bg-blue-600 transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-[10px] font-regular text-sm hover:bg-blue-600 transition-colors"
               >
                 Ok
               </button>

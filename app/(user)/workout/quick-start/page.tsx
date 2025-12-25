@@ -1315,21 +1315,21 @@ const loadWorkout = async () => {
           </div>
           <Button
             variant="ghost"
-            className="h-12 px-5 bg-gray-200 text-lg rounded-xl"
+            className="h-10 px-5 bg-gray-200 text-sm rounded-xl"
             onClick={() => adjustRestTime(-15)}
           >
             -15
           </Button>
 
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-3xl font-regular">
+            <span className="text-2xl font-regular">
               {formatRestTime(activeRest.remaining)}
             </span>
           </div>
 
           <Button
             variant="ghost"
-            className="h-12 px-5 bg-gray-200 text-lg rounded-xl"
+            className="h-10 px-5 bg-gray-200 text-sm rounded-xl"
             onClick={() => adjustRestTime(15)}
           >
             +15
@@ -1337,7 +1337,7 @@ const loadWorkout = async () => {
 
           <Button
             variant="default"
-            className="h-12 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-lg text-white"
+            className="h-10 px-5 rounded-xl bg-blue-500 hover:bg-blue-600 text-sm text-white"
             onClick={stopRestTimer}
           >
             Skip

@@ -317,7 +317,7 @@ export default function ReorderExercisesPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-center h-16 px-4">
-          <h1 className="text-lg font-regular text-center">Reorder</h1>
+          <h1 className="text-sm font-regular text-center">Reorder</h1>
         </div>
       </header>
 
@@ -369,7 +369,7 @@ export default function ReorderExercisesPage() {
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                   className={`
-                    flex items-center gap-4 p-4 bg-white rounded-[10px] border-2 transition-all
+                    flex items-center gap-4 p-2 bg-white rounded-[10px] border-2 transition-all
                     ${
                       draggedIndex === index
                         ? "opacity-50 border-blue-500"
@@ -389,12 +389,12 @@ export default function ReorderExercisesPage() {
                 >
                   {/* Remove Button (non-functional here, just UI) */}
                   <div className="flex-shrink-0 relative">
-                    <Circle className="size-7 fill-red-500 text-red-500" />
-                    <Minus className="size-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white stroke-[3]" />
+                    <Circle className="size-5 fill-red-500 text-red-500" />
+                    <Minus className="size-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white stroke-[3]" />
                   </div>
 
                   {/* Exercise Icon */}
-                  <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+                  <div className="relative flex-shrink-0 size-12 rounded-full overflow-hidden bg-gray-100">
                     {thumbnailUrl ? (
                       <img
                         src={thumbnailUrl}
@@ -410,16 +410,16 @@ export default function ReorderExercisesPage() {
 
                   {/* Name */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-regular text-black truncate">
+                    <h3 className="text-sm font-regular text-black truncate">
                       {displayName}
                     </h3>
                   </div>
 
                   {/* Drag handle */}
-                  <div className="flex-shrink-0 text-gray-400 flex flex-col gap-1.5">
-                    <div className="w-7 h-0.5 bg-gray-400"></div>
-                    <div className="w-7 h-0.5 bg-gray-400"></div>
-                    <div className="w-7 h-0.5 bg-gray-400"></div>
+                  <div className="flex-shrink-0 text-gray-400 flex flex-col gap-1">
+                    <div className="w-5 h-0.5 bg-gray-400"></div>
+                    <div className="w-5 h-0.5 bg-gray-400"></div>
+                    <div className="w-5 h-0.5 bg-gray-400"></div>
                   </div>
                 </div>
               );
@@ -433,7 +433,7 @@ export default function ReorderExercisesPage() {
         <Button
           variant="default"
           onClick={handleDone}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-regular py-8 rounded-[10px]"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-regular py-5 rounded-[10px]"
         >
           Done
         </Button>

@@ -163,20 +163,20 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Timer settings"
           >
-            <Settings2 className="size-7 text-gray-600" />
+            <Settings2 className="size-5 text-gray-600" />
           </button>
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center text-xl font-semibold">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center text-sm font-semibold">
             Clock
           </div>
           <div className="w-11"></div> {/* Spacer to balance the layout */}
         </div>
 
         {/* Tabs */}
-        <div className="px-4 pb-6">
+        <div className="px-2 pb-4">
           <Tabs value={timerMode} onValueChange={(value) => handleModeChange(value as "timer" | "stopwatch")}>
             <TabsList className="w-full">
-              <TabsTrigger value="timer">Timer</TabsTrigger>
-              <TabsTrigger value="stopwatch">Stopwatch</TabsTrigger>
+              <TabsTrigger value="timer" className="text-sm">Timer</TabsTrigger>
+              <TabsTrigger value="stopwatch" className="text-sm">Stopwatch</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -188,15 +188,15 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             <button
               onClick={handleTimerDecrease}
               disabled={timerRunning}
-              className="text-blue-500 font-medium text-lg px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-blue-500 font-medium text-sm px-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               -15s
             </button>
           )}
 
           {/* Circular Timer Display */}
-          <div className={`relative flex items-center justify-center mt-4 mb-4 ${timerMode === "timer" ? "mx-8" : ""}`}>
-            <div className="relative w-72 h-72 flex items-center justify-center">
+          <div className={`relative flex items-center justify-center mt-2 ${timerMode === "timer" ? "mx-8" : ""}`}>
+            <div className="relative size-48 flex items-center justify-center">
               {/* Progress Ring SVG */}
               <svg
                 className="absolute inset-0 w-full h-full transform -rotate-90"
@@ -209,7 +209,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
                   r="138"
                   fill="none"
                   stroke="#e5e7eb"
-                  strokeWidth="12"
+                  strokeWidth="8"
                 />
                 {/* Progress circle - Timer mode */}
                 {timerMode === "timer" && initialTimerValue > 0 && (
@@ -250,7 +250,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
                 )}
               </svg>
               {/* Timer text */}
-              <span className="text-6xl font-semibold relative z-10">
+              <span className="text-5xl font-semibold relative z-10">
                 {timerMode === "timer"
                   ? formatTimerDisplay(timerValue)
                   : formatTimerDisplay(timerElapsed)}
@@ -263,7 +263,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             <button
               onClick={handleTimerIncrease}
               disabled={timerRunning}
-              className="text-blue-500 font-medium text-lg px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-blue-500 font-medium text-sm px-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               +15s
             </button>
@@ -278,7 +278,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
               <div className="flex gap-3">
                 <Button
                   onClick={handleStopTimer}   
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-black py-6 text-lg rounded-[10px]"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-black py-5 text-sm rounded-[10px]"
                 >
                   Cancel
                 </Button>
@@ -286,7 +286,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             ) : (
               <Button
                 onClick={handleStartTimer}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-lg rounded-[10px]"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-5 text-sm rounded-[10px]"
               >
                 Start
               </Button>
@@ -296,7 +296,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             timerRunning ? (
               <Button
                 onClick={handleStopTimer}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-black py-6 text-lg rounded-[10px]"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-black py-5 text-sm rounded-[10px]"
               >
                 Stop
               </Button>
@@ -304,13 +304,13 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
               <div className="flex gap-3">
                 <Button
                   onClick={handleResetTimer}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-black py-6 text-lg rounded-[10px]"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-black py-5 text-sm rounded-[10px]"
                 >
                   Reset
                 </Button>
                 <Button
                   onClick={handleStartTimer}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-6 text-lg rounded-[10px]"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-5 text-sm rounded-[10px]"
                 >
                   Start
                 </Button>
@@ -318,7 +318,7 @@ export default function TimerModal({ open, onClose }: TimerModalProps) {
             ) : (
               <Button
                 onClick={handleStartTimer}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-lg rounded-[10px]"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-5 text-sm rounded-[10px]"
               >
                 Start
               </Button>

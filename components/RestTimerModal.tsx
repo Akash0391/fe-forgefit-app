@@ -136,20 +136,20 @@ export function RestTimerModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
       <div className="w-full mx-auto rounded-t-[24px] bg-white pb-8 pt-3 px-4">
         {/* drag handle */}
-        <div className="mx-auto mb-3 h-1 w-17 rounded-full bg-gray-400" />
+        <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-gray-400" />
 
         {/* title + subtitle */}
-        <h2 className="text-center text-lg font-regular mb-1">
+        <h2 className="text-center text-sm font-regular mb-1">
           Rest Timer
         </h2>
-        <p className="text-center text-lg text-gray-400 mb-4">
+        <p className="text-center text-sm text-gray-400 mb-4">
           Rest Timer - {exerciseName}
         </p>
 
         {/* picker */}
         <div className="relative mb-6">
           {/* center highlight band */}
-          <div className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 h-12 rounded-2xl bg-gray-100" />
+          <div className="pointer-events-none absolute inset-x-3 top-1/2 -translate-y-1/2 h-10 rounded-[10px] bg-gray-100" />
 
           {/* scrollable list */}
           <div
@@ -169,7 +169,7 @@ export function RestTimerModal({
                     onSelect(seconds);
                     scrollToValue(seconds, "smooth");
                   }}
-                  className={`w-full py-2 text-xl text-center transition ${
+                  className={`w-full py-1 text-sm text-center transition ${
                     isActive ? "font-regular text-black" : "text-gray-400"
                   }`}
                 >
@@ -181,7 +181,7 @@ export function RestTimerModal({
         </div>
 
         <Button
-          className="w-full text-lg bg-blue-500 py-6 rounded-[10px]"
+          className="w-full text-sm bg-blue-500 py-5 rounded-[10px]"
           onClick={onClose}
         >
           Done

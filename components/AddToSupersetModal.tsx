@@ -110,8 +110,8 @@ export default function AddToSupersetModal({
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 mb-4 items-center justify-center border-b flex flex-col">
-          <h2 className="text-xl font-regular text-black">Superset</h2>
-          <p className="text-lg font-regular text-gray-500 mt-1">
+          <h2 className="text-sm font-regular text-black">Superset</h2>
+          <p className="text-sm font-regular text-gray-500 mt-1">
             {currentExercise 
               ? `Superset ${formatExerciseName(currentExercise)} with...`
               : "Select exercises to group together"}
@@ -119,7 +119,7 @@ export default function AddToSupersetModal({
         </div>
 
         {/* Exercise List */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
           <div className="overflow-hidden">
             {exercises.map((exercise, index) => {
               const isSelected = selectedExercises.has(exercise._id);
@@ -130,7 +130,7 @@ export default function AddToSupersetModal({
                   key={exercise._id}
                   onClick={() => handleExerciseClick(exercise._id)}
                   disabled={isCurrentExercise}
-                  className={`w-full flex items-center gap-4 py-4 transition-colors text-left ${
+                  className={`w-full flex items-center gap-4 py-2 transition-colors text-left ${
                     index !== exercises.length - 1 ? "border-b border-gray-100" : ""
                   } ${
                     isCurrentExercise
@@ -139,7 +139,7 @@ export default function AddToSupersetModal({
                   }`}
                 >
                   {/* Exercise Thumbnail */}
-                  <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">   
+                  <div className="relative flex-shrink-0 size-12 rounded-full overflow-hidden bg-gray-100">   
                     {exercise.thumbnailUrl ? (
                       <img
                         src={exercise.thumbnailUrl}
@@ -155,7 +155,7 @@ export default function AddToSupersetModal({
 
                   {/* Exercise Name */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-regular text-gray-900 truncate">
+                    <h3 className="text-sm font-regular text-gray-900 truncate">
                       {formatExerciseName(exercise)}
                     </h3>
                   </div>
@@ -163,7 +163,7 @@ export default function AddToSupersetModal({
                   {/* Checkmark */}
                   {isSelected && (
                     <div className="flex-shrink-0">
-                      <Check className="size-7 text-blue-600" />
+                      <Check className="size-5 text-blue-600" />
                     </div>
                   )}
                 </button>

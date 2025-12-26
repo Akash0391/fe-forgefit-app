@@ -677,25 +677,31 @@ export default function QuickStartPage() {
     const draftWorkoutId = sessionStorage.getItem("draftWorkoutId");
     if (!draftWorkoutId) return;
 
+    socket.connect();
+
     socket.emit("joinWorkout", {
-      userId: "TEMP",     // later we put real user
+      userId: "TEMP",
       draftWorkoutId
     });
 
     socket.on("workout:update", (data) => {
       setWorkoutExercises(data.exercises);
-      // if you want sets also update exerciseSets here
     });
 
+    // 👇 Handle workout completed from any device
     socket.on("workout:complete", () => {
-      // we will handle later
+      console.log("🎉 Workout completed via socket");
+      cleanupWorkoutState();
+      router.push("/workout");
     });
 
     return () => {
+      console.log("🔌 Leaving workout room");
       socket.off("workout:update");
       socket.off("workout:complete");
     };
   }, []);
+
 
 
   // Ensure all exercises have at least 1 default set
@@ -870,6 +876,8 @@ export default function QuickStartPage() {
       setExerciseSets({});
       setSupersetGroups([]);
 
+      cleanupWorkoutState();
+
       // 5) go to success page
       router.push("/workout/quick-start/finish-workout");
     } catch (error) {
@@ -954,6 +962,26 @@ export default function QuickStartPage() {
   };
 
   const workoutProgress = calculateWorkoutProgress();
+
+  // ⛳️ Add this helper near top (BEFORE return)
+
+  const cleanupWorkoutState = () => {
+    console.log("🧹 Cleaning workout state + socket");
+
+    sessionStorage.removeItem("draftWorkoutId");
+    localStorage.removeItem("workoutInProgress");
+    localStorage.removeItem("workoutStartTime");
+
+    socket.off("workout:update");
+    socket.off("workout:complete");
+
+    try {
+      socket.disconnect();
+    } catch (e) {
+      console.warn("socket disconnect ignored");
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

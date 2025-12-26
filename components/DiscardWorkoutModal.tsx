@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { workoutApi } from "@/lib/api";
+import { socket } from "@/lib/socket";
 
 interface DiscardWorkoutModalProps {
   open: boolean;
@@ -24,34 +25,31 @@ export default function DiscardWorkoutModal({
   onConfirm,
   message = "Are you sure you want to discard this workout?",
 }: DiscardWorkoutModalProps) {
+  const cleanupWorkoutState = () => {
+    console.log("🧹 Cleaning workout state (discard)");
+
+    sessionStorage.removeItem("draftWorkoutId");
+    localStorage.removeItem("workoutInProgress");
+    localStorage.removeItem("workoutStartTime");
+
+    try {
+      socket.off("workout:update");
+      socket.off("workout:complete");
+      socket.disconnect();
+    } catch (_) {}
+  };
+
   const handleConfirmDiscard = async () => {
     try {
-      // Discard workout on backend
       await workoutApi.discard();
-      
-      // Clear workout in progress flag and start time to reset timer
-      localStorage.removeItem("workoutInProgress");
-      localStorage.removeItem("workoutStartTime");
-      
-      // Call custom onConfirm callback if provided
-      if (onConfirm) {
-        onConfirm();
-      }
-      
-      onClose();
     } catch (error) {
-      console.error("Error discarding workout:", error);
-      // Even if API call fails, clear local state
-      localStorage.removeItem("workoutInProgress");
-      localStorage.removeItem("workoutStartTime");
-      
-      // Call custom onConfirm callback if provided
-      if (onConfirm) {
-        onConfirm();
-      }
-      
-      onClose();
+      console.error("❌ Discard API failed (continuing cleanup):", error);
     }
+
+    cleanupWorkoutState();
+
+    if (onConfirm) onConfirm();
+    onClose();
   };
 
   return (

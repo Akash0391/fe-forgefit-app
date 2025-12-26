@@ -35,7 +35,7 @@ interface ExerciseSets {
 const emitUpdate = debounce((payload: any) => { socket.emit("workout:update", payload); }, 400);
 export default function QuickStartPage() {
   const router = useRouter();
-  const {user} = useAuth();
+  const { user } = useAuth();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [duration, setDuration] = useState(0); // Duration in seconds
   const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
@@ -684,6 +684,12 @@ export default function QuickStartPage() {
     socket.emit("joinWorkout", {
       userId: user?._id,
       draftWorkoutId
+    });
+
+    socket.on("workout:joined", ({ workoutId }) => {
+      console.log("🔗 Joined workout:", workoutId);
+
+      sessionStorage.setItem("draftWorkoutId", workoutId);
     });
 
 

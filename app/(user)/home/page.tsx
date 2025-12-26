@@ -427,7 +427,7 @@ export default function HomePage() {
               <Dumbbell className="size-12 text-gray-300 mb-4" />
               <h2 className="text-sm font-semibold mb-2">No workouts yet</h2>
               <p className="text-muted-foreground text-center">
-                Complete a workout to see it here
+                Start and complete a workout to see it here
               </p>
             </div>
           </div>

@@ -35,6 +35,15 @@ export default function HomePage() {
   const [activeSlides, setActiveSlides] = useState<Record<string, number>>({});
   const swipeRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
+  const [expandedWorkouts, setExpandedWorkouts] = useState<Record<string, boolean>>({});
+
+  const toggleExercises = (id: string) => {
+    setExpandedWorkouts(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   const isVideo = (url: string) => {
     return url.includes("/video/") || url.endsWith(".mp4");
   };
@@ -182,19 +191,19 @@ export default function HomePage() {
   };
 
   function getExerciseThumbnail(exercise: any) {
-  const ex = exercise?.exerciseId;
+    const ex = exercise?.exerciseId;
 
-  // case 1: populated object
-  if (ex && typeof ex === "object") {
-    return ex.gifUrl || ex.thumbnailUrl || null;
+    // case 1: populated object
+    if (ex && typeof ex === "object") {
+      return ex.gifUrl || ex.thumbnailUrl || null;
+    }
+
+    // case 2: missing / deleted exercise
+    if (!ex) return null;
+
+    // case 3: it's just an ID string
+    return null;
   }
-
-  // case 2: missing / deleted exercise
-  if (!ex) return null;
-
-  // case 3: it's just an ID string
-  return null;
-}
 
   // Count completed sets for an exercise
   const countCompletedSets = (sets: SetData[]): number => {
@@ -437,6 +446,11 @@ export default function HomePage() {
               const totalVolume = calculateTotalVolume(workout);
               const workoutTime = workout.endTime || workout.startTime || workout.createdAt;
               const hasMedia = workout.media && workout.media.length > 0;
+              const isExpanded = expandedWorkouts[workout._id] ?? false;
+              const exercisesToShow = isExpanded
+                ? workout.exercises
+                : workout.exercises.slice(0, 3);
+
 
 
               return (
@@ -519,7 +533,7 @@ export default function HomePage() {
                           {/* 🏋️ Exercise slide */}
                           <div className="min-w-full snap-center px-1">
                             <div className="bg-white rounded-[12px] p-4 space-y-3">
-                              {workout.exercises.map((exercise, index) => {
+                              {exercisesToShow.map((exercise, index) => {
                                 const exerciseName = getExerciseName(exercise);
                                 const completedSets = countCompletedSets(exercise.sets);
                                 const thumbnail = getExerciseThumbnail(exercise);
@@ -548,14 +562,26 @@ export default function HomePage() {
                           </div>
                         </div>
 
+                        {workout.exercises.length > 3 && (
+                          <div className="flex justify-center mt-2">
+                            <button
+                              onClick={() => toggleExercises(workout._id)}
+                              className="text-gray-500 text-sm"
+                            >
+                              {expandedWorkouts[workout._id] ? "Show less" : "See all exercises"}
+                            </button>
+                          </div>
+                        )}
+
+
                         {/* 🔘 Dynamic dots */}
                         <div className="flex justify-center gap-2 mt-2">
                           {Array.from({ length: workout.media!.length + 1 }).map((_, i) => (
                             <span
                               key={i}
                               className={`w-2 h-2 rounded-full transition-all ${(activeSlides[workout._id] ?? 0) === i
-                                  ? "bg-gray-600"
-                                  : "bg-gray-300"
+                                ? "bg-gray-600"
+                                : "bg-gray-300"
                                 }`}
                             />
                           ))}
@@ -563,8 +589,8 @@ export default function HomePage() {
                       </>
                     ) : (
                       /* No media → show exercises directly */
-                      <div className="bg-white rounded-[12px] p-4 space-y-3">
-                        {workout.exercises.map((exercise, index) => {
+                      <div className="bg-white rounded-[12px] space-y-3">
+                        {exercisesToShow.map((exercise, index) => {
                           const exerciseName = getExerciseName(exercise);
                           const completedSets = countCompletedSets(exercise.sets);
                           const thumbnail = getExerciseThumbnail(exercise);
@@ -589,9 +615,24 @@ export default function HomePage() {
                             </div>
                           );
                         })}
+                        {workout.exercises.length > 3 && (
+                          <div className="flex justify-center mt-2">
+                            <button
+                              onClick={() => toggleExercises(workout._id)}
+                              className="text-gray-500 text-sm"
+                            >
+                              {expandedWorkouts[workout._id] ? "Show less" : "See all exercises"}
+                            </button>
+                          </div>
+                        )}
+
                       </div>
+
                     )}
                   </div>
+
+
+
 
 
 

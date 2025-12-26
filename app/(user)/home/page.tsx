@@ -404,18 +404,18 @@ export default function HomePage() {
                 {/* Profile Card */}
                 <div className="flex flex-row items-center gap-6 mt-6">
                   <Avatar className="size-30">
-                    <AvatarImage src="/api/placeholder/56/56" alt="Akash" />
+                    <AvatarImage src="/images/developer-photo.png" alt="Akash" />
                     <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-semibold">
                       A
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col justify-between gap-2 flex-1">
-                    <h3 className="text-sm font-semibold text-gray-900 w-full">
-                      Akash
+                    <h3 className="text-lg font-semibold text-gray-900 w-full">
+                      Akash Yadav
                     </h3>
                     <Button
                       variant="default"
-                      className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-6 rounded-[8px] font-regular text-sm transition-colors"
+                      className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-6 rounded-[8px] font-regular text-sm transition-colors"
                     >
                       Follow
                     </Button>

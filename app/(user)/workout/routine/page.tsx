@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Exercise, workoutApi, Workout } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import DetailRoutineOptionModal from "@/components/DetailRoutineOptionModal";
+import { socket } from "@/lib/socket";
 
 interface RoutineExercise {
   exercise: Exercise;
@@ -153,29 +154,33 @@ export default function RoutineDetailsPage() {
   };
 
 
-  const handleStartRoutine = () => {
-    if (!routine) return;
-
-    // Store routine data in sessionStorage to start as a workout
+  const handleStartRoutine = async (routine: Workout) => {
+  try {
     const workoutData = {
-      name: routine.name || "Quick Start Workout",
-      exercises: routine.exercises.map((ex) => {
-        const exercise = typeof ex.exerciseId === 'object' ? ex.exerciseId : { _id: ex.exerciseId };
-        return {
-          exercise: exercise,
-          sets: ex.sets || [],
-          notes: ex.notes || "",
-        };
-      }),
-      supersetGroups: routine.supersetGroups || [],
+      routineId: routine._id,
+      exercises: routine.exercises,
+      supersetGroups: routine.supersetGroups || []
     };
 
-    sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
+    // 🔥 call backend to create draft workout
+    const res = await workoutApi.startWorkout(workoutData);
+    const draftWorkout = res.data;
 
-    // Set workout in progress and navigate to quick start
+    // store for resume
+    sessionStorage.setItem("draftWorkoutId", draftWorkout._id);
     localStorage.setItem("workoutInProgress", "true");
+
+    // 🔥 join websocket room
+    socket.emit("joinWorkout", {
+      userId: user?._id,
+      draftWorkoutId: draftWorkout._id
+    });
+
     router.push("/workout/quick-start");
-  };
+  } catch (err) {
+    console.error("Failed to start workout", err);
+  }
+};
 
   const handleEditRoutine = () => {
     if (!routineId) return;
@@ -283,7 +288,7 @@ export default function RoutineDetailsPage() {
             Created by {getUsername()}
           </p>
           <Button
-            onClick={handleStartRoutine}
+            onClick={() => handleStartRoutine(routine)}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-[10px] py-5"
           >
             Start Routine

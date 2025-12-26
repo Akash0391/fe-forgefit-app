@@ -11,9 +11,12 @@ import DeleteRoutineModal from "@/components/DeleteRoutineModal";
 import { FolderModal } from "@/components/FolderModal";
 import FolderOptionModal from "@/components/FolderOptionModal";
 import { RenameFolderModal } from "@/components/RenameFolderModal";
+import { socket } from "@/lib/socket";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function WorkoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [workoutInProgress, setWorkoutInProgress] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [routines, setRoutines] = useState<Workout[]>([]);
@@ -56,6 +59,25 @@ export default function WorkoutPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  useEffect(() => {
+    const checkActiveWorkout = async () => {
+      try {
+        const res = await workoutApi.getActive();
+
+        if (res.data) {
+          sessionStorage.setItem("draftWorkoutId", res.data._id);
+          localStorage.setItem("workoutInProgress", "true");
+          setWorkoutInProgress(true);
+        }
+      } catch (err) {
+        console.error("Error checking active workout:", err);
+      }
+    };
+
+    checkActiveWorkout();
+  }, []);
+
 
   const fetchRoutines = async () => {
     try {
@@ -109,38 +131,34 @@ export default function WorkoutPage() {
     router.push("/workout/explore-routine");
   }
 
-  const handleStartRoutine = (routine: Workout) => {
-    // Store routine data in sessionStorage to start as a workout
-    const workoutData = {
-      name: routine.name || "Quick Start Workout",
-      exercises: routine.exercises.map((ex) => {
+  const handleStartRoutine = async (routine: Workout) => {
+    try {
+      const workoutData = {
+        routineId: routine._id,
+        exercises: routine.exercises,
+        supersetGroups: routine.supersetGroups || []
+      };
 
-        const restTimerSeconds = (ex as any).restTimerSeconds ?? 0;
-        const exercise =
-          typeof ex.exerciseId === "object"
-            ? { ...(ex.exerciseId as any), restTimerSeconds }  // ⬅️ attach timer
-            : { _id: ex.exerciseId, restTimerSeconds };
+      // 🔥 call backend to create draft workout
+      const res = await workoutApi.startWorkout(workoutData);
+      const draftWorkout = res.data;
 
-        return {
-          exercise,
-          sets: ex.sets || [],
-          notes: ex.notes || "",
-          // // 🔹 read from routine document
-          // restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
-        };
-      }),
-      supersetGroups: routine.supersetGroups || [],
-    };
+      // store for resume
+      sessionStorage.setItem("draftWorkoutId", draftWorkout._id);
+      localStorage.setItem("workoutInProgress", "true");
 
-    // (optional) debug
-    // console.log("workoutData from routine:", workoutData);
+      // 🔥 join websocket room
+      socket.emit("joinWorkout", {
+        userId: user?._id,
+        draftWorkoutId: draftWorkout._id
+      });
 
-    sessionStorage.setItem("routineToWorkout", JSON.stringify(workoutData));
-
-    // Set workout in progress and navigate to quick start
-    localStorage.setItem("workoutInProgress", "true");
-    router.push("/workout/quick-start");
+      router.push("/workout/quick-start");
+    } catch (err) {
+      console.error("Failed to start workout", err);
+    }
   };
+
 
 
 
@@ -209,38 +227,38 @@ export default function WorkoutPage() {
   };
 
   const handleRoutineDuplicate = () => {
-  if (!selectedRoutine) return;
+    if (!selectedRoutine) return;
 
-  const routineData = {
-    name: `${selectedRoutine.name} (copy)`,
-    // preserve folder if you want the copy to stay in same folder
-    routineFolderId: selectedRoutine.routineFolderId ?? null,
+    const routineData = {
+      name: `${selectedRoutine.name} (copy)`,
+      // preserve folder if you want the copy to stay in same folder
+      routineFolderId: selectedRoutine.routineFolderId ?? null,
 
-    exercises: selectedRoutine.exercises.map((ex) => {
-      const baseExercise =
-        typeof ex.exerciseId === "object"
-          ? ex.exerciseId
-          : { _id: ex.exerciseId };
+      exercises: selectedRoutine.exercises.map((ex) => {
+        const baseExercise =
+          typeof ex.exerciseId === "object"
+            ? ex.exerciseId
+            : { _id: ex.exerciseId };
 
-      return {
-        exercise: {
-          ...baseExercise,
-          // ⬇ carry timer from routine into builder
-          restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
-        },
-        sets: ex.sets || [],
-        notes: ex.notes || "",
-      };
-    }),
+        return {
+          exercise: {
+            ...baseExercise,
+            // ⬇ carry timer from routine into builder
+            restTimerSeconds: (ex as any).restTimerSeconds ?? 0,
+          },
+          sets: ex.sets || [],
+          notes: ex.notes || "",
+        };
+      }),
 
-    // ⬇ carry supersets into builder
-    supersetGroups: selectedRoutine.supersetGroups || [],
+      // ⬇ carry supersets into builder
+      supersetGroups: selectedRoutine.supersetGroups || [],
+    };
+
+    sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
+    handleRoutineModalClose();
+    router.push("/workout/new-routine");
   };
-
-  sessionStorage.setItem("workoutToRoutine", JSON.stringify(routineData));
-  handleRoutineModalClose();
-  router.push("/workout/new-routine");
-};
 
 
   const handleDeleteFolder = async () => {

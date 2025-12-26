@@ -237,6 +237,17 @@ export const workoutApi = {
     data: Workout | null;
   }>('/api/workouts/active'),
 
+    startWorkout: (data: {
+    routineId?: string;
+    exercises: any[];
+    supersetGroups?: any[];
+  }) =>
+    apiClient.post<{
+      success: boolean;
+      data: Workout;
+    }>('/api/workouts/start', data),
+
+
   save: (data: {
     exercises: Exercise[];
     supersetGroups: string[][];

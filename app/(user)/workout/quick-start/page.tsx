@@ -25,6 +25,7 @@ import { RestTimerModal } from "@/components/RestTimerModal";
 import DiscardWorkoutModal from "@/components/DiscardWorkoutModal";
 import { WorkoutExerciseCard } from "@/components/WorkoutExerciseCard";
 import { debounce } from "@/lib/debounce";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 interface ExerciseSets {
@@ -34,6 +35,7 @@ interface ExerciseSets {
 const emitUpdate = debounce((payload: any) => { socket.emit("workout:update", payload); }, 400);
 export default function QuickStartPage() {
   const router = useRouter();
+  const {user} = useAuth();
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const [duration, setDuration] = useState(0); // Duration in seconds
   const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
@@ -680,9 +682,10 @@ export default function QuickStartPage() {
     socket.connect();
 
     socket.emit("joinWorkout", {
-      userId: "TEMP",
+      userId: user?._id,
       draftWorkoutId
     });
+
 
     socket.on("workout:update", (data) => {
       setWorkoutExercises(data.exercises);
@@ -700,7 +703,7 @@ export default function QuickStartPage() {
       socket.off("workout:update");
       socket.off("workout:complete");
     };
-  }, []);
+  }, [user]);
 
 
 

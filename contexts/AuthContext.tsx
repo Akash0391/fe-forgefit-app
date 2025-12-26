@@ -50,34 +50,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, []);
 
-  // Handle redirect after successful OAuth login
   useEffect(() => {
     if (user && !loading) {
-      // Check for saved redirect from sessionStorage (set before OAuth)
+      const restoreWorkoutIfExists = async () => {
+        try {
+          const res = await workoutApi.getActive();
+
+          if (res?.data) {
+            sessionStorage.setItem("draftWorkoutId", res.data._id);
+            localStorage.setItem("workoutInProgress", "true");
+          } else {
+            localStorage.removeItem("workoutInProgress");
+            sessionStorage.removeItem("draftWorkoutId");
+          }
+        } catch (err) {
+          console.error("Failed to restore workout:", err);
+        }
+      };
+
+      restoreWorkoutIfExists();
+
+      // your existing redirect logic
       const savedRedirect = sessionStorage.getItem("authRedirect");
       if (savedRedirect) {
         sessionStorage.removeItem("authRedirect");
         router.push(savedRedirect);
         return;
       }
-      
-      // Also check URL parameter as fallback
+
       const urlParams = new URLSearchParams(window.location.search);
       const redirect = urlParams.get("redirect");
-      if (redirect) {
-        router.push(redirect);
-      }
+      if (redirect) router.push(redirect);
     }
   }, [user, loading, router]);
+
 
   const login = (redirectTo?: string, isSignup: boolean = false) => {
     // Use provided redirect or check URL parameter, default to /workout for login
     const urlParams = new URLSearchParams(window.location.search);
     const redirect = redirectTo || urlParams.get("redirect") || "/workout";
-    
+
     // Save redirect destination for after OAuth completes
     sessionStorage.setItem("authRedirect", redirect);
-    
+
     // Redirect to backend Google OAuth endpoint with redirect parameter
     // Add signup parameter to force account selection screen
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -88,16 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       console.log("Attempting logout...");
-      
-      // Discard active workout on backend
-      try {
-        await workoutApi.discard();
-        console.log("Active workout discarded");
-      } catch (workoutError) {
-        console.error("Error discarding workout:", workoutError);
-        // Continue with logout even if workout discard fails
-      }
-      
+
       // Call logout API
       await apiClient.post("/api/auth/logout");
       console.log("Logout API call successful");
@@ -114,10 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("timerVolume");
       localStorage.removeItem("checkSetVolume");
       localStorage.removeItem("prVolume");
-      
+
       // Clear workout-related sessionStorage items (keep authRedirect for auth flow)
       sessionStorage.removeItem("replaceExerciseId");
-      
+
       // Clear user state and redirect
       console.log("Clearing user state and redirecting to login");
       setUser(null);

@@ -995,7 +995,7 @@ export default function AddExercisePage() {
                 <div className="flex-shrink-0 p-4 bg-background">
                     <Button
                         onClick={handleAddExercises}
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-[8px] font-regular text-lg"
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-[8px] font-regular text-sm"
                     >
                         Add {selectedExerciseIds.size}{" "}
                         {selectedExerciseIds.size === 1

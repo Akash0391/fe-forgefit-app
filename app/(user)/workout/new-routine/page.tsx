@@ -365,7 +365,7 @@ export default function NewRoutinePage() {
                   <div className="flex items-center justify-between gap-3 mb-4">
                     {/* Exercise Image/Icon */}
                     <div className="flex items-center gap-4">
-                      <div className="relative flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+                      <div className="relative flex-shrink-0 size-12 rounded-full overflow-hidden bg-gray-100">
                         {exercise.thumbnailUrl ? (
                           <img
                             src={exercise.thumbnailUrl}
@@ -380,7 +380,7 @@ export default function NewRoutinePage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-blue-600 truncate">
+                        <h3 className="text-sm font-semibold text-blue-600 truncate">
                           {formatExerciseName(exercise)}
                         </h3>
                       </div>
@@ -391,13 +391,13 @@ export default function NewRoutinePage() {
                       onClick={() => setSelectedExerciseForMenu(exercise)}
                       className="flex-shrink-0 hover:bg-gray-100 rounded-full transition-colors"
                     >
-                      <MoreVertical className="size-7 text-gray-600" />
+                      <MoreVertical className="size-5 text-gray-600" />
                     </button>
                   </div>
 
                   {/* Superset badge (same style as QuickStart) */}
                   {isExerciseInSuperset(exercise._id) && (
-                    <div className="bg-[#b600fd] text-white text-lg font-regular rounded-[8px] text-center py-0.5 px-5 inline-block mb-3">
+                    <div className="bg-[#b600fd] text-white text-sm font-regular rounded-[8px] text-center py-0.5 px-5 inline-block mb-3">
                       Superset
                     </div>
                   )}
@@ -408,7 +408,7 @@ export default function NewRoutinePage() {
                       placeholder="Add routine note here"
                       value={routineExercise.notes || ""}
                       onChange={(e) => handleNotesChange(index, e.target.value)}
-                      className="w-full !border-none text-gray-500 placeholder:text-gray-400"
+                      className="w-full !border-none text-sm text-gray-500 placeholder:text-gray-400"
                     />
                   </div>
 
@@ -417,8 +417,8 @@ export default function NewRoutinePage() {
                     className="flex items-center gap-2 mb-5 mt-5 cursor-pointer hover:opacity-80 transition-opacity active:opacity-70"
                     onClick={() => openRestTimerSheet(index)}
                   >
-                    <Timer className="size-7 text-blue-600" />
-                    <span className="text-lg text-blue-600 font-regular">
+                    <Timer className="size-5 text-blue-600" />
+                    <span className="text-sm text-blue-600 font-regular">
                       Rest Timer: {formatRestTimerLabel(routineExercise.restTimerSeconds ?? 35)}
                     </span>
                   </div>
@@ -445,7 +445,7 @@ export default function NewRoutinePage() {
                             }`}
                         >
                           <div
-                            className={`text-lg font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
+                            className={`text-sm font-semibold text-center ${set.completed ? "text-black" : "text-gray-700"
                               }`}
                           >
                             {set.setNumber}
@@ -462,7 +462,7 @@ export default function NewRoutinePage() {
                                   Number(e.target.value)
                                 )
                               }
-                              className={`w-full border-none h-8 px-2 text-lg text-center ${set.completed ? "bg-green-100" : ""}`}
+                              className={`w-full border-none h-8 px-2 text-sm text-center ${set.completed ? "bg-green-100" : ""}`}
                             />
                           </div>
 
@@ -478,7 +478,7 @@ export default function NewRoutinePage() {
                                   Number(e.target.value)
                                 )
                               }
-                              className={`w-full border-none h-8 px-2 text-lg text-center ${set.completed ? "bg-green-100" : ""}`}
+                              className={`w-full border-none h-8 px-2 text-sm text-center ${set.completed ? "bg-green-100" : ""}`}
                             />
                           </div>
                         </div>
@@ -496,8 +496,8 @@ export default function NewRoutinePage() {
                     onClick={() => handleAddSet(index)}
                     className="w-full text-gray-700 bg-gray-100 py-2 h-auto rounded-[10px]"
                   >
-                    <Plus className="size-6 mr-2" />
-                    <span className="text-lg font-regular">Add Set</span>
+                    <Plus className="size-5" />
+                    <span className="text-sm font-regular">Add Set</span>
                   </Button>
                 </div>
               );
@@ -510,9 +510,9 @@ export default function NewRoutinePage() {
             <Button
               variant="default"
               onClick={handleAddExercise}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg py-6 rounded-[10px]"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-5 rounded-[10px]"
             >
-              <Plus className="size-[20px] mr-2" />
+              <Plus className="size-5 mr-2" />
               Add Exercise
             </Button>
           </div>

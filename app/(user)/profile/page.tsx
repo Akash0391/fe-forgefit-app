@@ -659,7 +659,7 @@ export default function ProfilePage() {
             onClick={() => setSelectedMetric("Duration")}
             className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Duration"
               ? "bg-blue-500 text-white"
-              : "light:bg-gray-100 dark:bg-gray-800 border light:border-gray-300"
+              : "bg-gray-200 dark:bg-gray-800 border light:border-gray-300"
               }`}
           >
             Duration
@@ -668,7 +668,7 @@ export default function ProfilePage() {
             onClick={() => setSelectedMetric("Volume")}
             className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Volume"
               ? "bg-blue-500 text-white"
-              : "light:bg-gray-100 dark:bg-gray-800 border light:border-gray-300"
+              : "bg-gray-200 dark:bg-gray-800 border light:border-gray-300"
               }`}
           >
             Volume
@@ -677,7 +677,7 @@ export default function ProfilePage() {
             onClick={() => setSelectedMetric("Reps")}
             className={`flex py-2 px-4 rounded-full text-sm font-regular transition-colors ${selectedMetric === "Reps"
               ? "bg-blue-500 text-white"
-              : "light:bg-gray-100 dark:bg-gray-800 border light:border-gray-300"
+              : "bg-gray-200 dark:bg-gray-800 border light:border-gray-300"
               }`}
           >
             Reps
@@ -692,25 +692,25 @@ export default function ProfilePage() {
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {/* Statistics */}
-          <button onClick={handleStatistics} className="light:bg-gray-100 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
+          <button onClick={handleStatistics} className="bg-gray-200 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
             <TrendingUp className="size-6" />
             <span className="text-sm font-regular">Statistics</span>
           </button>
 
           {/* Exercises */}
-          <button onClick={handleExercises} className="light:bg-gray-100 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
+          <button onClick={handleExercises} className="bg-gray-200 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
             <Dumbbell className="size-6" />
             <span className="text-sm font-regular">Exercises</span>
           </button>
 
           {/* Measures */}
-          <button onClick={handleMeasures} className="light:bg-gray-100 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
+          <button onClick={handleMeasures} className="bg-gray-200 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
             <PersonStanding className="size-6" />
             <span className="text-sm font-regular">Measures</span>
           </button>
 
           {/* Calendar */}
-          <button onClick={handleCalendar} className="light:bg-gray-100 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
+          <button onClick={handleCalendar} className="bg-gray-200 rounded-[10px] p-4 flex flex-row items-center gap-3 dark:bg-gray-800 transition-colors">
             <CalendarDays className="size-6" />
             <span className="text-sm font-regular">Calendar</span>
           </button>
@@ -735,7 +735,7 @@ export default function ProfilePage() {
           // 6.2 empty state (what you already had)
           <>
             <div className="relative pb-3 px-1">
-              <div className="relative dark:bg-gray-800 rounded-[10px] border light:border-gray-200 dark:border-gray-800 p-8 flex flex-col items-center justify-center min-h-[150px] z-10">
+              <div className="relative bg-gray-100 dark:bg-gray-800 rounded-[10px] border border-gray-200 dark:border-gray-800 p-8 flex flex-col items-center justify-center min-h-[150px] z-10">
                 <Dumbbell className="size-10 text-gray-300 mb-2" />
                 <p className="text-sm font-regular mb-2">
                   No workouts

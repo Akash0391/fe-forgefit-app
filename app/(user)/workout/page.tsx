@@ -343,7 +343,7 @@ export default function WorkoutPage() {
               handleStartEmptyWorkout();
             }}
             variant="outline"
-            className="w-full justify-start text-xm light:bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6"
+            className="w-full justify-start text-xm bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6"
             size="lg"
           >
             <Plus className="size-[18px]" />{" "}
@@ -371,7 +371,7 @@ export default function WorkoutPage() {
               onClick={() => {
                 router.push("/workout/new-routine");
               }}
-              className="w-1/2 flex flex-col items-center justify-center light:bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
+              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >
               <Notebook className="size-[20px] mb-2" />
               <p className="text-xm font-regular">New Routine</p>
@@ -380,7 +380,7 @@ export default function WorkoutPage() {
               onClick={() => {
                 handleExploreRoutines();
               }}
-              className="w-1/2 flex flex-col items-center justify-center light:bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
+              className="w-1/2 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-[10px] p-6 hover:bg-gray-200 transition-colors cursor-pointer active:scale-95"
             >
               <Search className="size-[20px] mb-2" />
               <p className="text-xm font-regular">Explore routines</p>
@@ -412,7 +412,7 @@ export default function WorkoutPage() {
                     ) : (
                       <ChevronRight className="size-4 text-gray-400" />
                     )}
-                    <span className="text-sm font-semibold light:text-gray-500 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-gray-400 dark:text-gray-400">
                       {folder.name}
                     </span>
                   </div>
@@ -426,7 +426,7 @@ export default function WorkoutPage() {
                     }}
                     className="p-1 rounded-full"
                   >
-                    <MoreHorizontal className="size-6 dark:text-gray-400" />
+                    <MoreHorizontal className="size-6 text-gray-400" />
                   </button>
                 </button>
 
@@ -486,7 +486,7 @@ export default function WorkoutPage() {
 
                     {/* ⬇️ Only show dashed Add button if folder is empty */}
                     {folderRoutines.length === 0 && (
-                      <div className="border border-dashed light:border-gray-300 dark:border-gray-700 rounded-[10px] p-4 flex items-center justify-center">
+                      <div className="border border-dashed border-gray-300 dark:border-gray-700 rounded-[10px] p-4 flex items-center justify-center">
                         <button
                           onClick={() =>
                             router.push(`/workout/new-routine?folderId=${folder._id}`)
@@ -539,7 +539,7 @@ export default function WorkoutPage() {
                   return (
                     <div
                       key={routine._id}
-                      className="dark:bg-gray-800 rounded-[10px] p-4 shadow-sm border light:border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+                      className="dark:bg-gray-800 rounded-[10px] p-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
                       onClick={handleCardClick}
                     >
                       <div className="flex items-start justify-between mb-4">
@@ -548,7 +548,7 @@ export default function WorkoutPage() {
                             {routine.name}
                           </h3>
                           {exercise && (
-                            <p className="text-sm light:text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               {formatExerciseName(exercise)}
                             </p>
                           )}

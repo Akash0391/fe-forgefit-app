@@ -363,7 +363,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between h-16 px-4">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-900 rounded-[4px] text-sm font-regular light:text-gray-700 transition-colors">
+          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-900 rounded-[4px] text-sm font-regular text-gray-700 dark:text-gray-300 transition-colors">
             <span>Home</span>
             <ChevronDown className="size-4" />
           </button>
@@ -432,7 +432,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-            <div className="flex flex-col items-center light:bg-gray-100 dark:bg-gray-900 rounded-[10px] justify-center py-12">
+            <div className="flex flex-col items-center bg-gray-100 dark:bg-gray-900 rounded-[10px] justify-center py-12">
               <Dumbbell className="size-12 text-gray-300 mb-4" />
               <h2 className="text-sm font-semibold mb-2">No workouts yet</h2>
               <p className="text-muted-foreground text-center">

@@ -734,10 +734,10 @@ export default function ProfilePage() {
         ) : workouts.length === 0 ? (
           // 6.2 empty state (what you already had)
           <>
-            <div className="relative pb-3 pr-3">
+            <div className="relative pb-3 px-1">
               <div className="relative bg-white rounded-[10px] border border-gray-200 p-8 flex flex-col items-center justify-center min-h-[150px] z-10">
-                <Dumbbell className="size-14 text-gray-300 mb-4" />
-                <p className="text-sm font-regular text-gray-500 mb-4">
+                <Dumbbell className="size-10 text-gray-300 mb-2" />
+                <p className="text-sm font-regular text-gray-500 mb-2">
                   No workouts
                 </p>
               </div>

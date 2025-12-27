@@ -266,18 +266,18 @@ export default function BirthdayModal({
 
             {/* Bottom sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 dark:bg-gray-800 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[30vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Drag handle */}
                 <div className="flex justify-center pt-2">
-                    <div className="h-1.5 w-16 bg-gray-400 rounded-lg" />
+                    <div className="h-1 w-15 bg-gray-400 rounded-lg" />
                 </div>
 
                 {/* Title */}
-                <div className="text-center border-b border-gray-200 -mx-6 px-6">
-                    <h2 className="text-lg font-regular text-black my-6">Birthday</h2>
+                <div className="text-center border-b border-gray-200 dark:border-gray-600 -mx-6 px-6">
+                    <h2 className="text-sm font-regular my-4">Birthday</h2>
                 </div>
 
                 {/* Pickers – same visual style as RestTimerModal */}
@@ -311,8 +311,8 @@ export default function BirthdayModal({
                                                     onChange({ day: d, month, year });
                                                     scrollToDay(d, "smooth");
                                                 }}
-                                                className={`w-full py-4 text-2xl text-center transition ${isActive
-                                                    ? "font-regular text-black bg-gray-200 rounded-[10px]"
+                                                className={`w-full py-4 text-lg text-center transition ${isActive
+                                                    ? "font-regular text-black bg-gray-200 dark:bg-gray-600 dark:text-gray-100 rounded-[10px]"
                                                     : "text-gray-400"
                                                     }`}
                                             >
@@ -352,8 +352,8 @@ export default function BirthdayModal({
                                                     onChange({ day, month: mNum, year });
                                                     scrollToMonth(mNum, "smooth");
                                                 }}
-                                                className={`w-full py-4 text-2xl text-center transition ${isActive
-                                                    ? "font-regular text-black bg-gray-200 rounded-[10px]"
+                                                className={`w-full py-4 text-lg text-center transition ${isActive
+                                                    ? "font-regular text-black bg-gray-200 dark:bg-gray-600 dark:text-gray-100 rounded-[10px]"
                                                     : "text-gray-400"
                                                     }`}
                                             >
@@ -392,8 +392,8 @@ export default function BirthdayModal({
                                                     onChange({ day, month, year: y });
                                                     scrollToYear(y, "smooth");
                                                 }}
-                                                className={`w-full py-4 text-2xl text-center transition ${isActive
-                                                    ? "font-regular text-black bg-gray-200 rounded-[10px]"
+                                                className={`w-full py-4 text-lg text-center transition ${isActive
+                                                    ? "font-regular text-black bg-gray-200 dark:bg-gray-600 dark:text-gray-100 rounded-[10px]"
                                                     : "text-gray-400"
                                                     }`}
                                             >

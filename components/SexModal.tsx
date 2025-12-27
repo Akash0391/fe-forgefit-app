@@ -61,17 +61,14 @@ export default function SexModal({
         {
             label: "Male",
             onClick: onMale,
-            textColor: "text-black",
         },
         {
             label: "Female",
             onClick: onFemale,
-            textColor: "text-black",
         },
         {
             label: "Other",
             onClick: onOther,
-            textColor: "text-black",
         }
     ];
 
@@ -86,18 +83,18 @@ export default function SexModal({
             />
             {/* Modal Content - Bottom Sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 dark:bg-gray-800 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[30vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Drag Handle */}
                 <div className="flex justify-center pt-2">
-                    <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+                    <div className="h-1 w-15 bg-gray-400 dark:bg-gray-600 rounded-lg"></div>
                 </div>
 
-                <div className=" text-center border-b border-gray-200 -mx-6 px-6">
+                <div className=" text-center border-b border-gray-200 dark:border-gray-600 -mx-6 px-6">
                     {/* Title */}
-                    <h2 className="text-lg font-regular text-black my-6">Sex</h2>
+                    <h2 className="text-sm font-regular my-4">Sex</h2>
                 </div>
 
                 <div className="px-6 py-5 pb-8">
@@ -111,16 +108,16 @@ export default function SexModal({
                                     onClick={() => {
                                         item.onClick();
                                     }}
-                                    className={`w-full flex items-center gap-5 px-6 py-6 transition-colors text-left ${!isLast ? "border-b border-gray-100" : ""
+                                    className={`w-full flex items-center gap-5 px-6 py-5 transition-colors text-left ${!isLast ? "border-b border-gray-100 dark:border-gray-400 dark:bg-gray-600" : "dark:bg-gray-600"
                                         } hover:bg-gray-50 active:bg-gray-100`}
                                 >
-                                    <span className={`text-lg font-regular ${item.textColor}`}>
+                                    <span className={`text-sm font-regular`}>
                                         {item.label}
                                     </span>
 
                                     {/* ✅ CHECKMARK ON RIGHT */}
                                     {isSelected && (
-                                        <Check className="ml-auto size-6 text-blue-500" />
+                                        <Check className="ml-auto size-5 text-blue-500" />
                                     )}
                                 </button>
                             );

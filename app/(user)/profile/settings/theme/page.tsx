@@ -17,9 +17,9 @@ export default function ThemePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* HEADER */}
-      <div className="sticky top-0 z-40 bg-white relative flex items-center px-4 pt-4 pb-3 border-b">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-600">
         <button onClick={() => router.back()} className="p-1 -ml-1">
           <ArrowLeft className="size-5" />
         </button>
@@ -31,7 +31,7 @@ export default function ThemePage() {
       {/* CONTENT */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full bg-white flex justify-between px-4 py-4"
+        className="w-full bg-white dark:bg-gray-900 flex justify-between px-4 py-4"
       >
         <span className="text-sm">Theme</span>
         <div className="flex items-center gap-1">

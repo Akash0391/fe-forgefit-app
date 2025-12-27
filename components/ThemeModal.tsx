@@ -74,7 +74,7 @@ export default function ThemeModal({
             />
             {/* Modal Content - Bottom Sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 dark:bg-gray-800 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[30vh] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
                     }`}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -91,7 +91,7 @@ export default function ThemeModal({
                                 <button
                                     key={index}
                                     onClick={item.onClick}
-                                    className={`w-full px-5 py-5 text-left ${!isLast ? "border-b border-gray-100" : ""
+                                    className={`w-full px-5 py-5 text-left ${!isLast ? "border-b border-gray-100 dark:border-gray-400 dark:bg-gray-600" : "dark:bg-gray-600"
                                         } hover:bg-gray-50`}
                                 >
                                     <span className="text-sm">{item.label}</span>

@@ -65,9 +65,9 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
       {/* HEADER */}
-      <div className="sticky top-0 z-40 bg-white relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-600">
         
         {/* Back button */}
         <button
@@ -92,11 +92,11 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           <h2 className="text-sm font-regular text-gray-400 mb-3 px-4">Account</h2>
           <button
             onClick={() => { router.push("/profile/edit-profile"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
-            <UserRound className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Profile</span>
+            <UserRound className="size-6 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-regular dark:text-white">Profile</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
@@ -104,11 +104,11 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           </button>
           <button
             onClick={() => { router.push("/profile/settings/account-settings"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
-            <Lock className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Account</span>
+            <Lock className="size-6 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-regular dark:text-white">Account</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
@@ -116,11 +116,11 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           </button>
           <button
             onClick={() => { router.push("/profile/settings/theme"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
-            <Moon className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Theme</span>
+            <Moon className="size-6 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-regular dark:text-white">Theme</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
@@ -139,7 +139,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
         ) : (
           <div
             onClick={handleLogout}
-            className="w-full bg-white text-red-500 p-4 flex items-center justify-center gap-3 transition-colors"
+            className="w-full bg-white dark:bg-gray-900 text-red-500 p-4 flex items-center justify-center gap-3 transition-colors"
           >
             <span className="text-sm font-regular">Logout</span>
           </div>

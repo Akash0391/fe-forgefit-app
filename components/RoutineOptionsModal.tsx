@@ -64,19 +64,16 @@ export default function RoutineOptionsModal({
       icon: Share,
       label: "Share Routine",
       onClick: onShare,
-      textColor: "text-gray-900",
     },
     {
       icon: Copy,
       label: "Duplicate Routine",
       onClick: onDuplicate,
-      textColor: "text-gray-900",
     },
     {
       icon: Pencil,
       label: "Edit Routine",
       onClick: onEdit,
-      textColor: "text-gray-900",
     },
     {
       icon: X,
@@ -98,25 +95,25 @@ export default function RoutineOptionsModal({
       />
       {/* Modal Content - Bottom Sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-gray-100 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[50vh] ${
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 rounded-t-[30px] shadow-lg transition-all duration-300 ease-in-out min-h-[40vh] ${
           isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag Handle */}
         <div className="flex justify-center pt-2">
-          <div className="h-1.5 w-17 bg-gray-400 rounded-lg"></div>
+          <div className="h-1 w-15 bg-gray-400 rounded-lg"></div>
         </div>
         
         {/* Header with Routine Title */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-regular text-center">
+        <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-sm font-regular text-center">
             {routine?.name}
           </h2>
         </div>
 
         <div className="px-6 py-6 pb-8">
-          <div className="bg-white rounded-[10px] overflow-hidden">
+          <div className="dark:bg-gray-600 bg-gray-100 rounded-[10px] overflow-hidden">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
               const isLast = index === menuItems.length - 1;
@@ -133,7 +130,7 @@ export default function RoutineOptionsModal({
                     }
                   }}
                   className={`w-full flex items-center gap-5 px-5 py-5 transition-colors text-left ${
-                    !isLast ? "border-b border-gray-100" : ""
+                    !isLast ? "border-b border-gray-100 dark:border-gray-700" : ""
                   } hover:bg-gray-50 active:bg-gray-100`}
                 >
                   <Icon className={`size-5 ${item.textColor} flex-shrink-0`} />

@@ -6,9 +6,9 @@ export default function SettingsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
       {/* HEADER */}
-      <div className="sticky top-0 z-40 bg-white relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-600">
         
         {/* Back button */}
         <button
@@ -32,11 +32,11 @@ export default function SettingsPage() {
         <div className="mb-6">
           <button
             onClick={() => { router.push("/profile/settings/account-settings/change-username"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
-            <UserRound className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Change Username</span>
+            <UserRound className="size-6 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-regular text-black dark:text-white">Change Username</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />
@@ -44,11 +44,11 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={() => { router.push("/profile/settings/account-settings/update-password"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 bg-white transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
-            <Lock className="size-6 text-gray-600" />
-            <span className="text-sm font-regular text-black">Update Password</span>
+            <Lock className="size-6 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-regular text-black dark:text-white">Update Password</span>
             </div>
             <div className="flex items-center gap-2">
               <ChevronRight className="size-5 text-gray-400" />

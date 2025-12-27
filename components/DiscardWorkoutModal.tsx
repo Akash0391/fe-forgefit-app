@@ -57,7 +57,7 @@ export default function DiscardWorkoutModal({
       <DialogContent className="rounded-[10px] w-[360px]">
         <DialogHeader>
           <DialogTitle className="sr-only">Discard Workout</DialogTitle>
-          <DialogDescription className="text-center text-sm font-regular">
+          <DialogDescription className="text-center dark:text-white text-sm font-regular">
             {message}
           </DialogDescription>
         </DialogHeader>
@@ -65,14 +65,14 @@ export default function DiscardWorkoutModal({
           <Button
             variant="default"
             onClick={handleConfirmDiscard}
-            className="w-full sm:w-auto bg-gray-100 text-red-500 p-5 text-sm rounded-[10px]"
+            className="w-full sm:w-auto bg-gray-100 dark:bg-blue-500 text-red-500 dark:text-white p-5 text-sm rounded-[10px]"
           >
             Discard Workout
           </Button>
           <Button
             variant="default"
             onClick={onClose}
-            className="w-full sm:w-auto bg-gray-100 text-black p-5 text-sm rounded-[10px]"
+            className="w-full sm:w-auto bg-gray-100 dark:bg-gray-500 text-black dark:text-white p-5 text-sm rounded-[10px]"
           >
             Cancel
           </Button>

@@ -19,9 +19,9 @@ const handleUpdate = async () => {
 };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-100">
+        <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
             {/* HEADER */}
-            <div className="sticky top-0 z-40 bg-white relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100">
+            <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 relative flex items-center px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-600">
 
                 {/* Back button */}
                 <button
@@ -42,9 +42,9 @@ const handleUpdate = async () => {
             {/* Main Content */}
             <div className="">
 
-                <div className="p-4 bg-white">
+                <div className="p-4 bg-white dark:bg-gray-900">
                     <div className="mb-4">
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-600 mb-3">
+                        <label htmlFor="username" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
                             Username
                         </label>
                         <input
@@ -52,7 +52,7 @@ const handleUpdate = async () => {
                             id="username"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full py-2 mb-4 px-1 border-none rounded-md focus:outline-none text-sm"
+                            className="w-full py-2 mb-4 px-1 border-none rounded-md focus:outline-none text-sm dark:text-white pl-4"
                             placeholder="Enter new username"
                         />
                     </div>

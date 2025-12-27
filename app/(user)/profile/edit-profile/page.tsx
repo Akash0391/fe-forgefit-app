@@ -188,9 +188,9 @@ export default function EditProfilePage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       {/* HEADER */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800 sticky top-0 z-40">
         <button
           className="p-1 -ml-1"
           onClick={() => router.back()}
@@ -230,37 +230,37 @@ export default function EditProfilePage() {
 
         {/* Public profile data */}
         <section className="mb-8">
-          <p className="text-sm text-gray-500 mb-3">Public profile data</p>
+          <p className="text-sm text-gray-400 mb-3">Public profile data</p>
 
           {/* Name */}
-          <div className="py-3 pb-6 flex flex-row gap-20 items-center border-b border-gray-100">
-            <p className="text-sm text-black mb-1">Name</p>
+          <div className="py-3 pb-6 flex flex-row gap-20 items-center border-b border-gray-100 dark:border-gray-700">
+            <p className="text-sm dark:text-gray-300 mb-1">Name</p>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="border-0 px-0 shadow-none h-7 text-sm focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-7 text-sm focus-visible:ring-0 dark:bg-gray-900"
             />
           </div>
 
           {/* Bio */}
-          <div className="py-3 mt-3 pb-6 flex flex-row gap-25  border-b border-gray-100">
-            <p className="text-sm text-black mb-1">Bio</p>
+          <div className="py-3 mt-3 pb-6 flex flex-row gap-25  border-b border-gray-100 dark:border-gray-700">
+            <p className="text-sm dark:text-gray-300 mb-1">Bio</p>
             <Input
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Describe yourself"
-              className="border-0 px-0 shadow-none h-20 text-sm font-regular placeholder:text-gray-400 focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-20 text-sm font-regular placeholder:text-gray-400 dark:bg-gray-900 focus-visible:ring-0"
             />
           </div>
 
           {/* Link */}
-          <div className="py-3 mt-3 pb-6 flex flex-row gap-23  border-b border-gray-100">
-            <p className="text-sm text-black mb-1">Link</p>
+          <div className="py-3 mt-3 pb-6 flex flex-row gap-23  border-b border-gray-100 dark:border-gray-700">
+            <p className="text-sm dark:text-gray-300 mb-1">Link</p>
             <Input
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="https://example.com"
-              className="border-0 px-0 shadow-none h-15 text-sm font-regular placeholder:text-gray-400 focus-visible:ring-0"
+              className="border-0 px-0 shadow-none h-15 text-sm font-regular placeholder:text-gray-400 dark:bg-gray-900 focus-visible:ring-0"
             />
           </div>
         </section>
@@ -269,10 +269,10 @@ export default function EditProfilePage() {
         <section>
           <div className="mb-6 mt-12 ">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-regular text-gray-400">Private Data</p>
+              <p className="text-sm font-regular text-gray-400 ">Private Data</p>
               <button
                 onClick={() => setShowInfoModal(true)}
-                className="flex items-center justify-center rounded-full bg-gray-200 p-1 hover:bg-gray-300 transition-colors"
+                className="flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-500 p-1 hover:bg-gray-300 transition-colors"
               >
                 <Image
                   src="/icons/punctuation-marks.png"
@@ -285,8 +285,8 @@ export default function EditProfilePage() {
           </div>
 
           {/* Sex */}
-          <div className="border-b border-gray-100 py-3 pb-6 flex items-center justify-between">
-            <p className="text-sm text-black font-regular">Sex</p>
+          <div className="border-b border-gray-100 dark:border-gray-700 py-3 pb-6 flex items-center justify-between">
+            <p className="text-sm dark:text-gray-300 font-regular">Sex</p>
             <button
               onClick={() => setShowSexModal(true)}
               className="text-blue-500 text-sm"
@@ -296,8 +296,8 @@ export default function EditProfilePage() {
           </div>
 
           {/* Birthday */}
-          <div className="border-b border-gray-100 py-3 pt-6 pb-6 flex items-center justify-between">
-            <p className="text-sm text-black font-regular">Birthday</p>
+          <div className="border-b border-gray-100 dark:border-gray-700 py-3 pt-6 pb-6 flex items-center justify-between">
+            <p className="text-sm dark:text-gray-300 font-regular">Birthday</p>
             <button
               className="text-blue-500 text-sm"
               onClick={() => setShowBirthdayModal(true)}

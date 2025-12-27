@@ -29,7 +29,7 @@ export function FolderModal({ open, onClose, onSave }: FolderModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       {/* Modal card */}
-      <div className="w-[90%] rounded-[10px] bg-white px-6 py-6 md:px-8 md:py-8">
+      <div className="w-[90%] rounded-[10px] dark:bg-gray-800 bg-gray-100 px-6 py-6 md:px-8 md:py-8">
         {/* Title */}
         <h2 className="text-center text-sm md:text-xl font-semibold mb-6">
           Create New Folder
@@ -41,7 +41,7 @@ export function FolderModal({ open, onClose, onSave }: FolderModalProps) {
             placeholder="New Folder"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-16 text-sm placeholder:text-gray-400 md:text-lg px-6 rounded-[8px]"
+            className="h-16 text-sm placeholder:text-gray-400 dark:bg-gray-600 bg-gray-200 md:text-lg px-6 rounded-[8px]"
           />
         </div>
 
@@ -55,7 +55,7 @@ export function FolderModal({ open, onClose, onSave }: FolderModalProps) {
           </Button>
           <Button
             variant="outline"
-            className="w-full h-10 md:h-12 text-sm md:text-lg rounded-[10px] bg-gray-100 hover:bg-gray-200 border-0 text-gray-900"
+            className="w-full h-10 md:h-12 text-sm md:text-lg rounded-[10px] bg-gray-300 dark:bg-gray-700 border-0"
             onClick={onClose}
           >
             Cancel

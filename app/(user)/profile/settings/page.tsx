@@ -131,7 +131,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
         {/* Logout Section */}
       <div className="mb-6">
         {isLoggingOut && logoutCountdown !== null ? (
-          <div className="bg-white p-4">
+          <div className="bg-white dark:bg-gray-900 p-4">
             <p className="text-red-500 text-center text-sm font-regular">
               Logging out in {logoutCountdown} second{logoutCountdown !== 1 ? "s" : ""}...
             </p>

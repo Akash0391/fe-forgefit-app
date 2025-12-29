@@ -32,7 +32,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col p-4 relative">
+    <div className="min-h-screen flex flex-col dark:bg-gray-900 p-4 relative">
       {/* Header */}
       <div className="pt-8 pb-4">
         <h1 className="text-3xl font-bold text-center text-foreground">
@@ -51,7 +51,7 @@ const LoginPage = () => {
         <div className="w-full max-w-md mx-auto">
           <Button
             onClick={handleGoogleLogin}
-            className="w-full text-lg rounded-[12px] p-6 justify-start"
+            className="w-full text-lg dark:bg-gray-800 rounded-[12px] p-6 justify-start"
             size="lg"
             variant="outline"
           >

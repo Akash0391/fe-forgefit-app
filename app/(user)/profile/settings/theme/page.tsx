@@ -31,7 +31,7 @@ export default function ThemePage() {
       {/* CONTENT */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full bg-white dark:bg-gray-900 flex justify-between px-4 py-4"
+        className="w-full bg-white dark:bg-gray-800 flex justify-between px-4 py-4"
       >
         <span className="text-sm">Theme</span>
         <div className="flex items-center gap-1">

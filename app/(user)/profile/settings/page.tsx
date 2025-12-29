@@ -92,7 +92,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           <h2 className="text-sm font-regular text-gray-400 mb-3 px-4">Account</h2>
           <button
             onClick={() => { router.push("/profile/edit-profile"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
             <UserRound className="size-6 text-gray-600 dark:text-gray-400" />
@@ -104,7 +104,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           </button>
           <button
             onClick={() => { router.push("/profile/settings/account-settings"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
             <Lock className="size-6 text-gray-600 dark:text-gray-400" />
@@ -116,7 +116,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
           </button>
           <button
             onClick={() => { router.push("/profile/settings/theme"); }}
-            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-5 border-b border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors"
           >
             <div className="flex flex-row items-center gap-3">
             <Moon className="size-6 text-gray-600 dark:text-gray-400" />
@@ -139,7 +139,7 @@ const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
         ) : (
           <div
             onClick={handleLogout}
-            className="w-full bg-white dark:bg-gray-900 text-red-500 p-4 flex items-center justify-center gap-3 transition-colors"
+            className="w-full bg-white dark:bg-gray-800 text-red-500 p-4 flex items-center justify-center gap-3 transition-colors"
           >
             <span className="text-sm font-regular">Logout</span>
           </div>

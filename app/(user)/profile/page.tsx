@@ -564,10 +564,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen dark:bg-gray-900 pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background border-b border-border">
-        <div className="flex items-center justify-between h-16 px-4">
+      <header className="sticky top-0 z-40 dark:bg-gray-800 border-b border-border">
+        <div className="flex items-center justify-between h-14 px-4">
 
           {/* Center: Username */}
           <h1 className="text-sm font-regular">{getUsername()}</h1>
@@ -624,7 +624,7 @@ export default function ProfilePage() {
       <div className="px-3 mb-6">
         {/* Workout summary card with Chart.js */}
         <div className="">
-          <div className="p-4">
+          <div className="p-2">
             {/* Top row: "X hours this week" (optional) */}
             {summary.length !== 0 &&
               <div className="flex items-center justify-between mb-2">
@@ -640,7 +640,7 @@ export default function ProfilePage() {
                 Loading…
               </div>
             ) : summary.length === 0 ? (
-              <div className="h-24 flex flex-col border rounded-[10px] h-32 items-center justify-center text-sm text-gray-400">
+              <div className="h-24 flex flex-col border rounded-[10px] h-32 items-center dark:bg-gray-800 justify-center text-sm text-gray-400">
                 <ChartNoAxesColumnIncreasing className="size-10" />
                 <span className="text-sm">No data yet</span>
               </div>

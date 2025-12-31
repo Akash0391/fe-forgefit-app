@@ -21,12 +21,27 @@ jobs:
           cache-dependency-path: 'package-lock.json'
       
       - name: 🔨 Build Frontend
+        env:
+          NODE_ENV: production
         run: |
-          echo "Installing dependencies..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔨 Building Frontend Application"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Build Environment Information:"
+          echo "   Environment: PRODUCTION"
+          echo "   NODE_ENV: $NODE_ENV"
+          echo "   Node Version: $(node --version)"
+          echo "   NPM Version: $(npm --version)"
+          echo "   Working Directory: $(pwd)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📥 Installing dependencies..."
           npm ci
-          echo "Building application..."
+          echo ""
+          echo "🔨 Building application (NODE_ENV=$NODE_ENV)..."
           npm run build
-          echo "✅ Build completed"
+          echo ""
+          echo "✅ Build completed successfully for $NODE_ENV environment"
       
       - name: 📦 Package Frontend
         run: |

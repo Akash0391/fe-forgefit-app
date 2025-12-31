@@ -34,7 +34,8 @@ jobs:
           ARCHIVE_NAME="forgefit-frontend-deploy-${TIMESTAMP}.tar.gz"
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
           echo "Creating deployment archive: ${ARCHIVE_NAME}..."
-          tar -czf ${ARCHIVE_NAME} \
+          # Create archive in /tmp to avoid any conflicts
+          tar -czf /tmp/${ARCHIVE_NAME} \
             --exclude='.git' \
             --exclude='*.log' \
             --exclude='.env.local' \
@@ -43,8 +44,9 @@ jobs:
             --exclude='node_modules/.bin/.cache' \
             --exclude='.next/cache' \
             --exclude='.next/trace' \
-            --exclude='forgefit-frontend-deploy-*.tar.gz' \
             .
+          # Move to current directory for upload
+          mv /tmp/${ARCHIVE_NAME} .
           echo "✅ Package created: $(du -h ${ARCHIVE_NAME} | cut -f1)"
       
       - name: 📤 Upload to Server

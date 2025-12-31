@@ -43,6 +43,7 @@ jobs:
             --exclude='node_modules/.bin/.cache' \
             --exclude='.next/cache' \
             --exclude='.next/trace' \
+            --exclude='forgefit-frontend-deploy-*.tar.gz' \
             .
           echo "✅ Package created: $(du -h ${ARCHIVE_NAME} | cut -f1)"
       

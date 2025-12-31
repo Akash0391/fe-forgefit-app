@@ -38,7 +38,7 @@ jobs:
           tar -czf /tmp/${ARCHIVE_NAME} \
             --exclude='.git' \
             --exclude='*.log' \
-            --exclude='.env.local' \
+            --exclude='.env.backup.local' \
             --exclude='.env.development' \
             --exclude='node_modules/.cache' \
             --exclude='node_modules/.bin/.cache' \

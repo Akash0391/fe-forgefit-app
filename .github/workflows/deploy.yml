@@ -103,6 +103,8 @@ jobs:
             if [ -f "/var/www/verify-deployment.sh" ]; then
               /var/www/verify-deployment.sh || echo "⚠️ Verification found issues, but continuing..."
             fi
+
+            cd ..
             
             echo "🔄 Restarting frontend service..."
             pm2 restart forgefit-frontend || pm2 start ecosystem.config.js --only forgefit-frontend

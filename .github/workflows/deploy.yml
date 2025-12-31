@@ -22,7 +22,6 @@ jobs:
       
       - name: 🔨 Build Frontend
         env:
-          NODE_ENV: production
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -30,16 +29,17 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📦 Build Configuration:"
           echo "   Environment: PRODUCTION"
-          echo "   NODE_ENV: $NODE_ENV"
           echo "   API URL: $NEXT_PUBLIC_API_URL"
           echo "   Node: $(node --version)"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
-          echo "📥 Installing dependencies..."
+          echo "📥 Installing dependencies (including devDependencies for build)..."
+          # Don't set NODE_ENV=production here - we need devDependencies for building
           npm ci
           echo ""
           echo "🔨 Building for PRODUCTION..."
-          npm run build
+          # Set NODE_ENV=production only during build, not during install
+          NODE_ENV=production npm run build
           echo ""
           echo "✅ Production build completed"
       
